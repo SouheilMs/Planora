@@ -21,8 +21,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     imports: [
         CommonModule, RouterLink, MatCardModule, MatTableModule,
         MatButtonModule, MatIconModule, MatProgressBarModule,
-        MatSnackBarModule, MatDialogModule, MatTooltipModule, LoadingComponent,
-        ConfirmDialogComponent
+        MatSnackBarModule, MatDialogModule, MatTooltipModule, LoadingComponent
     ],
     template: `
     <div class="page-container">

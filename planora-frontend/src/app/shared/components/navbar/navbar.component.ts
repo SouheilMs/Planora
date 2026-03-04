@@ -24,7 +24,7 @@ import { AuthService } from '../../../core/services/auth.service';
     
       <div class="navbar-right">
         @if (authService.user$ | async; as user) {
-          @if (user.roles?.length) {
+          @if (user.roles.length) {
             <span class="role-chip">{{ user.roles[0] }}</span>
           }
           <div class="user-info">

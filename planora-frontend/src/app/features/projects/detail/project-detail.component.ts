@@ -79,11 +79,11 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
           <!-- Team Card -->
           <div class="planora-card">
             <h3 class="section-title">Team Members</h3>
-            @if (project.members?.length) {
+            @if (project.members.length) {
               <div class="members-list">
                 @for (m of project.members; track m) {
                   <div class="member-item">
-                    <div class="member-avatar">{{ m.fullName?.[0] || '?' }}</div>
+                    <div class="member-avatar">{{ m.fullName[0] || '?' }}</div>
                     <div>
                       <div class="member-name">{{ m.fullName }}</div>
                       <div class="member-email">{{ m.email }}</div>
@@ -92,7 +92,7 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
                 }
               </div>
             }
-            @if (!project.members?.length) {
+            @if (!project.members.length) {
               <div class="empty-state" style="padding: 32px 0">
                 <mat-icon>people_outline</mat-icon>
                 <h3>No members</h3>
