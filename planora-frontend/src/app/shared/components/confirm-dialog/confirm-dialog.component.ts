@@ -12,10 +12,9 @@ export interface ConfirmDialogData {
 }
 
 @Component({
-  selector: 'app-confirm-dialog',
-  standalone: true,
-  imports: [MatButtonModule, MatDialogModule, MatIconModule],
-  template: `
+    selector: 'app-confirm-dialog',
+    imports: [MatButtonModule, MatDialogModule, MatIconModule],
+    template: `
     <div class="confirm-dialog">
       <div class="confirm-icon" [class.danger]="data.danger">
         <mat-icon>{{ data.danger ? 'warning' : 'help_outline' }}</mat-icon>
@@ -30,7 +29,7 @@ export interface ConfirmDialogData {
       </mat-dialog-actions>
     </div>
   `,
-  styles: [`
+    styles: [`
     .confirm-dialog { padding: 8px 4px; text-align: center; }
     .confirm-icon {
       width: 56px; height: 56px; border-radius: 50%;

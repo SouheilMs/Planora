@@ -12,13 +12,12 @@ import { DashboardData } from '../../core/models';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, MatCardModule, MatProgressBarModule,
-    MatTableModule, MatIconModule, MatButtonModule, MatSnackBarModule, LoadingComponent
-  ],
-  template: `
+    selector: 'app-dashboard',
+    imports: [
+        CommonModule, RouterLink, MatCardModule, MatProgressBarModule,
+        MatTableModule, MatIconModule, MatButtonModule, MatSnackBarModule, LoadingComponent
+    ],
+    template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -26,10 +25,12 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
           <p class="text-secondary">Welcome back! Here's what's happening with your projects.</p>
         </div>
       </div>
-
-      <app-loading *ngIf="loading"></app-loading>
-
-      <ng-container *ngIf="!loading && data">
+    
+      @if (loading) {
+        <app-loading></app-loading>
+      }
+    
+      @if (!loading && data) {
         <!-- Stats Row -->
         <div class="stats-grid">
           <div class="stat-card">
@@ -69,7 +70,6 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
             </div>
           </div>
         </div>
-
         <!-- Progress + Task Breakdown Row -->
         <div class="two-col">
           <div class="planora-card">
@@ -80,7 +80,6 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
               <div class="pct-label">of all tasks completed</div>
             </div>
           </div>
-
           <div class="planora-card">
             <h3 class="card-title">Task Breakdown</h3>
             <div class="breakdown-list">
@@ -108,59 +107,62 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
             </div>
           </div>
         </div>
-
         <!-- Projects Progress Table -->
         <div class="planora-card">
           <div class="card-header-row">
             <h3 class="card-title">Projects Progress</h3>
             <a routerLink="/projects" class="planora-link" style="font-size:.875rem">View all</a>
           </div>
-
-          <div *ngIf="data.projectsProgress.length === 0" class="empty-state">
-            <mat-icon>folder_open</mat-icon>
-            <h3>No projects yet</h3>
-            <p>Create your first project to get started</p>
-          </div>
-
-          <table mat-table [dataSource]="data.projectsProgress" class="planora-table" *ngIf="data.projectsProgress.length > 0">
-            <ng-container matColumnDef="projectName">
-              <th mat-header-cell *matHeaderCellDef>Project</th>
-              <td mat-cell *matCellDef="let p">
-                <a [routerLink]="['/projects', p.projectId]" class="planora-link">{{ p.projectName }}</a>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="totalTasks">
-              <th mat-header-cell *matHeaderCellDef>Tasks</th>
-              <td mat-cell *matCellDef="let p">{{ p.totalTasks }}</td>
-            </ng-container>
-            <ng-container matColumnDef="completedTasks">
-              <th mat-header-cell *matHeaderCellDef>Completed</th>
-              <td mat-cell *matCellDef="let p">{{ p.completedTasks }}</td>
-            </ng-container>
-            <ng-container matColumnDef="progress">
-              <th mat-header-cell *matHeaderCellDef>Progress</th>
-              <td mat-cell *matCellDef="let p">
-                <div class="progress-cell">
-                  <mat-progress-bar mode="determinate" [value]="p.progressPercentage"></mat-progress-bar>
-                  <span class="pct">{{ p.progressPercentage | number:'1.0-0' }}%</span>
-                </div>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
+          @if (data.projectsProgress.length === 0) {
+            <div class="empty-state">
+              <mat-icon>folder_open</mat-icon>
+              <h3>No projects yet</h3>
+              <p>Create your first project to get started</p>
+            </div>
+          }
+          @if (data.projectsProgress.length > 0) {
+            <table mat-table [dataSource]="data.projectsProgress" class="planora-table">
+              <ng-container matColumnDef="projectName">
+                <th mat-header-cell *matHeaderCellDef>Project</th>
+                <td mat-cell *matCellDef="let p">
+                  <a [routerLink]="['/projects', p.projectId]" class="planora-link">{{ p.projectName }}</a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="totalTasks">
+                <th mat-header-cell *matHeaderCellDef>Tasks</th>
+                <td mat-cell *matCellDef="let p">{{ p.totalTasks }}</td>
+              </ng-container>
+              <ng-container matColumnDef="completedTasks">
+                <th mat-header-cell *matHeaderCellDef>Completed</th>
+                <td mat-cell *matCellDef="let p">{{ p.completedTasks }}</td>
+              </ng-container>
+              <ng-container matColumnDef="progress">
+                <th mat-header-cell *matHeaderCellDef>Progress</th>
+                <td mat-cell *matCellDef="let p">
+                  <div class="progress-cell">
+                    <mat-progress-bar mode="determinate" [value]="p.progressPercentage"></mat-progress-bar>
+                    <span class="pct">{{ p.progressPercentage | number:'1.0-0' }}%</span>
+                  </div>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          }
         </div>
-      </ng-container>
-
+      }
+    
       <!-- Empty state when no data -->
-      <div *ngIf="!loading && !data" class="empty-state">
-        <mat-icon>dashboard</mat-icon>
-        <h3>No dashboard data</h3>
-        <p>Create projects to see your stats here</p>
-      </div>
+      @if (!loading && !data) {
+        <div class="empty-state">
+          <mat-icon>dashboard</mat-icon>
+          <h3>No dashboard data</h3>
+          <p>Create projects to see your stats here</p>
+        </div>
+      }
     </div>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

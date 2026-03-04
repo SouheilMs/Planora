@@ -243,12 +243,12 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
 }
 
 .mat-mdc-progress-bar {
-  --mdc-linear-progress-active-indicator-color: var(--primary);
+  --mat-progress-bar-active-indicator-color: var(--primary);
   border-radius: 4px;
 }
 
 .mat-mdc-snack-bar-container {
-  --mdc-snackbar-container-color: #1f2937;
+  --mat-snackbar-container-color: #1f2937;
   border-radius: 8px !important;
 }
 

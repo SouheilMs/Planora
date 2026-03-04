@@ -16,75 +16,86 @@ import { Task, TaskComment, TaskStatus, TaskPriority } from '../../../core/model
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 @Component({
-  selector: 'app-task-detail',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, ReactiveFormsModule,
-    MatCardModule, MatButtonModule, MatIconModule, MatChipsModule,
-    MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDividerModule,
-    LoadingComponent
-  ],
-  template: `
+    selector: 'app-task-detail',
+    imports: [
+        CommonModule, RouterLink, ReactiveFormsModule,
+        MatCardModule, MatButtonModule, MatIconModule, MatChipsModule,
+        MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDividerModule,
+        LoadingComponent
+    ],
+    template: `
     <div class="page-container">
-      <app-loading *ngIf="loading"></app-loading>
-      <div *ngIf="!loading && task">
-        <div class="page-header">
-          <h1>{{ task.title }}</h1>
-          <button mat-button [routerLink]="['/projects', task.projectId, 'tasks']">
-            <mat-icon>arrow_back</mat-icon> Back to Tasks
-          </button>
-        </div>
-        <div class="detail-grid">
-          <mat-card>
-            <mat-card-header><mat-card-title>Task Details</mat-card-title></mat-card-header>
-            <mat-card-content>
-              <p>{{ task.description }}</p>
-              <div class="info-row">
-                <span class="label">Status:</span>
-                <span class="chip" [ngClass]="getStatusClass(task.status)">{{ getStatusLabel(task.status) }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Priority:</span>
-                <span class="chip" [ngClass]="getPriorityClass(task.priority)">{{ getPriorityLabel(task.priority) }}</span>
-              </div>
-              <div class="info-row"><span class="label">Assigned To:</span><span>{{ task.assignedToName || 'Unassigned' }}</span></div>
-              <div class="info-row"><span class="label">Sprint:</span><span>{{ task.sprintName || 'No sprint' }}</span></div>
-              <div class="info-row"><span class="label">Due Date:</span><span>{{ task.dueDate ? (task.dueDate | date:'mediumDate') : '—' }}</span></div>
-              <div class="info-row"><span class="label">Progress:</span><span>{{ task.progressPercentage }}%</span></div>
-            </mat-card-content>
-          </mat-card>
-          <mat-card>
-            <mat-card-header><mat-card-title>Comments</mat-card-title></mat-card-header>
-            <mat-card-content>
-              <app-loading *ngIf="commentsLoading"></app-loading>
-              <div *ngFor="let c of comments" class="comment">
-                <div class="comment-header">
-                  <strong>{{ c.authorName }}</strong>
-                  <span class="comment-date">{{ c.createdAt | date:'short' }}</span>
-                  <button mat-icon-button color="warn" (click)="deleteComment(c)" *ngIf="canDelete(c)" style="margin-left:auto">
-                    <mat-icon style="font-size:16px">close</mat-icon>
+      @if (loading) {
+        <app-loading></app-loading>
+      }
+      @if (!loading && task) {
+        <div>
+          <div class="page-header">
+            <h1>{{ task.title }}</h1>
+            <button mat-button [routerLink]="['/projects', task.projectId, 'tasks']">
+              <mat-icon>arrow_back</mat-icon> Back to Tasks
+            </button>
+          </div>
+          <div class="detail-grid">
+            <mat-card>
+              <mat-card-header><mat-card-title>Task Details</mat-card-title></mat-card-header>
+              <mat-card-content>
+                <p>{{ task.description }}</p>
+                <div class="info-row">
+                  <span class="label">Status:</span>
+                  <span class="chip" [ngClass]="getStatusClass(task.status)">{{ getStatusLabel(task.status) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Priority:</span>
+                  <span class="chip" [ngClass]="getPriorityClass(task.priority)">{{ getPriorityLabel(task.priority) }}</span>
+                </div>
+                <div class="info-row"><span class="label">Assigned To:</span><span>{{ task.assignedToName || 'Unassigned' }}</span></div>
+                <div class="info-row"><span class="label">Sprint:</span><span>{{ task.sprintName || 'No sprint' }}</span></div>
+                <div class="info-row"><span class="label">Due Date:</span><span>{{ task.dueDate ? (task.dueDate | date:'mediumDate') : '—' }}</span></div>
+                <div class="info-row"><span class="label">Progress:</span><span>{{ task.progressPercentage }}%</span></div>
+              </mat-card-content>
+            </mat-card>
+            <mat-card>
+              <mat-card-header><mat-card-title>Comments</mat-card-title></mat-card-header>
+              <mat-card-content>
+                @if (commentsLoading) {
+                  <app-loading></app-loading>
+                }
+                @for (c of comments; track c) {
+                  <div class="comment">
+                    <div class="comment-header">
+                      <strong>{{ c.authorName }}</strong>
+                      <span class="comment-date">{{ c.createdAt | date:'short' }}</span>
+                      @if (canDelete(c)) {
+                        <button mat-icon-button color="warn" (click)="deleteComment(c)" style="margin-left:auto">
+                          <mat-icon style="font-size:16px">close</mat-icon>
+                        </button>
+                      }
+                    </div>
+                    <p>{{ c.content }}</p>
+                    <mat-divider></mat-divider>
+                  </div>
+                }
+                @if (!commentsLoading && !comments.length) {
+                  <p class="no-data">No comments yet.</p>
+                }
+                <div class="add-comment">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Add comment</mat-label>
+                    <textarea matInput [formControl]="commentCtrl" rows="2"></textarea>
+                  </mat-form-field>
+                  <button mat-raised-button color="primary" (click)="addComment()" [disabled]="commentCtrl.invalid || addingComment">
+                    {{ addingComment ? 'Posting...' : 'Post' }}
                   </button>
                 </div>
-                <p>{{ c.content }}</p>
-                <mat-divider></mat-divider>
-              </div>
-              <p *ngIf="!commentsLoading && !comments.length" class="no-data">No comments yet.</p>
-              <div class="add-comment">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Add comment</mat-label>
-                  <textarea matInput [formControl]="commentCtrl" rows="2"></textarea>
-                </mat-form-field>
-                <button mat-raised-button color="primary" (click)="addComment()" [disabled]="commentCtrl.invalid || addingComment">
-                  {{ addingComment ? 'Posting...' : 'Post' }}
-                </button>
-              </div>
-            </mat-card-content>
-          </mat-card>
+              </mat-card-content>
+            </mat-card>
+          </div>
         </div>
-      </div>
+      }
     </div>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     h1 { margin: 0; }
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
