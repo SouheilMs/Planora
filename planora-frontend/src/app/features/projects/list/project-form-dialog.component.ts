@@ -14,14 +14,13 @@ import { UserService } from '../../../core/services/user.service';
 import { Project, User } from '../../../core/models';
 
 @Component({
-  selector: 'app-project-form-dialog',
-  standalone: true,
-  imports: [
-    CommonModule, ReactiveFormsModule, MatDialogModule,
-    MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatDatepickerModule, MatNativeDateModule, MatSelectModule, MatSnackBarModule
-  ],
-  template: `
+    selector: 'app-project-form-dialog',
+    imports: [
+        CommonModule, ReactiveFormsModule, MatDialogModule,
+        MatFormFieldModule, MatInputModule, MatButtonModule,
+        MatDatepickerModule, MatNativeDateModule, MatSelectModule, MatSnackBarModule
+    ],
+    template: `
     <h2 mat-dialog-title>{{ data ? 'Edit' : 'Create' }} Project</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form">
@@ -64,7 +63,7 @@ import { Project, User } from '../../../core/models';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`
+    styles: [`
     .form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; }
     .full-width { width: 100%; }
     .half-width { width: calc(50% - 8px); }

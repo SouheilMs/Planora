@@ -12,13 +12,12 @@ import { DashboardData } from '../../core/models';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, MatCardModule, MatProgressBarModule,
-    MatTableModule, MatIconModule, MatButtonModule, MatSnackBarModule, LoadingComponent
-  ],
-  template: `
+    selector: 'app-dashboard',
+    imports: [
+        CommonModule, RouterLink, MatCardModule, MatProgressBarModule,
+        MatTableModule, MatIconModule, MatButtonModule, MatSnackBarModule, LoadingComponent
+    ],
+    template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -160,7 +159,7 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

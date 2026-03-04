@@ -20,15 +20,14 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
-  selector: 'app-backlog-list',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, MatCardModule, MatTableModule,
-    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatSnackBarModule, MatDialogModule, MatTooltipModule,
-    LoadingComponent, ConfirmDialogComponent
-  ],
-  template: `
+    selector: 'app-backlog-list',
+    imports: [
+        CommonModule, RouterLink, MatCardModule, MatTableModule,
+        MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
+        MatSelectModule, MatSnackBarModule, MatDialogModule, MatTooltipModule,
+        LoadingComponent, ConfirmDialogComponent
+    ],
+    template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -91,7 +90,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .back-btn { color: #6b7280; margin-bottom: 4px; }
     .primary-btn { background: #4f46e5 !important; color: #fff !important; border-radius: 8px !important; }
     .actions-cell { text-align: right; white-space: nowrap; }
@@ -219,10 +218,9 @@ export class BacklogListComponent implements OnInit {
 }
 
 @Component({
-  selector: 'app-backlog-create-dialog',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSnackBarModule],
-  template: `
+    selector: 'app-backlog-create-dialog',
+    imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSnackBarModule],
+    template: `
     <h2 mat-dialog-title>Add Backlog Item</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form">
@@ -253,7 +251,7 @@ export class BacklogListComponent implements OnInit {
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.form { display: flex; flex-direction: column; gap: 8px; min-width: 300px; } .full-width { width: 100%; }`]
+    styles: [`.form { display: flex; flex-direction: column; gap: 8px; min-width: 300px; } .full-width { width: 100%; }`]
 })
 export class BacklogCreateDialogComponent {
   private fb = inject(FormBuilder);
@@ -296,10 +294,9 @@ export class BacklogCreateDialogComponent {
 }
 
 @Component({
-  selector: 'app-move-to-sprint-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatSelectModule, MatButtonModule],
-  template: `
+    selector: 'app-move-to-sprint-dialog',
+    imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatSelectModule, MatButtonModule],
+    template: `
     <h2 mat-dialog-title>Move to Sprint</h2>
     <mat-dialog-content>
       <mat-form-field appearance="outline" class="full-width">
@@ -314,7 +311,7 @@ export class BacklogCreateDialogComponent {
       <button mat-raised-button color="primary" [mat-dialog-close]="selectedSprintId" [disabled]="!selectedSprintId">Move</button>
     </mat-dialog-actions>
   `,
-  styles: [`.full-width { width: 100%; min-width: 250px; }`]
+    styles: [`.full-width { width: 100%; min-width: 250px; }`]
 })
 export class MoveToSprintDialogComponent {
   selectedSprintId = '';

@@ -22,16 +22,15 @@ import { ProjectFormDialogComponent } from './project-form-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
-  selector: 'app-projects-list',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, ReactiveFormsModule,
-    MatCardModule, MatTableModule, MatButtonModule, MatIconModule,
-    MatFormFieldModule, MatInputModule, MatPaginatorModule,
-    MatProgressBarModule, MatSnackBarModule, MatDialogModule,
-    MatTooltipModule, LoadingComponent, ConfirmDialogComponent
-  ],
-  template: `
+    selector: 'app-projects-list',
+    imports: [
+        CommonModule, RouterLink, ReactiveFormsModule,
+        MatCardModule, MatTableModule, MatButtonModule, MatIconModule,
+        MatFormFieldModule, MatInputModule, MatPaginatorModule,
+        MatProgressBarModule, MatSnackBarModule, MatDialogModule,
+        MatTooltipModule, LoadingComponent, ConfirmDialogComponent
+    ],
+    template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -124,7 +123,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .primary-btn {
       background: #4f46e5 !important;
       color: #fff !important;

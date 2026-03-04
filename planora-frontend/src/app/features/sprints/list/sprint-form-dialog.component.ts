@@ -12,14 +12,13 @@ import { SprintService } from '../../../core/services/sprint.service';
 import { Sprint } from '../../../core/models';
 
 @Component({
-  selector: 'app-sprint-form-dialog',
-  standalone: true,
-  imports: [
-    CommonModule, ReactiveFormsModule, MatDialogModule,
-    MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatDatepickerModule, MatNativeDateModule, MatSnackBarModule
-  ],
-  template: `
+    selector: 'app-sprint-form-dialog',
+    imports: [
+        CommonModule, ReactiveFormsModule, MatDialogModule,
+        MatFormFieldModule, MatInputModule, MatButtonModule,
+        MatDatepickerModule, MatNativeDateModule, MatSnackBarModule
+    ],
+    template: `
     <h2 mat-dialog-title>{{ data.sprint ? 'Edit' : 'Create' }} Sprint</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form">
@@ -55,7 +54,7 @@ import { Sprint } from '../../../core/models';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`
+    styles: [`
     .form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; }
     .full-width { width: 100%; }
     .half-width { width: calc(50% - 8px); }

@@ -8,10 +8,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
-  selector: 'app-navbar',
-  standalone: true,
-  imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
-  template: `
+    selector: 'app-navbar',
+    imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
+    template: `
     <header class="navbar">
       <div class="navbar-left">
         <button mat-icon-button class="toggle-btn" (click)="toggleSidebar.emit()" matTooltip="Toggle sidebar">
@@ -44,7 +43,7 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
     </header>
   `,
-  styles: [`
+    styles: [`
     .navbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;
       height: 64px;

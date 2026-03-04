@@ -13,10 +13,9 @@ interface NavItem {
 }
 
 @Component({
-  selector: 'app-sidebar',
-  standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule, MatTooltipModule],
-  template: `
+    selector: 'app-sidebar',
+    imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule, MatTooltipModule],
+    template: `
     <nav class="sidebar" [class.collapsed]="collapsed">
       <div class="nav-section">
         <ng-container *ngFor="let item of navItems">
@@ -33,7 +32,7 @@ interface NavItem {
       </div>
     </nav>
   `,
-  styles: [`
+    styles: [`
     .sidebar {
       position: fixed;
       top: 64px;

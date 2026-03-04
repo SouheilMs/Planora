@@ -12,14 +12,13 @@ import { Project } from '../../../core/models';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 @Component({
-  selector: 'app-project-detail',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, MatCardModule, MatButtonModule,
-    MatIconModule, MatChipsModule, MatProgressBarModule,
-    MatSnackBarModule, LoadingComponent
-  ],
-  template: `
+    selector: 'app-project-detail',
+    imports: [
+        CommonModule, RouterLink, MatCardModule, MatButtonModule,
+        MatIconModule, MatChipsModule, MatProgressBarModule,
+        MatSnackBarModule, LoadingComponent
+    ],
+    template: `
     <div class="page-container">
       <app-loading *ngIf="loading"></app-loading>
 
@@ -138,7 +137,7 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .back-btn { color: #6b7280; margin-bottom: 4px; }
 
     .detail-grid {

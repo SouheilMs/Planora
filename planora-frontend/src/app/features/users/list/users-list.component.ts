@@ -21,15 +21,14 @@ import { Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-users-list',
-  standalone: true,
-  imports: [
-    CommonModule, ReactiveFormsModule, MatCardModule, MatTableModule,
-    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
-    MatPaginatorModule, MatChipsModule, MatSnackBarModule, MatDialogModule,
-    MatSelectModule, MatTooltipModule, LoadingComponent
-  ],
-  template: `
+    selector: 'app-users-list',
+    imports: [
+        CommonModule, ReactiveFormsModule, MatCardModule, MatTableModule,
+        MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
+        MatPaginatorModule, MatChipsModule, MatSnackBarModule, MatDialogModule,
+        MatSelectModule, MatTooltipModule, LoadingComponent
+    ],
+    template: `
     <div class="page-container">
       <div class="page-header">
         <h1>Users</h1>
@@ -97,7 +96,7 @@ import { FormsModule } from '@angular/forms';
       </mat-card>
     </div>
   `,
-  styles: [`
+    styles: [`
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     h1 { margin: 0; }
     .search-field { width: 100%; margin-bottom: 16px; }
@@ -176,10 +175,9 @@ export class UsersListComponent implements OnInit {
 }
 
 @Component({
-  selector: 'app-assign-role-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatSelectModule, MatButtonModule, MatSnackBarModule],
-  template: `
+    selector: 'app-assign-role-dialog',
+    imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatSelectModule, MatButtonModule, MatSnackBarModule],
+    template: `
     <h2 mat-dialog-title>Assign Role to {{ data.user.fullName }}</h2>
     <mat-dialog-content>
       <mat-form-field appearance="outline" class="full-width">
@@ -198,7 +196,7 @@ export class UsersListComponent implements OnInit {
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.full-width { width: 100%; min-width: 250px; }`]
+    styles: [`.full-width { width: 100%; min-width: 250px; }`]
 })
 export class AssignRoleDialogComponent {
   private userService = inject(UserService);

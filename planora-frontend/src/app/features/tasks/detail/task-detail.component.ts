@@ -16,15 +16,14 @@ import { Task, TaskComment, TaskStatus, TaskPriority } from '../../../core/model
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 @Component({
-  selector: 'app-task-detail',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, ReactiveFormsModule,
-    MatCardModule, MatButtonModule, MatIconModule, MatChipsModule,
-    MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDividerModule,
-    LoadingComponent
-  ],
-  template: `
+    selector: 'app-task-detail',
+    imports: [
+        CommonModule, RouterLink, ReactiveFormsModule,
+        MatCardModule, MatButtonModule, MatIconModule, MatChipsModule,
+        MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDividerModule,
+        LoadingComponent
+    ],
+    template: `
     <div class="page-container">
       <app-loading *ngIf="loading"></app-loading>
       <div *ngIf="!loading && task">
@@ -84,7 +83,7 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     h1 { margin: 0; }
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

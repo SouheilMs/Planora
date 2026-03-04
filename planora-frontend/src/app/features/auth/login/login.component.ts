@@ -12,14 +12,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, ReactiveFormsModule,
-    MatCardModule, MatFormFieldModule, MatInputModule,
-    MatButtonModule, MatIconModule, MatSnackBarModule, MatProgressSpinnerModule
-  ],
-  template: `
+    selector: 'app-login',
+    imports: [
+        CommonModule, RouterLink, ReactiveFormsModule,
+        MatCardModule, MatFormFieldModule, MatInputModule,
+        MatButtonModule, MatIconModule, MatSnackBarModule, MatProgressSpinnerModule
+    ],
+    template: `
     <div class="auth-card">
       <div class="auth-card-header">
         <h2>Welcome back</h2>
@@ -55,7 +54,7 @@ import { AuthService } from '../../../core/services/auth.service';
       <p class="auth-footer">Don't have an account? <a routerLink="/auth/register">Create one</a></p>
     </div>
   `,
-  styles: [`
+    styles: [`
     .auth-card {
       background: #fff;
       border-radius: 16px;
