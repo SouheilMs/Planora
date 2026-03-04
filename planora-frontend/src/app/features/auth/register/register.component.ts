@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -14,46 +14,62 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
     selector: 'app-register',
     imports: [
-        CommonModule, RouterLink, ReactiveFormsModule,
-        MatCardModule, MatFormFieldModule, MatInputModule,
-        MatButtonModule, MatIconModule, MatSnackBarModule, MatProgressSpinnerModule
-    ],
+    RouterLink,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSnackBarModule,
+    MatProgressSpinnerModule
+],
     template: `
     <div class="auth-card">
       <div class="auth-card-header">
         <h2>Create your account</h2>
         <p>Join Planora and start managing projects</p>
       </div>
-
+    
       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
         <div class="field-row">
           <mat-form-field appearance="outline">
             <mat-label>First Name</mat-label>
             <input matInput formControlName="firstName" autocomplete="given-name">
-            <mat-error *ngIf="registerForm.get('firstName')?.hasError('required')">Required</mat-error>
+            @if (registerForm.get('firstName')?.hasError('required')) {
+              <mat-error>Required</mat-error>
+            }
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Last Name</mat-label>
             <input matInput formControlName="lastName" autocomplete="family-name">
-            <mat-error *ngIf="registerForm.get('lastName')?.hasError('required')">Required</mat-error>
+            @if (registerForm.get('lastName')?.hasError('required')) {
+              <mat-error>Required</mat-error>
+            }
           </mat-form-field>
         </div>
-
+    
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email address</mat-label>
           <input matInput type="email" formControlName="email" autocomplete="email">
           <mat-icon matPrefix class="field-icon">mail_outline</mat-icon>
-          <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Required</mat-error>
-          <mat-error *ngIf="registerForm.get('email')?.hasError('email')">Enter a valid email</mat-error>
+          @if (registerForm.get('email')?.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
+          @if (registerForm.get('email')?.hasError('email')) {
+            <mat-error>Enter a valid email</mat-error>
+          }
         </mat-form-field>
-
+    
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Username</mat-label>
           <input matInput formControlName="userName" autocomplete="username">
           <mat-icon matPrefix class="field-icon">alternate_email</mat-icon>
-          <mat-error *ngIf="registerForm.get('userName')?.hasError('required')">Required</mat-error>
+          @if (registerForm.get('userName')?.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
         </mat-form-field>
-
+    
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
           <input matInput [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password">
@@ -61,20 +77,28 @@ import { AuthService } from '../../../core/services/auth.service';
           <button type="button" mat-icon-button matSuffix (click)="showPassword.set(!showPassword())" tabindex="-1">
             <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
-          <mat-error *ngIf="registerForm.get('password')?.hasError('required')">Required</mat-error>
-          <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">Minimum 8 characters</mat-error>
+          @if (registerForm.get('password')?.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
+          @if (registerForm.get('password')?.hasError('minlength')) {
+            <mat-error>Minimum 8 characters</mat-error>
+          }
         </mat-form-field>
-
+    
         <button mat-raised-button class="submit-btn" type="submit"
-                [disabled]="registerForm.invalid || loading">
-          <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
-          <span *ngIf="!loading">Create Account</span>
+          [disabled]="registerForm.invalid || loading">
+          @if (loading) {
+            <mat-spinner diameter="18"></mat-spinner>
+          }
+          @if (!loading) {
+            <span>Create Account</span>
+          }
         </button>
       </form>
-
+    
       <p class="auth-footer">Already have an account? <a routerLink="/auth/login">Sign in</a></p>
     </div>
-  `,
+    `,
     styles: [`
     .auth-card {
       background: #fff;

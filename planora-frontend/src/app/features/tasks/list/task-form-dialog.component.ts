@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,10 +17,16 @@ import { Task, TaskStatus, TaskPriority, Sprint, User } from '../../../core/mode
 @Component({
     selector: 'app-task-form-dialog',
     imports: [
-        CommonModule, ReactiveFormsModule, MatDialogModule,
-        MatFormFieldModule, MatInputModule, MatButtonModule,
-        MatSelectModule, MatDatepickerModule, MatNativeDateModule, MatSnackBarModule
-    ],
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatSnackBarModule
+],
     template: `
     <h2 mat-dialog-title>{{ data.task ? 'Edit' : 'Create' }} Task</h2>
     <mat-dialog-content>
@@ -28,7 +34,9 @@ import { Task, TaskStatus, TaskPriority, Sprint, User } from '../../../core/mode
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Title</mat-label>
           <input matInput formControlName="title">
-          <mat-error *ngIf="form.get('title')?.hasError('required')">Required</mat-error>
+          @if (form.get('title')?.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Description</mat-label>
@@ -69,14 +77,18 @@ import { Task, TaskStatus, TaskPriority, Sprint, User } from '../../../core/mode
           <mat-label>Assigned To</mat-label>
           <mat-select formControlName="assignedToId">
             <mat-option value="">Unassigned</mat-option>
-            <mat-option *ngFor="let u of users" [value]="u.id">{{ u.fullName }}</mat-option>
+            @for (u of users; track u) {
+              <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Sprint (optional)</mat-label>
           <mat-select formControlName="sprintId">
             <mat-option value="">No Sprint</mat-option>
-            <mat-option *ngFor="let s of sprints" [value]="s.id">{{ s.name }}</mat-option>
+            @for (s of sprints; track s) {
+              <mat-option [value]="s.id">{{ s.name }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </form>
@@ -87,7 +99,7 @@ import { Task, TaskStatus, TaskPriority, Sprint, User } from '../../../core/mode
         {{ saving ? 'Saving...' : 'Save' }}
       </button>
     </mat-dialog-actions>
-  `,
+    `,
     styles: [`
     .form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; }
     .full-width { width: 100%; }

@@ -40,56 +40,69 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
           <mat-icon>add</mat-icon> Add Item
         </button>
       </div>
-
+    
       <div class="planora-card">
-        <app-loading *ngIf="loading"></app-loading>
-
-        <ng-container *ngIf="!loading">
-          <div *ngIf="items.length === 0" class="empty-state">
-            <mat-icon>list_alt</mat-icon>
-            <h3>Backlog is empty</h3>
-            <p>Add items to start planning your work</p>
-          </div>
-
-          <table mat-table [dataSource]="items" class="planora-table" *ngIf="items.length > 0">
-            <ng-container matColumnDef="title">
-              <th mat-header-cell *matHeaderCellDef>Title</th>
-              <td mat-cell *matCellDef="let item">{{ item.title }}</td>
-            </ng-container>
-            <ng-container matColumnDef="priority">
-              <th mat-header-cell *matHeaderCellDef>Priority</th>
-              <td mat-cell *matCellDef="let item">
-                <span class="chip" [ngClass]="getPriorityClass(item.priority)">{{ getPriorityLabel(item.priority) }}</span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="sprint">
-              <th mat-header-cell *matHeaderCellDef>Sprint</th>
-              <td mat-cell *matCellDef="let item">
-                <span *ngIf="item.sprintName" class="chip sprint-active">{{ item.sprintName }}</span>
-                <span *ngIf="!item.sprintName" class="text-secondary">Not assigned</span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let item" class="actions-cell">
-                <button mat-icon-button (click)="changePriority(item)" matTooltip="Cycle priority">
-                  <mat-icon>swap_vert</mat-icon>
-                </button>
-                <button mat-icon-button (click)="moveToSprint(item)" *ngIf="canManage && !item.sprintId" matTooltip="Move to Sprint">
-                  <mat-icon>arrow_forward</mat-icon>
-                </button>
-                <button mat-icon-button class="delete-btn" (click)="deleteItem(item)" *ngIf="canManage" matTooltip="Delete">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-        </ng-container>
+        @if (loading) {
+          <app-loading></app-loading>
+        }
+    
+        @if (!loading) {
+          @if (items.length === 0) {
+            <div class="empty-state">
+              <mat-icon>list_alt</mat-icon>
+              <h3>Backlog is empty</h3>
+              <p>Add items to start planning your work</p>
+            </div>
+          }
+          @if (items.length > 0) {
+            <table mat-table [dataSource]="items" class="planora-table">
+              <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef>Title</th>
+                <td mat-cell *matCellDef="let item">{{ item.title }}</td>
+              </ng-container>
+              <ng-container matColumnDef="priority">
+                <th mat-header-cell *matHeaderCellDef>Priority</th>
+                <td mat-cell *matCellDef="let item">
+                  <span class="chip" [ngClass]="getPriorityClass(item.priority)">{{ getPriorityLabel(item.priority) }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="sprint">
+                <th mat-header-cell *matHeaderCellDef>Sprint</th>
+                <td mat-cell *matCellDef="let item">
+                  @if (item.sprintName) {
+                    <span class="chip sprint-active">{{ item.sprintName }}</span>
+                  }
+                  @if (!item.sprintName) {
+                    <span class="text-secondary">Not assigned</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let item" class="actions-cell">
+                  <button mat-icon-button (click)="changePriority(item)" matTooltip="Cycle priority">
+                    <mat-icon>swap_vert</mat-icon>
+                  </button>
+                  @if (canManage && !item.sprintId) {
+                    <button mat-icon-button (click)="moveToSprint(item)" matTooltip="Move to Sprint">
+                      <mat-icon>arrow_forward</mat-icon>
+                    </button>
+                  }
+                  @if (canManage) {
+                    <button mat-icon-button class="delete-btn" (click)="deleteItem(item)" matTooltip="Delete">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          }
+        }
       </div>
     </div>
-  `,
+    `,
     styles: [`
     .back-btn { color: #6b7280; margin-bottom: 4px; }
     .primary-btn { background: #4f46e5 !important; color: #fff !important; border-radius: 8px !important; }
@@ -227,7 +240,9 @@ export class BacklogListComponent implements OnInit {
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Title</mat-label>
           <input matInput formControlName="title">
-          <mat-error *ngIf="form.get('title')?.hasError('required')">Required</mat-error>
+          @if (form.get('title')?.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Description</mat-label>
@@ -250,7 +265,7 @@ export class BacklogListComponent implements OnInit {
         {{ saving ? 'Saving...' : 'Save' }}
       </button>
     </mat-dialog-actions>
-  `,
+    `,
     styles: [`.form { display: flex; flex-direction: column; gap: 8px; min-width: 300px; } .full-width { width: 100%; }`]
 })
 export class BacklogCreateDialogComponent {
@@ -302,7 +317,9 @@ export class BacklogCreateDialogComponent {
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Select Sprint</mat-label>
         <mat-select [(ngModel)]="selectedSprintId" [ngModelOptions]="{standalone: true}">
-          <mat-option *ngFor="let s of data.sprints" [value]="s.id">{{ s.name }}</mat-option>
+          @for (s of data.sprints; track s) {
+            <mat-option [value]="s.id">{{ s.name }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
     </mat-dialog-content>
@@ -310,7 +327,7 @@ export class BacklogCreateDialogComponent {
       <button mat-button mat-dialog-close>Cancel</button>
       <button mat-raised-button color="primary" [mat-dialog-close]="selectedSprintId" [disabled]="!selectedSprintId">Move</button>
     </mat-dialog-actions>
-  `,
+    `,
     styles: [`.full-width { width: 100%; min-width: 250px; }`]
 })
 export class MoveToSprintDialogComponent {

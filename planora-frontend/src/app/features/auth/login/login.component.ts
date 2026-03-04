@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -14,26 +14,36 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
     selector: 'app-login',
     imports: [
-        CommonModule, RouterLink, ReactiveFormsModule,
-        MatCardModule, MatFormFieldModule, MatInputModule,
-        MatButtonModule, MatIconModule, MatSnackBarModule, MatProgressSpinnerModule
-    ],
+    RouterLink,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSnackBarModule,
+    MatProgressSpinnerModule
+],
     template: `
     <div class="auth-card">
       <div class="auth-card-header">
         <h2>Welcome back</h2>
         <p>Sign in to your Planora account</p>
       </div>
-
+    
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email address</mat-label>
           <input matInput type="email" formControlName="email" placeholder="you@example.com" autocomplete="email">
           <mat-icon matPrefix class="field-icon">mail_outline</mat-icon>
-          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
-          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
+          @if (loginForm.get('email')?.hasError('required')) {
+            <mat-error>Email is required</mat-error>
+          }
+          @if (loginForm.get('email')?.hasError('email')) {
+            <mat-error>Enter a valid email address</mat-error>
+          }
         </mat-form-field>
-
+    
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
           <input matInput [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password">
@@ -41,19 +51,25 @@ import { AuthService } from '../../../core/services/auth.service';
           <button type="button" mat-icon-button matSuffix (click)="showPassword.set(!showPassword())" tabindex="-1">
             <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+          @if (loginForm.get('password')?.hasError('required')) {
+            <mat-error>Password is required</mat-error>
+          }
         </mat-form-field>
-
+    
         <button mat-raised-button class="submit-btn" type="submit"
-                [disabled]="loginForm.invalid || loading">
-          <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
-          <span *ngIf="!loading">Sign In</span>
+          [disabled]="loginForm.invalid || loading">
+          @if (loading) {
+            <mat-spinner diameter="18"></mat-spinner>
+          }
+          @if (!loading) {
+            <span>Sign In</span>
+          }
         </button>
       </form>
-
+    
       <p class="auth-footer">Don't have an account? <a routerLink="/auth/register">Create one</a></p>
     </div>
-  `,
+    `,
     styles: [`
     .auth-card {
       background: #fff;

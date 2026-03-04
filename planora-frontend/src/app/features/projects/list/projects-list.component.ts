@@ -37,11 +37,13 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
           <h1>Projects</h1>
           <p class="text-secondary">Manage and track your team's projects</p>
         </div>
-        <button mat-raised-button class="primary-btn" (click)="openCreate()" *ngIf="canManage">
-          <mat-icon>add</mat-icon> New Project
-        </button>
+        @if (canManage) {
+          <button mat-raised-button class="primary-btn" (click)="openCreate()">
+            <mat-icon>add</mat-icon> New Project
+          </button>
+        }
       </div>
-
+    
       <div class="planora-card">
         <div class="toolbar">
           <mat-form-field appearance="outline" class="search-field">
@@ -50,79 +52,87 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
         </div>
-
-        <app-loading *ngIf="loading"></app-loading>
-
-        <ng-container *ngIf="!loading">
-          <div *ngIf="projects.length === 0" class="empty-state">
-            <mat-icon>folder_open</mat-icon>
-            <h3>No projects found</h3>
-            <p>{{ searchCtrl.value ? 'Try a different search term' : 'Create your first project to get started' }}</p>
-          </div>
-
-          <table mat-table [dataSource]="projects" class="planora-table" *ngIf="projects.length > 0">
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Name</th>
-              <td mat-cell *matCellDef="let p">
-                <a [routerLink]="['/projects', p.id]" class="planora-link">{{ p.name }}</a>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="description">
-              <th mat-header-cell *matHeaderCellDef>Description</th>
-              <td mat-cell *matCellDef="let p" class="text-secondary">
-                {{ p.description | slice:0:60 }}{{ (p.description?.length ?? 0) > 60 ? '…' : '' }}
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="manager">
-              <th mat-header-cell *matHeaderCellDef>Manager</th>
-              <td mat-cell *matCellDef="let p">{{ p.projectManagerName }}</td>
-            </ng-container>
-            <ng-container matColumnDef="members">
-              <th mat-header-cell *matHeaderCellDef>Members</th>
-              <td mat-cell *matCellDef="let p">
-                <span class="member-count">
-                  <mat-icon style="font-size:14px;width:14px;height:14px;vertical-align:middle">people</mat-icon>
-                  {{ p.members?.length || 0 }}
-                </span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="progress">
-              <th mat-header-cell *matHeaderCellDef>Progress</th>
-              <td mat-cell *matCellDef="let p">
-                <div class="progress-cell">
-                  <mat-progress-bar mode="determinate" [value]="p.progressPercentage"></mat-progress-bar>
-                  <span class="pct">{{ p.progressPercentage | number:'1.0-0' }}%</span>
-                </div>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let p" class="actions-cell">
-                <button mat-icon-button [routerLink]="['/projects', p.id]" matTooltip="View details">
-                  <mat-icon>arrow_forward</mat-icon>
-                </button>
-                <button mat-icon-button (click)="openEdit(p)" *ngIf="canManage" matTooltip="Edit">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button class="delete-btn" (click)="deleteProject(p)" *ngIf="isAdmin" matTooltip="Delete">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-
+    
+        @if (loading) {
+          <app-loading></app-loading>
+        }
+    
+        @if (!loading) {
+          @if (projects.length === 0) {
+            <div class="empty-state">
+              <mat-icon>folder_open</mat-icon>
+              <h3>No projects found</h3>
+              <p>{{ searchCtrl.value ? 'Try a different search term' : 'Create your first project to get started' }}</p>
+            </div>
+          }
+          @if (projects.length > 0) {
+            <table mat-table [dataSource]="projects" class="planora-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let p">
+                  <a [routerLink]="['/projects', p.id]" class="planora-link">{{ p.name }}</a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef>Description</th>
+                <td mat-cell *matCellDef="let p" class="text-secondary">
+                  {{ p.description | slice:0:60 }}{{ (p.description?.length ?? 0) > 60 ? '…' : '' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="manager">
+                <th mat-header-cell *matHeaderCellDef>Manager</th>
+                <td mat-cell *matCellDef="let p">{{ p.projectManagerName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="members">
+                <th mat-header-cell *matHeaderCellDef>Members</th>
+                <td mat-cell *matCellDef="let p">
+                  <span class="member-count">
+                    <mat-icon style="font-size:14px;width:14px;height:14px;vertical-align:middle">people</mat-icon>
+                    {{ p.members?.length || 0 }}
+                  </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="progress">
+                <th mat-header-cell *matHeaderCellDef>Progress</th>
+                <td mat-cell *matCellDef="let p">
+                  <div class="progress-cell">
+                    <mat-progress-bar mode="determinate" [value]="p.progressPercentage"></mat-progress-bar>
+                    <span class="pct">{{ p.progressPercentage | number:'1.0-0' }}%</span>
+                  </div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let p" class="actions-cell">
+                  <button mat-icon-button [routerLink]="['/projects', p.id]" matTooltip="View details">
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                  @if (canManage) {
+                    <button mat-icon-button (click)="openEdit(p)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                  @if (isAdmin) {
+                    <button mat-icon-button class="delete-btn" (click)="deleteProject(p)" matTooltip="Delete">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          }
           <mat-paginator
             [length]="totalCount"
             [pageSize]="pageSize"
             [pageSizeOptions]="[5, 10, 20]"
             (page)="onPageChange($event)">
           </mat-paginator>
-        </ng-container>
+        }
       </div>
     </div>
-  `,
+    `,
     styles: [`
     .primary-btn {
       background: #4f46e5 !important;

@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,10 +16,16 @@ import { Project, User } from '../../../core/models';
 @Component({
     selector: 'app-project-form-dialog',
     imports: [
-        CommonModule, ReactiveFormsModule, MatDialogModule,
-        MatFormFieldModule, MatInputModule, MatButtonModule,
-        MatDatepickerModule, MatNativeDateModule, MatSelectModule, MatSnackBarModule
-    ],
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatSelectModule,
+    MatSnackBarModule
+],
     template: `
     <h2 mat-dialog-title>{{ data ? 'Edit' : 'Create' }} Project</h2>
     <mat-dialog-content>
@@ -27,7 +33,9 @@ import { Project, User } from '../../../core/models';
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Name</mat-label>
           <input matInput formControlName="name">
-          <mat-error *ngIf="form.get('name')?.hasError('required')">Required</mat-error>
+          @if (form.get('name')?.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Description</mat-label>
@@ -50,9 +58,13 @@ import { Project, User } from '../../../core/models';
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Project Manager</mat-label>
           <mat-select formControlName="projectManagerId">
-            <mat-option *ngFor="let u of users" [value]="u.id">{{ u.fullName }}</mat-option>
+            @for (u of users; track u) {
+              <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+            }
           </mat-select>
-          <mat-error *ngIf="form.get('projectManagerId')?.hasError('required')">Required</mat-error>
+          @if (form.get('projectManagerId')?.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
         </mat-form-field>
       </form>
     </mat-dialog-content>
@@ -62,7 +74,7 @@ import { Project, User } from '../../../core/models';
         {{ saving ? 'Saving...' : 'Save' }}
       </button>
     </mat-dialog-actions>
-  `,
+    `,
     styles: [`
     .form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; }
     .full-width { width: 100%; }

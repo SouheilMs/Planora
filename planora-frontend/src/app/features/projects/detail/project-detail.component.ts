@@ -20,9 +20,11 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
     ],
     template: `
     <div class="page-container">
-      <app-loading *ngIf="loading"></app-loading>
-
-      <ng-container *ngIf="!loading && project">
+      @if (loading) {
+        <app-loading></app-loading>
+      }
+    
+      @if (!loading && project) {
         <div class="page-header">
           <div>
             <button mat-button [routerLink]="['/projects']" class="back-btn">
@@ -32,7 +34,6 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
             <p class="text-secondary">{{ project.description }}</p>
           </div>
         </div>
-
         <div class="detail-grid">
           <!-- Info Card -->
           <div class="planora-card info-card">
@@ -75,27 +76,31 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
               <mat-progress-bar mode="determinate" [value]="project.progressPercentage" class="project-bar"></mat-progress-bar>
             </div>
           </div>
-
           <!-- Team Card -->
           <div class="planora-card">
             <h3 class="section-title">Team Members</h3>
-            <div *ngIf="project.members?.length" class="members-list">
-              <div class="member-item" *ngFor="let m of project.members">
-                <div class="member-avatar">{{ m.fullName?.[0] || '?' }}</div>
-                <div>
-                  <div class="member-name">{{ m.fullName }}</div>
-                  <div class="member-email">{{ m.email }}</div>
-                </div>
+            @if (project.members?.length) {
+              <div class="members-list">
+                @for (m of project.members; track m) {
+                  <div class="member-item">
+                    <div class="member-avatar">{{ m.fullName?.[0] || '?' }}</div>
+                    <div>
+                      <div class="member-name">{{ m.fullName }}</div>
+                      <div class="member-email">{{ m.email }}</div>
+                    </div>
+                  </div>
+                }
               </div>
-            </div>
-            <div *ngIf="!project.members?.length" class="empty-state" style="padding: 32px 0">
-              <mat-icon>people_outline</mat-icon>
-              <h3>No members</h3>
-              <p>No team members assigned yet</p>
-            </div>
+            }
+            @if (!project.members?.length) {
+              <div class="empty-state" style="padding: 32px 0">
+                <mat-icon>people_outline</mat-icon>
+                <h3>No members</h3>
+                <p>No team members assigned yet</p>
+              </div>
+            }
           </div>
         </div>
-
         <!-- Navigation Cards -->
         <div class="nav-grid">
           <a class="nav-card" [routerLink]="['/projects', project.id, 'tasks']">
@@ -129,14 +134,16 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
             <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
           </a>
         </div>
-      </ng-container>
-
-      <div *ngIf="!loading && !project" class="empty-state" style="padding: 64px">
-        <mat-icon>folder_off</mat-icon>
-        <h3>Project not found</h3>
-      </div>
+      }
+    
+      @if (!loading && !project) {
+        <div class="empty-state" style="padding: 64px">
+          <mat-icon>folder_off</mat-icon>
+          <h3>Project not found</h3>
+        </div>
+      }
     </div>
-  `,
+    `,
     styles: [`
     .back-btn { color: #6b7280; margin-bottom: 4px; }
 

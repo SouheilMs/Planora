@@ -40,52 +40,58 @@ import { FormsModule } from '@angular/forms';
             <input matInput [formControl]="searchCtrl" placeholder="Search...">
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
-          <app-loading *ngIf="loading"></app-loading>
-          <table mat-table [dataSource]="users" class="full-width-table" *ngIf="!loading">
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Name</th>
-              <td mat-cell *matCellDef="let u">{{ u.fullName }}</td>
-            </ng-container>
-            <ng-container matColumnDef="email">
-              <th mat-header-cell *matHeaderCellDef>Email</th>
-              <td mat-cell *matCellDef="let u">{{ u.email }}</td>
-            </ng-container>
-            <ng-container matColumnDef="username">
-              <th mat-header-cell *matHeaderCellDef>Username</th>
-              <td mat-cell *matCellDef="let u">{{ u.userName }}</td>
-            </ng-container>
-            <ng-container matColumnDef="roles">
-              <th mat-header-cell *matHeaderCellDef>Roles</th>
-              <td mat-cell *matCellDef="let u">
-                <span class="role-chip" *ngFor="let r of u.roles">{{ r }}</span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef>Status</th>
-              <td mat-cell *matCellDef="let u">
-                <span class="chip" [ngClass]="u.isActive ? 'active' : 'inactive'">
-                  {{ u.isActive ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>Actions</th>
-              <td mat-cell *matCellDef="let u">
-                <button mat-icon-button (click)="openAssignRole(u)" matTooltip="Assign Role" color="primary">
-                  <mat-icon>manage_accounts</mat-icon>
-                </button>
-                <button mat-icon-button color="accent" (click)="toggleActive(u)"
-                        [matTooltip]="u.isActive ? 'Deactivate' : 'Activate'">
-                  <mat-icon>{{ u.isActive ? 'person_off' : 'person' }}</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            <tr class="mat-row" *matNoDataRow>
-              <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:24px">No users found.</td>
-            </tr>
-          </table>
+          @if (loading) {
+            <app-loading></app-loading>
+          }
+          @if (!loading) {
+            <table mat-table [dataSource]="users" class="full-width-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let u">{{ u.fullName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+              </ng-container>
+              <ng-container matColumnDef="username">
+                <th mat-header-cell *matHeaderCellDef>Username</th>
+                <td mat-cell *matCellDef="let u">{{ u.userName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="roles">
+                <th mat-header-cell *matHeaderCellDef>Roles</th>
+                <td mat-cell *matCellDef="let u">
+                  @for (r of u.roles; track r) {
+                    <span class="role-chip">{{ r }}</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let u">
+                  <span class="chip" [ngClass]="u.isActive ? 'active' : 'inactive'">
+                    {{ u.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let u">
+                  <button mat-icon-button (click)="openAssignRole(u)" matTooltip="Assign Role" color="primary">
+                    <mat-icon>manage_accounts</mat-icon>
+                  </button>
+                  <button mat-icon-button color="accent" (click)="toggleActive(u)"
+                    [matTooltip]="u.isActive ? 'Deactivate' : 'Activate'">
+                    <mat-icon>{{ u.isActive ? 'person_off' : 'person' }}</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:24px">No users found.</td>
+              </tr>
+            </table>
+          }
           <mat-paginator
             [length]="totalCount"
             [pageSize]="pageSize"
@@ -95,7 +101,7 @@ import { FormsModule } from '@angular/forms';
         </mat-card-content>
       </mat-card>
     </div>
-  `,
+    `,
     styles: [`
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     h1 { margin: 0; }

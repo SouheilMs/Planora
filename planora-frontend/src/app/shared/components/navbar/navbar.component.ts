@@ -21,10 +21,12 @@ import { AuthService } from '../../../core/services/auth.service';
           Planora
         </span>
       </div>
-
+    
       <div class="navbar-right">
-        <ng-container *ngIf="authService.user$ | async as user">
-          <span class="role-chip" *ngIf="user.roles?.length">{{ user.roles[0] }}</span>
+        @if (authService.user$ | async; as user) {
+          @if (user.roles?.length) {
+            <span class="role-chip">{{ user.roles[0] }}</span>
+          }
           <div class="user-info">
             <span class="user-name">{{ user.fullName }}</span>
             <span class="user-email">{{ user.email }}</span>
@@ -32,8 +34,8 @@ import { AuthService } from '../../../core/services/auth.service';
           <button mat-icon-button class="avatar-btn" [matMenuTriggerFor]="menu" matTooltip="Account">
             <div class="avatar">{{ getInitials(user.fullName) }}</div>
           </button>
-        </ng-container>
-
+        }
+    
         <mat-menu #menu="matMenu" class="user-menu">
           <button mat-menu-item (click)="logout()">
             <mat-icon>logout</mat-icon>
@@ -42,7 +44,7 @@ import { AuthService } from '../../../core/services/auth.service';
         </mat-menu>
       </div>
     </header>
-  `,
+    `,
     styles: [`
     .navbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;

@@ -1,6 +1,6 @@
 import { Component, inject, Input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../../core/services/auth.service';
@@ -14,24 +14,28 @@ interface NavItem {
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule, MatTooltipModule],
+    imports: [RouterLink, RouterLinkActive, MatIconModule, MatTooltipModule],
     template: `
     <nav class="sidebar" [class.collapsed]="collapsed">
       <div class="nav-section">
-        <ng-container *ngFor="let item of navItems">
-          <a *ngIf="!item.roles || hasRole(item.roles)"
-             class="nav-item"
-             [routerLink]="item.route"
-             routerLinkActive="active"
-             [matTooltip]="collapsed ? item.label : ''"
-             matTooltipPosition="right">
-            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
-            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
-          </a>
-        </ng-container>
+        @for (item of navItems; track item) {
+          @if (!item.roles || hasRole(item.roles)) {
+            <a
+              class="nav-item"
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              [matTooltip]="collapsed ? item.label : ''"
+              matTooltipPosition="right">
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+              @if (!collapsed) {
+                <span class="nav-label">{{ item.label }}</span>
+              }
+            </a>
+          }
+        }
       </div>
     </nav>
-  `,
+    `,
     styles: [`
     .sidebar {
       position: fixed;
