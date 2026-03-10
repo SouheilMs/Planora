@@ -6,6 +6,28 @@ namespace Planora.Infrastructure.Services;
 
 public class LdapService : ILdapService
 {
+    public async Task<bool> AuthenticateAsync(string email, string password)
+    {
+        try
+        {
+            var identifier = new LdapDirectoryIdentifier("localhost", 389);
+            using var connection = new LdapConnection(identifier);
+            
+            connection.SessionOptions.ProtocolVersion = 3;
+            connection.AuthType = AuthType.Basic;
+
+            // Corrected to .com to match your Docker environment
+            var userDn = $"uid={email},ou=users,dc=test,dc=com";
+            
+            // In this library, a successful Bind means authentication passed
+            connection.Bind(new NetworkCredential(userDn, password));
+            return await Task.FromResult(true);
+        }
+        catch
+        {
+            return await Task.FromResult(false);
+        }
+    }
 
     public async Task CreateUserAsync(
         string username,
