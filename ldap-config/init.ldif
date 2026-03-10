@@ -1,0 +1,12 @@
+dn: ou=users,dc=test,dc=com
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=test,dc=com
+objectClass: organizationalUnit
+ou: groups
+
+dn: cn=app_users,ou=groups,dc=test,dc=com
+objectClass: posixGroup
+cn: app_users
+gidNumber: 5000
