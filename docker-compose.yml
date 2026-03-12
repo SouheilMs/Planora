@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  openldap:
+    build:
+      context: ./ldap-config/
+      dockerfile: ./Dockerfile
+    container_name: openldap-server
+    environment:
+      - LDAP_ORGANISATION=test
+      - LDAP_DOMAIN=test.com
+      - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_TLS=false
+    ports:
+      - "389:389"
+      - "636:636"
+    networks:
+      - planora-network
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:latest
+    container_name: phpldapadmin
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=openldap
+      - PHPLDAPADMIN_HTTPS=false
+    ports:
+      - "8069:80"
+    depends_on:
+      - openldap
+    networks:
+      - planora-network
+
+networks:
+  planora-network:
+    driver: bridge

@@ -13,13 +13,15 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly ILdapService _ldapService;
 
-    public AuthService(UserManager<ApplicationUser> userManager, IJwtService jwtService, IConfiguration configuration, ILogger<AuthService> logger)
+    public AuthService(UserManager<ApplicationUser> userManager, IJwtService jwtService, IConfiguration configuration, ILogger<AuthService> logger, ILdapService ldapService)
     {
         _userManager = userManager;
         _jwtService = jwtService;
         _configuration = configuration;
         _logger = logger;
+        _ldapService = ldapService;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -27,6 +29,14 @@ public class AuthService : IAuthService
         var existingUser = await _userManager.FindByEmailAsync(dto.Email);
         if (existingUser != null)
             throw new InvalidOperationException("A user with this email already exists.");
+
+        await _ldapService.CreateUserAsync(
+            dto.UserName,
+            dto.Password,
+            dto.FirstName,
+            dto.LastName,
+            dto.Email
+        );
 
         var user = new ApplicationUser
         {
@@ -37,7 +47,8 @@ public class AuthService : IAuthService
             IsActive = true
         };
 
-        var result = await _userManager.CreateAsync(user, dto.Password);
+        var result = await _userManager.CreateAsync(user);
+
         if (!result.Succeeded)
             throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
 
@@ -48,13 +59,30 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
     {
-        var user = await _userManager.FindByEmailAsync(dto.Email);
-        if (user == null || !user.IsActive)
-            throw new UnauthorizedAccessException("Invalid credentials or account is inactive.");
+        var ldapValid = await _ldapService.AuthenticateAsync(dto.Email, dto.Password);
 
-        var isValid = await _userManager.CheckPasswordAsync(user, dto.Password);
-        if (!isValid)
-            throw new UnauthorizedAccessException("Invalid credentials.");
+        if (!ldapValid)
+            throw new UnauthorizedAccessException("Invalid LDAP credentials.");
+
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+
+        if (user == null)
+        {
+            user = new ApplicationUser
+            {
+                Email = dto.Email,
+                UserName = dto.Email,
+                FirstName = dto.Email,
+                LastName = "",
+                IsActive = true
+            };
+
+            await _userManager.CreateAsync(user);
+            await _userManager.AddToRoleAsync(user, "Member");
+        }
+
+        if (!user.IsActive)
+            throw new UnauthorizedAccessException("Account is inactive.");
 
         return await IssueTokensAsync(user);
     }
