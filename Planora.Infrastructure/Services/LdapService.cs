@@ -15,11 +15,9 @@ public class LdapService : ILdapService
             
             connection.SessionOptions.ProtocolVersion = 3;
             connection.AuthType = AuthType.Basic;
-
-            // Corrected to .com to match your Docker environment
+            
             var userDn = $"uid={email},ou=users,dc=test,dc=com";
             
-            // In this library, a successful Bind means authentication passed
             connection.Bind(new NetworkCredential(userDn, password));
             return await Task.FromResult(true);
         }
@@ -42,7 +40,6 @@ public class LdapService : ILdapService
         connection.SessionOptions.ProtocolVersion = 3;
         connection.AuthType = AuthType.Basic;
         
-        // Corrected admin DN
         connection.Bind(new NetworkCredential("cn=admin,dc=test,dc=com", "admin"));
 
         var dn = $"uid={email},ou=users,dc=test,dc=com";
