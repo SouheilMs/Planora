@@ -18,15 +18,13 @@ import { TaskFormDialogComponent } from './task-form-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
-  selector: 'app-tasks-list',
-  standalone: true,
-  imports: [
-    CommonModule, RouterLink, MatCardModule, MatTableModule,
-    MatButtonModule, MatIconModule, MatChipsModule, MatPaginatorModule,
-    MatSnackBarModule, MatDialogModule, MatTooltipModule, LoadingComponent,
-    ConfirmDialogComponent
-  ],
-  template: `
+    selector: 'app-tasks-list',
+    imports: [
+        CommonModule, RouterLink, MatCardModule, MatTableModule,
+        MatButtonModule, MatIconModule, MatChipsModule, MatPaginatorModule,
+        MatSnackBarModule, MatDialogModule, MatTooltipModule, LoadingComponent
+    ],
+    template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -39,73 +37,83 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
           <mat-icon>add</mat-icon> New Task
         </button>
       </div>
-
+    
       <div class="planora-card">
-        <app-loading *ngIf="loading"></app-loading>
-
-        <ng-container *ngIf="!loading">
-          <div *ngIf="tasks.length === 0" class="empty-state">
-            <mat-icon>task_alt</mat-icon>
-            <h3>No tasks yet</h3>
-            <p>Create your first task for this project</p>
-          </div>
-
-          <table mat-table [dataSource]="tasks" class="planora-table" *ngIf="tasks.length > 0">
-            <ng-container matColumnDef="title">
-              <th mat-header-cell *matHeaderCellDef>Title</th>
-              <td mat-cell *matCellDef="let t">
-                <a [routerLink]="['/projects', projectId, 'tasks', t.id]" class="planora-link">{{ t.title }}</a>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef>Status</th>
-              <td mat-cell *matCellDef="let t">
-                <span class="chip" [ngClass]="getStatusClass(t.status)">{{ getStatusLabel(t.status) }}</span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="priority">
-              <th mat-header-cell *matHeaderCellDef>Priority</th>
-              <td mat-cell *matCellDef="let t">
-                <span class="chip" [ngClass]="getPriorityClass(t.priority)">{{ getPriorityLabel(t.priority) }}</span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="assignedTo">
-              <th mat-header-cell *matHeaderCellDef>Assignee</th>
-              <td mat-cell *matCellDef="let t">
-                <span *ngIf="t.assignedToName" class="assignee">
-                  <span class="assignee-avatar">{{ t.assignedToName[0] }}</span>
-                  {{ t.assignedToName }}
-                </span>
-                <span *ngIf="!t.assignedToName" class="text-secondary">Unassigned</span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="dueDate">
-              <th mat-header-cell *matHeaderCellDef>Due Date</th>
-              <td mat-cell *matCellDef="let t" class="text-secondary">
-                {{ t.dueDate ? (t.dueDate | date:'mediumDate') : '—' }}
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let t" class="actions-cell">
-                <button mat-icon-button (click)="openEdit(t)" matTooltip="Edit">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button class="delete-btn" (click)="deleteTask(t)" *ngIf="canManage" matTooltip="Delete">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-
+        @if (loading) {
+          <app-loading></app-loading>
+        }
+    
+        @if (!loading) {
+          @if (tasks.length === 0) {
+            <div class="empty-state">
+              <mat-icon>task_alt</mat-icon>
+              <h3>No tasks yet</h3>
+              <p>Create your first task for this project</p>
+            </div>
+          }
+          @if (tasks.length > 0) {
+            <table mat-table [dataSource]="tasks" class="planora-table">
+              <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef>Title</th>
+                <td mat-cell *matCellDef="let t">
+                  <a [routerLink]="['/projects', projectId, 'tasks', t.id]" class="planora-link">{{ t.title }}</a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let t">
+                  <span class="chip" [ngClass]="getStatusClass(t.status)">{{ getStatusLabel(t.status) }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="priority">
+                <th mat-header-cell *matHeaderCellDef>Priority</th>
+                <td mat-cell *matCellDef="let t">
+                  <span class="chip" [ngClass]="getPriorityClass(t.priority)">{{ getPriorityLabel(t.priority) }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="assignedTo">
+                <th mat-header-cell *matHeaderCellDef>Assignee</th>
+                <td mat-cell *matCellDef="let t">
+                  @if (t.assignedToName) {
+                    <span class="assignee">
+                      <span class="assignee-avatar">{{ t.assignedToName[0] }}</span>
+                      {{ t.assignedToName }}
+                    </span>
+                  }
+                  @if (!t.assignedToName) {
+                    <span class="text-secondary">Unassigned</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="dueDate">
+                <th mat-header-cell *matHeaderCellDef>Due Date</th>
+                <td mat-cell *matCellDef="let t" class="text-secondary">
+                  {{ t.dueDate ? (t.dueDate | date:'mediumDate') : '—' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let t" class="actions-cell">
+                  <button mat-icon-button (click)="openEdit(t)" matTooltip="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  @if (canManage) {
+                    <button mat-icon-button class="delete-btn" (click)="deleteTask(t)" matTooltip="Delete">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          }
           <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[5,10,20]" (page)="onPageChange($event)"></mat-paginator>
-        </ng-container>
+        }
       </div>
     </div>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .back-btn { color: #6b7280; margin-bottom: 4px; }
     .primary-btn { background: #4f46e5 !important; color: #fff !important; border-radius: 8px !important; }
     .actions-cell { text-align: right; white-space: nowrap; }

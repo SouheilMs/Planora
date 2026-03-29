@@ -10,4 +10,5 @@ public interface IBacklogService
     Task<BacklogItemDto> UpdatePriorityAsync(Guid id, int priority);
     Task<BacklogItemDto> MoveToSprintAsync(Guid id, Guid sprintId);
     Task DeleteBacklogItemAsync(Guid id);
+    Task<BacklogItemDto> RemoveFromSprintAsync(Guid id);
 }

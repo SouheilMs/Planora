@@ -3,10 +3,9 @@ import { RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-auth-layout',
-  standalone: true,
-  imports: [RouterOutlet, MatIconModule],
-  template: `
+    selector: 'app-auth-layout',
+    imports: [RouterOutlet, MatIconModule],
+    template: `
     <div class="auth-layout">
       <div class="auth-branding">
         <div class="auth-logo">
@@ -20,7 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .auth-layout {
       min-height: 100vh;
       display: flex;

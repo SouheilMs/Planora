@@ -1,9 +1,14 @@
-namespace Planora.Application.DTOs.Sprints;
+// Planora.Application.DTOs.Sprints.UpdateSprintDto
+using System;
 
-public class UpdateSprintDto
+namespace Planora.Application.DTOs.Sprints
 {
-    public string Name { get; set; } = string.Empty;
-    public string Goal { get; set; } = string.Empty;
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public class UpdateSprintDto
+    {
+        public string? Name { get; set; }
+        public string? Goal { get; set; }
+        public DateTime? StartDate { get; set; }  // ✅ DateTime? (nullable)
+        public DateTime? EndDate { get; set; }    // ✅ DateTime? (nullable)
+        public int? Status { get; set; }          // ✅ int? (nullable)
+    }
 }

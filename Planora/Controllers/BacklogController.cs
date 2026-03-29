@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Planora.Application.DTOs.Backlog;
 using Planora.Application.DTOs.Common;
 using Planora.Application.Interfaces;
+using Planora.Infrastructure.Data;
+using AutoMapper;
+using System;
+using System.Threading.Tasks;
 
 namespace Planora.Controllers;
 
@@ -12,10 +16,17 @@ namespace Planora.Controllers;
 public class BacklogController : ControllerBase
 {
     private readonly IBacklogService _backlogService;
+    private readonly ApplicationDbContext _context;
+    private readonly IMapper _mapper;
 
-    public BacklogController(IBacklogService backlogService)
+    public BacklogController(
+        IBacklogService backlogService,
+        ApplicationDbContext context,
+        IMapper mapper)
     {
         _backlogService = backlogService;
+        _context = context;
+        _mapper = mapper;
     }
 
     /// <summary>Get backlog for a project</summary>
@@ -31,7 +42,8 @@ public class BacklogController : ControllerBase
     public async Task<IActionResult> GetBacklogItem(Guid id)
     {
         var result = await _backlogService.GetBacklogItemByIdAsync(id);
-        if (result == null) return NotFound(ApiResponseDto<object>.ErrorResult("Backlog item not found."));
+        if (result == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Backlog item not found."));
         return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result));
     }
 
@@ -40,7 +52,8 @@ public class BacklogController : ControllerBase
     public async Task<IActionResult> CreateBacklogItem([FromBody] CreateBacklogItemDto dto)
     {
         var result = await _backlogService.CreateBacklogItemAsync(dto);
-        return CreatedAtAction(nameof(GetBacklogItem), new { id = result.Id }, ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Backlog item created successfully."));
+        return CreatedAtAction(nameof(GetBacklogItem), new { id = result.Id },
+            ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Backlog item created successfully."));
     }
 
     /// <summary>Update backlog item priority</summary>
@@ -57,8 +70,51 @@ public class BacklogController : ControllerBase
     [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> MoveToSprint(Guid id, Guid sprintId)
     {
-        var result = await _backlogService.MoveToSprintAsync(id, sprintId);
-        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Backlog item moved to sprint successfully."));
+        var backlogItem = await _context.BacklogItems.FindAsync(id);
+        if (backlogItem == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Backlog item not found."));
+
+        var sprint = await _context.Sprints.FindAsync(sprintId);
+        if (sprint == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Sprint not found."));
+
+        backlogItem.SprintId = sprintId;
+        backlogItem.Status = 0;
+        backlogItem.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        var backlogItemDto = _mapper.Map<BacklogItemDto>(backlogItem);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(backlogItemDto, "Item moved to sprint successfully."));
+    }
+
+    /// <summary>Update backlog item status (for Kanban drag & drop)</summary>
+    [HttpPatch("{id:guid}/status")]
+    [Authorize(Policy = "ProjectManagerOrAdmin")]
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusDto dto)
+    {
+        Console.WriteLine($"UpdateStatus - id: {id}, status: {dto.Status}");
+
+        var backlogItem = await _context.BacklogItems.FindAsync(id);
+        if (backlogItem == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Backlog item not found."));
+
+        backlogItem.Status = dto.Status;
+        backlogItem.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        var backlogItemDto = _mapper.Map<BacklogItemDto>(backlogItem);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(backlogItemDto, "Status updated successfully."));
+    }
+
+    /// <summary>Remove backlog item from sprint</summary>
+    [HttpPatch("{id:guid}/remove-from-sprint")]
+    [Authorize(Policy = "ProjectManagerOrAdmin")]
+    public async Task<IActionResult> RemoveFromSprint(Guid id)
+    {
+        var result = await _backlogService.RemoveFromSprintAsync(id);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Backlog item removed from sprint successfully."));
     }
 
     /// <summary>Delete backlog item</summary>

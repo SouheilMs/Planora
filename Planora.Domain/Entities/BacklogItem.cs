@@ -5,10 +5,12 @@ public class BacklogItem : BaseEntity
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public int Priority { get; set; } = 0;
+    public int Status { get; set; } = 0; // ✅ AJOUTER - 0: Todo, 1: InProgress, 2: Done
     public Guid ProjectId { get; set; }
     public Guid? SprintId { get; set; }
     public bool IsMovedToSprint { get; set; } = false;
 
     // Navigation properties
     public Project Project { get; set; } = null!;
+    public Sprint? Sprint { get; set; }
 }

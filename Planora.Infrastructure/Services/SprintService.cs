@@ -62,7 +62,28 @@ public class SprintService : ISprintService
     {
         var sprint = await _unitOfWork.Sprints.GetByIdAsync(id) ?? throw new KeyNotFoundException("Sprint not found.");
 
-        _mapper.Map(dto, sprint);
+        // Mettre à jour le nom (string nullable)
+        if (!string.IsNullOrEmpty(dto.Name))
+            sprint.Name = dto.Name;
+
+        // Mettre à jour l'objectif (string nullable)
+        if (dto.Goal != null)
+            sprint.Goal = dto.Goal;
+
+        // ✅ Vérifier si StartDate a une valeur (DateTime nullable)
+        if (dto.StartDate.HasValue)
+            sprint.StartDate = dto.StartDate.Value;
+
+        // ✅ Vérifier si EndDate a une valeur (DateTime nullable)
+        if (dto.EndDate.HasValue)
+            sprint.EndDate = dto.EndDate.Value;
+
+        // ✅ Vérifier si Status a une valeur (int nullable)
+        if (dto.Status.HasValue)
+        {
+            sprint.Status = (SprintStatus)dto.Status.Value;
+        }
+
         sprint.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Sprints.Update(sprint);
         await _unitOfWork.SaveChangesAsync();

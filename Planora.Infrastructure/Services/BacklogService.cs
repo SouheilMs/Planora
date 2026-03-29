@@ -64,6 +64,22 @@ public class BacklogService : IBacklogService
         return _mapper.Map<BacklogItemDto>(item);
     }
 
+    // NOUVELLE MÉTHODE : Retirer du sprint
+    public async Task<BacklogItemDto> RemoveFromSprintAsync(Guid id)
+    {
+        var item = await _unitOfWork.BacklogItems.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException("Backlog item not found.");
+
+        item.SprintId = null;
+        item.IsMovedToSprint = false;
+        item.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.BacklogItems.Update(item);
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<BacklogItemDto>(item);
+    }
+
     public async Task DeleteBacklogItemAsync(Guid id)
     {
         var item = await _unitOfWork.BacklogItems.GetByIdAsync(id) ?? throw new KeyNotFoundException("Backlog item not found.");
