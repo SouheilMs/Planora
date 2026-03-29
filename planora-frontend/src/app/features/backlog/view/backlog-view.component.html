@@ -1,0 +1,156 @@
+<div class="backlog-view">
+  <!-- Header -->
+  <div class="backlog-header">
+    <div class="header-left">
+      <div class="title-icon">
+        <mat-icon>view_kanban</mat-icon>
+      </div>
+      <div>
+        <h1>Backlog et Sprints</h1>
+        <p class="subtitle">Gérez vos tickets et sprints</p>
+      </div>
+    </div>
+  </div>
+
+  <app-loading *ngIf="loading"></app-loading>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- SECTION UNIQUE: SPRINTS -->
+    <div class="sprints-section">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>sprint</mat-icon>
+          <h2>Sprint en cours</h2>
+        </div>
+        <!-- Bouton pour créer un nouveau sprint (visible seulement quand il n'y a pas de sprint) -->
+        <button class="add-sprint-btn" *ngIf="sprints.length === 0" (click)="createNewSprint()">
+          <mat-icon>add</mat-icon>
+          Créer un sprint
+        </button>
+      </div>
+
+      <!-- Afficher le sprint s'il existe (un seul) -->
+      <div class="sprints-kanban" *ngIf="sprints.length > 0">
+        <div class="sprint-column" *ngFor="let sprint of sprints">
+          <div class="sprint-column-header">
+            <div class="sprint-title-row">
+              <span class="sprint-name">{{ sprint.name }}</span>
+              <span class="sprint-badge">{{ getSprintItems(sprint.id).length }} tickets</span>
+            </div>
+            <div class="sprint-status" [ngClass]="getSprintStatusClass(sprint.status)">
+              {{ getSprintStatusLabel(sprint.status) }}
+            </div>
+            <div class="sprint-dates" *ngIf="sprint.startDate">
+              {{ sprint.startDate | date:'dd MMM' }} - {{ sprint.endDate | date:'dd MMM' }}
+            </div>
+            <!-- BOUTON DÉMARRER -->
+            <button class="start-sprint-btn" (click)="startSprint(sprint.id)">
+              <mat-icon>play_arrow</mat-icon>
+              <span>Démarrer le sprint</span>
+            </button>
+          </div>
+
+          <div class="sprint-tickets"
+               cdkDropList
+               [id]="'sprint-' + sprint.id"
+               [cdkDropListData]="getSprintItems(sprint.id)"
+               [cdkDropListConnectedTo]="['backlog-list']"
+               (cdkDropListDropped)="onDrop($event, 'sprint-' + sprint.id)">
+            <div *ngFor="let item of getSprintItems(sprint.id)"
+                 class="sprint-ticket"
+                 cdkDrag
+                 [cdkDragData]="item">
+              <div class="ticket-code">{{ item.id.slice(-6) }}</div>
+              <div class="ticket-title">{{ item.title }}</div>
+              <div class="ticket-footer">
+                <span class="priority-badge-small" [ngClass]="getPriorityClass(item.priority)">
+                  {{ getPriorityLabel(item.priority) }}
+                </span>
+              </div>
+            </div>
+            <div *ngIf="getSprintItems(sprint.id).length === 0" class="empty-sprint-tickets">
+              <mat-icon>drag_indicator</mat-icon>
+              <span>Glissez des tickets ici</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message quand aucun sprint -->
+      <div *ngIf="sprints.length === 0" class="no-sprints-message">
+        <mat-icon>sprint</mat-icon>
+        <p>Aucun sprint en cours</p>
+        <button class="create-sprint-btn-outline" (click)="createNewSprint()">
+          <mat-icon>add</mat-icon>
+          Créer un sprint
+        </button>
+      </div>
+    </div>
+
+    <!-- SECTION BACKLOG -->
+    <div class="backlog-section">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>inbox</mat-icon>
+          <h2>Backlog</h2>
+          <span class="backlog-count">{{ backlogItems.length }} tickets</span>
+        </div>
+        <button class="create-btn" (click)="openCreate()">
+          <mat-icon>add</mat-icon>
+          Créer un ticket
+        </button>
+      </div>
+
+      <div class="backlog-container"
+           cdkDropList
+           id="backlog-list"
+           [cdkDropListData]="backlogItems"
+           [cdkDropListConnectedTo]="getSprintListIds()"
+           (cdkDropListDropped)="onDrop($event, 'backlog-list')">
+
+        <div *ngFor="let item of backlogItems"
+             class="backlog-item"
+             cdkDrag
+             [cdkDragData]="item">
+          <div class="backlog-item-content">
+            <div class="drag-handle" cdkDragHandle>
+              <mat-icon>drag_indicator</mat-icon>
+            </div>
+            <div class="backlog-item-info">
+              <div class="backlog-item-code">#{{ item.id.slice(-6) }}</div>
+              <div class="backlog-item-title">{{ item.title }}</div>
+              <div class="backlog-item-description" *ngIf="item.description">
+                {{ item.description | slice:0:60 }}{{ item.description.length > 60 ? '…' : '' }}
+              </div>
+            </div>
+            <div class="backlog-item-priority">
+              <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
+                {{ getPriorityLabel(item.priority) }}
+              </span>
+            </div>
+            <div class="backlog-item-actions">
+              <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="deleteItem(item)" matTooltip="Supprimer" *ngIf="canManage">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="backlogItems.length === 0" class="empty-backlog">
+          <mat-icon>inbox</mat-icon>
+          <h3>Backlog vide</h3>
+          <p>Créez votre premier ticket pour commencer</p>
+          <button class="create-btn-outline" (click)="openCreate()">
+            <mat-icon>add</mat-icon>
+            Créer un ticket
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

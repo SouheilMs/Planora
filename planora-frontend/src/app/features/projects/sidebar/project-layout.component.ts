@@ -1,41 +1,29 @@
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter } from 'rxjs/operators';
-// CORRECTION: chemins depuis shared/components/sidebar -> src/app
+// CORRECTION: 3 niveaux vers le haut (features/projects/sidebar -> src/app)
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
 
 @Component({
-  selector: 'app-sidebar',
+  selector: 'app-project-sidebar',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    RouterLinkActive,
-    MatIconModule,
-    MatButtonModule,
-    MatTooltipModule
-  ],
-  templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss']
+  imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule, MatButtonModule],
+  templateUrl: './project-sidebar.component.html',
+  styleUrls: ['./project-sidebar.component.scss']
 })
-export class SidebarComponent implements OnInit {
-  @Input() collapsed = false;
-
+export class ProjectSidebarComponent implements OnInit {
   authService = inject(AuthService);
   private projectService = inject(ProjectService);
   private router = inject(Router);
 
   currentProject: any = null;
-  showProjectNav = false;
   userName = '';
   userEmail = '';
   userInitials = '';
-  backlogCount = 0;
 
   ngOnInit(): void {
     const user = this.authService.currentUser;
@@ -48,18 +36,9 @@ export class SidebarComponent implements OnInit {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
-      const url = this.router.url;
-      this.showProjectNav = url.includes('/projects/') &&
-        !url.includes('/projects/list') &&
-        !url.match(/\/projects\/?$/);
-
-      if (this.showProjectNav) {
-        const projectId = this.extractProjectId(url);
-        if (projectId) {
-          this.loadProject(projectId);
-        }
-      } else {
-        this.currentProject = null;
+      const projectId = this.extractProjectId(this.router.url);
+      if (projectId) {
+        this.loadProject(projectId);
       }
     });
   }
@@ -80,10 +59,6 @@ export class SidebarComponent implements OnInit {
         console.error('Erreur chargement projet', err);
       }
     });
-  }
-
-  getProjectColor(): string {
-    return this.currentProject?.color || '#4f46e5';
   }
 
   logout(): void {

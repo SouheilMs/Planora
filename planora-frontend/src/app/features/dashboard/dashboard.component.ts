@@ -1,3 +1,4 @@
+// dashboard.component.ts - Version corrigée
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -18,6 +19,7 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
     CommonModule, RouterLink, MatCardModule, MatProgressBarModule,
     MatTableModule, MatIconModule, MatButtonModule, MatSnackBarModule, LoadingComponent
   ],
+  // Utiliser template au lieu de templateUrl
   template: `
     <div class="page-container">
       <div class="page-header">
@@ -127,7 +129,7 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
               <th mat-header-cell *matHeaderCellDef>Project</th>
               <td mat-cell *matCellDef="let p">
                 <a [routerLink]="['/projects', p.projectId]" class="planora-link">{{ p.projectName }}</a>
-              </td>
+               </td>
             </ng-container>
             <ng-container matColumnDef="totalTasks">
               <th mat-header-cell *matHeaderCellDef>Tasks</th>
@@ -144,7 +146,7 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
                   <mat-progress-bar mode="determinate" [value]="p.progressPercentage"></mat-progress-bar>
                   <span class="pct">{{ p.progressPercentage | number:'1.0-0' }}%</span>
                 </div>
-              </td>
+               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>

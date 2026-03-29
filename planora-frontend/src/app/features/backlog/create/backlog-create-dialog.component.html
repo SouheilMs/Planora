@@ -1,0 +1,62 @@
+<div class="dialog-header">
+  <div class="dialog-icon">
+    <mat-icon>add_task</mat-icon>
+  </div>
+  <h2 mat-dialog-title>Nouvel élément backlog</h2>
+</div>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Titre</mat-label>
+      <input matInput formControlName="title" placeholder="Ex: Implémenter la recherche...">
+      <mat-error *ngIf="form.get('title')?.hasError('required')">Requis</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3" placeholder="Décris la tâche..."></textarea>
+    </mat-form-field>
+
+    <div class="row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Priorité</mat-label>
+        <mat-select formControlName="priority">
+          <mat-option [value]="0">🟢 Faible</mat-option>
+          <mat-option [value]="1">🔵 Moyenne</mat-option>
+          <mat-option [value]="2">🟡 Haute</mat-option>
+          <mat-option [value]="3">🔴 Critique</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Complexité</mat-label>
+        <mat-select formControlName="complexity">
+          <mat-option [value]="0">XS - Très facile</mat-option>
+          <mat-option [value]="1">S - Facile</mat-option>
+          <mat-option [value]="2">M - Moyenne</mat-option>
+          <mat-option [value]="3">L - Difficile</mat-option>
+          <mat-option [value]="4">XL - Très difficile</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Assigné à</mat-label>
+      <mat-select formControlName="assignedToId">
+        <mat-option value="">Non assigné</mat-option>
+        <mat-option *ngFor="let user of users" [value]="user.id">
+          {{ user.fullName }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Annuler</button>
+  <button class="save-btn" (click)="save()" [disabled]="form.invalid || saving">
+    <mat-icon>{{ saving ? 'hourglass_empty' : 'add' }}</mat-icon>
+    {{ saving ? 'Enregistrement...' : 'Ajouter' }}
+  </button>
+</mat-dialog-actions>

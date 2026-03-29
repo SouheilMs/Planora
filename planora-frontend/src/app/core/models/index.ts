@@ -132,14 +132,13 @@ export interface Sprint {
   goal: string;
   startDate: string;
   endDate: string;
-  status: SprintStatus;
+  status: SprintStatus; // Planning, Active, Closed
   projectId: string;
   projectName: string;
   tasksCount: number;
   completedTasksCount: number;
   progressPercentage: number;
 }
-
 export enum SprintStatus {
   Planning = 0,
   Active = 1,
@@ -152,7 +151,9 @@ export interface CreateSprintRequest {
   startDate: string;
   endDate: string;
   projectId: string;
+  status?: number;
 }
+
 
 export interface BacklogItem {
   id: string;
@@ -163,8 +164,15 @@ export interface BacklogItem {
   projectName: string;
   sprintId: string | null;
   sprintName: string | null;
+  status: TaskStatus;  // Déjà présent ✅
+  assignedToName: string;  // Déjà présent ✅
+  progressPercentage: number;  // Déjà présent ✅
+  dueDate: string;  // Déjà présent ✅
+  assignedToId?: string;  // Déjà présent ✅
+  complexity?: number;     // Déjà présent ✅ (0: XS, 1: S, 2: M, 3: L, 4: XL)
+  createdAt?: string;  // Optionnel pour le backlog
+  updatedAt?: string;
 }
-
 export interface CreateBacklogItemRequest {
   title: string;
   description: string;
