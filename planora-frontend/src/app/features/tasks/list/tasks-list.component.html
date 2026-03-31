@@ -1,0 +1,60 @@
+<!-- src/app/features/tasks/list/tasks-list.component.html -->
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Tickets</h1>
+      <p class="subtitle">Tous les tickets du projet (backlog + sprints actifs et terminés)</p>
+    </div>
+    <button mat-raised-button class="primary-btn" (click)="openCreate()">
+      <mat-icon>add</mat-icon> Nouveau ticket
+    </button>
+  </div>
+
+  <div class="tasks-card">
+    @if (loading) {
+    <app-loading></app-loading>
+    }
+
+    @if (!loading) {
+    @if (backlogItems.length === 0) {
+    <div class="empty-state">
+      <mat-icon>task_alt</mat-icon>
+      <h3>Aucun ticket</h3>
+      <p>Créez votre premier ticket</p>
+      <button mat-raised-button color="primary" (click)="openCreate()">
+        <mat-icon>add</mat-icon>
+        Créer un ticket
+      </button>
+    </div>
+    }
+
+    @if (backlogItems.length > 0) {
+    <div class="tasks-grid">
+      @for (item of backlogItems; track item.id) {
+      <app-task-card [task]="{
+                id: item.id,
+                title: item.title,
+                description: item.description,
+                priority: item.priority,
+                status: item.status,
+                assignedToName: item.assignedToName,
+                sprintName: item.sprintName ?? undefined,
+                code: '#' + item.id.slice(-6)
+              }"
+                     [showStatus]="true"
+                     [showSprint]="true"
+                     (onEdit)="openEdit($event)"
+                     (onDelete)="deleteBacklogItem($event)">
+      </app-task-card>
+      }
+    </div>
+    }
+
+    <mat-paginator [length]="totalCount"
+                   [pageSize]="pageSize"
+                   [pageSizeOptions]="[5, 10, 20, 50]"
+                   (page)="onPageChange($event)">
+    </mat-paginator>
+    }
+  </div>
+</div>

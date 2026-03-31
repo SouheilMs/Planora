@@ -25,8 +25,10 @@ public class SprintService : ISprintService
         {
             var dto = _mapper.Map<SprintDto>(s);
             var tasks = s.Tasks.ToList();
+            dto.TasksCount = tasks.Count;
+            dto.CompletedTasksCount = tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done);
             dto.ProgressPercentage = tasks.Count > 0
-                ? Math.Round((double)tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done) / tasks.Count * 100, 2)
+                ? Math.Round((double)dto.CompletedTasksCount / tasks.Count * 100, 2)
                 : 0;
             return dto;
         });
@@ -39,8 +41,10 @@ public class SprintService : ISprintService
 
         var dto = _mapper.Map<SprintDto>(sprint);
         var tasks = sprint.Tasks.ToList();
+        dto.TasksCount = tasks.Count;
+        dto.CompletedTasksCount = tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done);
         dto.ProgressPercentage = tasks.Count > 0
-            ? Math.Round((double)tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done) / tasks.Count * 100, 2)
+            ? Math.Round((double)dto.CompletedTasksCount / tasks.Count * 100, 2)
             : 0;
         return dto;
     }
@@ -50,56 +54,69 @@ public class SprintService : ISprintService
         var sprint = _mapper.Map<Sprint>(dto);
         sprint.Id = Guid.NewGuid();
         sprint.CreatedAt = DateTime.UtcNow;
-        sprint.Status = SprintStatus.Planning;
+        sprint.Status = Domain.Enums.SprintStatus.Planning; // ✅ Spécifier explicitement
 
         await _unitOfWork.Sprints.AddAsync(sprint);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<SprintDto>(sprint);
+        var result = _mapper.Map<SprintDto>(sprint);
+        result.TasksCount = 0;
+        result.CompletedTasksCount = 0;
+        result.ProgressPercentage = 0;
+        return result;
     }
 
     public async Task<SprintDto> UpdateSprintAsync(Guid id, UpdateSprintDto dto)
     {
         var sprint = await _unitOfWork.Sprints.GetByIdAsync(id) ?? throw new KeyNotFoundException("Sprint not found.");
 
-        // Mettre à jour le nom (string nullable)
         if (!string.IsNullOrEmpty(dto.Name))
             sprint.Name = dto.Name;
 
-        // Mettre à jour l'objectif (string nullable)
         if (dto.Goal != null)
             sprint.Goal = dto.Goal;
 
-        // ✅ Vérifier si StartDate a une valeur (DateTime nullable)
         if (dto.StartDate.HasValue)
             sprint.StartDate = dto.StartDate.Value;
 
-        // ✅ Vérifier si EndDate a une valeur (DateTime nullable)
         if (dto.EndDate.HasValue)
             sprint.EndDate = dto.EndDate.Value;
 
-        // ✅ Vérifier si Status a une valeur (int nullable)
         if (dto.Status.HasValue)
         {
-            sprint.Status = (SprintStatus)dto.Status.Value;
+            sprint.Status = (Domain.Enums.SprintStatus)dto.Status.Value; // ✅ Spécifier explicitement
         }
 
         sprint.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Sprints.Update(sprint);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<SprintDto>(sprint);
+        var result = _mapper.Map<SprintDto>(sprint);
+        var tasks = sprint.Tasks.ToList();
+        result.TasksCount = tasks.Count;
+        result.CompletedTasksCount = tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done);
+        result.ProgressPercentage = tasks.Count > 0
+            ? Math.Round((double)result.CompletedTasksCount / tasks.Count * 100, 2)
+            : 0;
+        return result;
     }
 
     public async Task<SprintDto> CloseSprintAsync(Guid id)
     {
         var sprint = await _unitOfWork.Sprints.GetByIdAsync(id) ?? throw new KeyNotFoundException("Sprint not found.");
-        sprint.Status = SprintStatus.Closed;
+        sprint.Status = Domain.Enums.SprintStatus.Closed; // ✅ Spécifier explicitement
         sprint.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Sprints.Update(sprint);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<SprintDto>(sprint);
+        var result = _mapper.Map<SprintDto>(sprint);
+        var tasks = sprint.Tasks.ToList();
+        result.TasksCount = tasks.Count;
+        result.CompletedTasksCount = tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done);
+        result.ProgressPercentage = tasks.Count > 0
+            ? Math.Round((double)result.CompletedTasksCount / tasks.Count * 100, 2)
+            : 0;
+        return result;
     }
 
     public async Task DeleteSprintAsync(Guid id)
@@ -109,5 +126,27 @@ public class SprintService : ISprintService
         sprint.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Sprints.Update(sprint);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<SprintDto>> GetCompletedSprintsAsync(Guid projectId)
+    {
+        var allSprints = await _unitOfWork.Sprints.FindAsync(s => s.ProjectId == projectId);
+
+        var completedSprints = allSprints
+            .Where(s => s.Status == Domain.Enums.SprintStatus.Closed) // ✅ Spécifier explicitement
+            .OrderByDescending(s => s.EndDate)
+            .ToList();
+
+        return completedSprints.Select(sprint =>
+        {
+            var dto = _mapper.Map<SprintDto>(sprint);
+            var tasks = sprint.Tasks.ToList();
+            dto.TasksCount = tasks.Count;
+            dto.CompletedTasksCount = tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done);
+            dto.ProgressPercentage = tasks.Count > 0
+                ? Math.Round((double)dto.CompletedTasksCount / tasks.Count * 100, 2)
+                : 0;
+            return dto;
+        });
     }
 }

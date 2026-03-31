@@ -67,6 +67,23 @@ export const routes: Routes = [
         loadComponent: () => import('./features/sprints/board/sprint-board.component').then(m => m.SprintBoardComponent)
       },
 
+      // Sprint History (liste des sprints terminés)
+      {
+        path: 'projects/:projectId/history',
+        loadComponent: () => import('./features/sprints/history/sprint-history.component').then(m => m.SprintHistoryComponent)
+      },
+
+      // Sprint Detail (détails d'un sprint terminé avec tableau des tickets)
+      {
+        path: 'projects/:projectId/history/:sprintId',
+        loadComponent: () => import('./features/sprints/history/details/sprint-detail.component').then(m => m.SprintDetailComponent)
+      },
+ 
+      {
+        path: 'tasks',
+        loadComponent: () => import('./features/tasks/list/tasks-list.component').then(m => m.TasksListComponent)
+      },
+
       // Users (admin only)
       {
         path: 'users',

@@ -1,3 +1,4 @@
+// Planora.Infrastructure/Services/TaskService.cs
 using AutoMapper;
 using Planora.Application.DTOs.Common;
 using Planora.Application.DTOs.Tasks;
@@ -21,6 +22,38 @@ public class TaskService : ITaskService
     public async Task<PaginatedResultDto<TaskDto>> GetTasksAsync(Guid projectId, int page, int pageSize)
     {
         var (tasks, total) = await _unitOfWork.Tasks.GetPagedAsync(t => t.ProjectId == projectId, page, pageSize);
+        var dtos = _mapper.Map<IEnumerable<TaskDto>>(tasks);
+
+        return new PaginatedResultDto<TaskDto>
+        {
+            Items = dtos,
+            TotalCount = total,
+            PageNumber = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<PaginatedResultDto<TaskDto>> GetAllTasksAsync(int page, int pageSize)
+    {
+        var (tasks, total) = await _unitOfWork.Tasks.GetPagedAsync(t => !t.IsDeleted, page, pageSize);
+        var dtos = _mapper.Map<IEnumerable<TaskDto>>(tasks);
+
+        return new PaginatedResultDto<TaskDto>
+        {
+            Items = dtos,
+            TotalCount = total,
+            PageNumber = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<PaginatedResultDto<TaskDto>> GetTasksByProjectIncludingClosedSprintsAsync(Guid projectId, int page, int pageSize)
+    {
+        var (tasks, total) = await _unitOfWork.Tasks.GetPagedAsync(
+            t => t.ProjectId == projectId && !t.IsDeleted,
+            page,
+            pageSize);
+
         var dtos = _mapper.Map<IEnumerable<TaskDto>>(tasks);
 
         return new PaginatedResultDto<TaskDto>

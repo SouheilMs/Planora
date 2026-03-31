@@ -77,7 +77,66 @@ h2 {
   .save-btn mat-icon {
     font-size: 18px;
   }
+/* src/app/features/backlog/create/backlog-create-dialog.component.css */
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
 
+.dialog-icon {
+  background: #4f46e5;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+  .dialog-icon mat-icon {
+    color: white;
+  }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 450px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.half-width {
+  width: calc(50% - 8px);
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.save-btn {
+  background: #4f46e5 !important;
+  color: white !important;
+}
+
+@media (max-width: 600px) {
+  .row {
+    flex-direction: column;
+  }
+
+  .half-width {
+    width: 100%;
+  }
+
+  .form {
+    min-width: auto;
+  }
+}
   .save-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;

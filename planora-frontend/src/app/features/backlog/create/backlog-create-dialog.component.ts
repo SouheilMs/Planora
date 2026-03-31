@@ -22,7 +22,7 @@ import { User } from '../../../core/models';
     MatSelectModule, MatSnackBarModule, MatIconModule
   ],
   templateUrl: './backlog-create-dialog.component.html',
-  styleUrls: ['./backlog-create-dialog.component.css']
+  styleUrls: ['./backlog-create-dialog.component.scss']
 })
 export class BacklogCreateDialogComponent {
   private fb = inject(FormBuilder);

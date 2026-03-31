@@ -85,7 +85,10 @@ export class SidebarComponent implements OnInit {
   getProjectColor(): string {
     return this.currentProject?.color || '#4f46e5';
   }
-
+  // dashboard.component.ts
+  goToAllTasks(): void {
+    this.router.navigate(['/tasks/all']);
+  }
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);

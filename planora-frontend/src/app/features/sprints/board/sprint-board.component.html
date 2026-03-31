@@ -17,8 +17,8 @@
       </button>
       <button class="complete-sprint-btn"
               (click)="completeSprint()"
-              [disabled]="(todoItems.length + inProgressItems.length) > 0"
-              matTooltip="Terminer le sprint">
+              [disabled]="isCompleteButtonDisabled()"
+              matTooltip="{{ getCompleteButtonTooltip() }}">
         <mat-icon>check_circle</mat-icon>
         Terminer le sprint
       </button>

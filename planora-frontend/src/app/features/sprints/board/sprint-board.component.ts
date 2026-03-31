@@ -83,7 +83,53 @@ export class SprintBoardComponent implements OnInit {
   completeSprint(): void {
     if (!this.selectedSprintId) return;
 
-    const allTasksDone = this.doneItems.length === (this.todoItems.length + this.inProgressItems.length + this.doneItems.length);
+    // Vérifier si le sprint est déjà actif ou en planning
+    const currentSprint = this.sprints.find(s => s.id === this.selectedSprintId);
+
+    if (currentSprint?.status === SprintStatus.Planning) {
+      // Pour un sprint en planning, on peut soit le démarrer, soit le supprimer
+      const confirmDialog = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          title: 'Sprint non démarré',
+          message: `Ce sprint n'est pas encore démarré. Voulez-vous le démarrer ou le supprimer ?`,
+          confirmLabel: 'Démarrer',
+          cancelLabel: 'Supprimer',
+          danger: false
+        }
+      });
+
+      confirmDialog.afterClosed().subscribe((confirmed: boolean) => {
+        if (confirmed) {
+          // Démarrer le sprint
+          this.sprintService.startSprint(this.selectedSprintId!).subscribe({
+            next: () => {
+              this.loadSprints();
+              this.snackBar.open('Sprint démarré !', 'Fermer', { duration: 3000 });
+            },
+            error: () => {
+              this.snackBar.open('Erreur lors du démarrage', 'Fermer', { duration: 3000 });
+            }
+          });
+        } else {
+          // Supprimer le sprint
+          this.sprintService.deleteSprint(this.selectedSprintId!).subscribe({
+            next: () => {
+              this.loadSprints();
+              this.snackBar.open('Sprint supprimé', 'Fermer', { duration: 3000 });
+            },
+            error: () => {
+              this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
+            }
+          });
+        }
+      });
+      return;
+    }
+
+    // Comportement normal pour un sprint actif
+    const allTasksDone = this.doneItems.length ===
+      (this.todoItems.length + this.inProgressItems.length + this.doneItems.length);
 
     if (!allTasksDone) {
       this.snackBar.open('Toutes les tâches doivent être terminées avant de fermer le sprint', 'Fermer', { duration: 3000 });
@@ -103,21 +149,20 @@ export class SprintBoardComponent implements OnInit {
     confirmDialog.afterClosed().subscribe((confirmed: boolean) => {
       if (!confirmed) return;
 
-      this.sprintService.updateSprintStatus(this.selectedSprintId!, SprintStatus.Closed).subscribe({
+      this.sprintService.closeSprint(this.selectedSprintId!).subscribe({
         next: (response: any) => {
           if (response.success) {
-            this.snackBar.open('Sprint terminé !', 'Fermer', { duration: 3000 });
-            this.router.navigate(['/projects', this.projectId, 'backlog']);
+            this.snackBar.open('✓ Sprint terminé !', 'Fermer', { duration: 3000 });
+            this.loadSprints();
           }
         },
         error: () => {
-          this.snackBar.open('Erreur lors de la fermeture du sprint', 'Fermer', { duration: 3000 });
+          this.snackBar.open('Erreur lors de la fermeture', 'Fermer', { duration: 3000 });
         }
       });
     });
   }
 
-  // ✅ Méthode corrigée avec typage explicite
   fixTicketStatuses(): void {
     console.log('=== CORRECTION DES STATUTS ===');
     this.backlogService.getBacklogByProject(this.projectId).subscribe({
@@ -158,12 +203,15 @@ export class SprintBoardComponent implements OnInit {
     });
   }
 
+  // sprint-board.component.ts
   loadSprints(): void {
     this.loading = true;
     this.sprintService.getSprintsByProject(this.projectId).subscribe({
       next: (response: ApiResponse<Sprint[]>) => {
         if (response.success) {
-          this.sprints = response.data;
+          // ✅ Afficher TOUS les sprints (Planning + Active)
+          // Exclure seulement les sprints fermés (Closed)
+          this.sprints = response.data.filter(s => s.status !== SprintStatus.Closed);
 
           if (this.selectedSprintId) {
             const sprintExists = this.sprints.some(s => s.id === this.selectedSprintId);
@@ -174,14 +222,9 @@ export class SprintBoardComponent implements OnInit {
             }
           }
 
-          const activeSprint = this.sprints.find(s => s.status === SprintStatus.Active);
-          if (activeSprint) {
-            this.selectedSprintId = activeSprint.id;
-          } else if (this.sprints.length > 0) {
+          // Sélectionner le premier sprint (peu importe son statut)
+          if (this.sprints.length > 0) {
             this.selectedSprintId = this.sprints[0].id;
-          }
-
-          if (this.selectedSprintId) {
             this.loadSprintItems();
           } else {
             this.loading = false;
@@ -196,7 +239,6 @@ export class SprintBoardComponent implements OnInit {
       }
     });
   }
-
   loadSprintItems(): void {
     if (!this.selectedSprintId) {
       console.log('Aucun sprint sélectionné');
@@ -209,29 +251,19 @@ export class SprintBoardComponent implements OnInit {
     this.backlogService.getBacklogByProject(this.projectId).subscribe({
       next: (response: ApiResponse<BacklogItem[]>) => {
         if (response.success) {
-          // Filtrer les items du sprint sélectionné
           const itemsInSprint = response.data.filter((item: BacklogItem) => item.sprintId === this.selectedSprintId);
 
-          // ✅ Forcer le statut à Todo pour les tickets qui n'ont pas de statut valide
           itemsInSprint.forEach((item: BacklogItem) => {
             if (item.status === undefined || item.status === null ||
               (item.status !== TaskStatus.Todo && item.status !== TaskStatus.InProgress && item.status !== TaskStatus.Done)) {
-              console.log(`Forçage du statut pour: ${item.title} (ancien: ${item.status})`);
               item.status = TaskStatus.Todo;
             }
           });
 
-          // Répartir selon le statut
           this.todoItems = itemsInSprint.filter((item: BacklogItem) => item.status === TaskStatus.Todo);
           this.inProgressItems = itemsInSprint.filter((item: BacklogItem) => item.status === TaskStatus.InProgress);
           this.doneItems = itemsInSprint.filter((item: BacklogItem) => item.status === TaskStatus.Done);
 
-          console.log('=== RÉPARTITION APRÈS CORRECTION ===');
-          console.log('Todo:', this.todoItems.length);
-          console.log('InProgress:', this.inProgressItems.length);
-          console.log('Done:', this.doneItems.length);
-
-          // Forcer la détection des changements
           this.todoItems = [...this.todoItems];
           this.inProgressItems = [...this.inProgressItems];
           this.doneItems = [...this.doneItems];
@@ -249,7 +281,10 @@ export class SprintBoardComponent implements OnInit {
     this.selectedSprintId = sprintId;
     this.loadSprintItems();
   }
+  
 
+
+ 
   onDrop(event: CdkDragDrop<BacklogItem[]>, newStatus: TaskStatus): void {
     if (event.previousContainer === event.container) {
       return;
@@ -347,4 +382,44 @@ export class SprintBoardComponent implements OnInit {
     const classes = ['planning', 'active', 'closed'];
     return classes[status] ?? '';
   }
+  isCompleteButtonDisabled(): boolean {
+    if (!this.selectedSprint) return true;
+
+    // Sprint en Planning → désactiver
+    if (this.selectedSprint.status === SprintStatus.Planning) {
+      return true;
+    }
+
+    // Sprint Actif → désactiver si des tâches non terminées
+    if (this.selectedSprint.status === SprintStatus.Active) {
+      const hasUnfinishedTasks = (this.todoItems.length + this.inProgressItems.length) > 0;
+      return hasUnfinishedTasks;
+    }
+
+    // Sprint déjà fermé → désactiver
+    return true;
+  }
+
+  getCompleteButtonTooltip(): string {
+    if (!this.selectedSprint) return '';
+
+    if (this.selectedSprint.status === SprintStatus.Planning) {
+      return '📋 Ce sprint n\'est pas encore démarré. Allez dans le Backlog pour le démarrer.';
+    }
+
+    if (this.selectedSprint.status === SprintStatus.Active) {
+      const unfinishedCount = this.todoItems.length + this.inProgressItems.length;
+      if (unfinishedCount > 0) {
+        return `⚠️ ${unfinishedCount} tâche(s) non terminée(s). Déplacez toutes les tâches vers "Terminé" avant de fermer le sprint.`;
+      }
+      return '✅ Terminer ce sprint';
+    }
+
+    return '';
+  }
+  goToHistory(): void {
+    this.router.navigate(['/projects', this.projectId, 'history']);
+  }
+
+
 }

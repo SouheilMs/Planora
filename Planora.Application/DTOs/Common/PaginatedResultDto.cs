@@ -1,8 +1,11 @@
+// Planora.Application/DTOs/Common/PaginatedResultDto.cs
+using System.Collections.Generic;
+
 namespace Planora.Application.DTOs.Common;
 
 public class PaginatedResultDto<T>
 {
-    public IEnumerable<T> Items { get; set; } = Enumerable.Empty<T>();
+    public IEnumerable<T> Items { get; set; } = new List<T>();
     public int TotalCount { get; set; }
     public int PageNumber { get; set; }
     public int PageSize { get; set; }

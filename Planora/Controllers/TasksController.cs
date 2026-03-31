@@ -83,6 +83,21 @@ public class TasksController : ControllerBase
         return Ok(ApiResponseDto<CommentDto>.SuccessResult(result, "Comment added successfully."));
     }
 
+    /// <summary>Get all tasks (no project filter)</summary>
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllTasks([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var result = await _taskService.GetAllTasksAsync(page, pageSize);
+        return Ok(ApiResponseDto<object>.SuccessResult(result));
+    }
+   
+    /// <summary>Get tasks for a project including closed sprints</summary>
+    [HttpGet("project/{projectId:guid}/all-tasks")]
+    public async Task<IActionResult> GetTasksIncludingClosedSprints(Guid projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var result = await _taskService.GetTasksByProjectIncludingClosedSprintsAsync(projectId, page, pageSize);
+        return Ok(ApiResponseDto<object>.SuccessResult(result));
+    }
     /// <summary>Delete a comment</summary>
     [HttpDelete("{taskId:guid}/comments/{commentId:guid}")]
     public async Task<IActionResult> DeleteComment(Guid taskId, Guid commentId)

@@ -59,7 +59,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // CORS – allowed origins are configurable via Cors:AllowedOrigins in appsettings
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:4200"];
+    ?? ["http://localhost:4200", "http://localhost:5000"];
 
 builder.Services.AddCors(options =>
 {
@@ -69,6 +69,7 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials());
 });
+
 static async Task SeedAdminUser(IServiceProvider services)
 {
     var userManager = services.GetRequiredService<UserManager<Planora.Domain.Entities.ApplicationUser>>();
@@ -87,6 +88,7 @@ static async Task SeedAdminUser(IServiceProvider services)
     await userManager.CreateAsync(admin, "Admin@1234");
     await userManager.AddToRoleAsync(admin, "Admin");
 }
+
 var app = builder.Build();
 
 // Apply pending migrations and seed roles
@@ -103,11 +105,8 @@ using (var scope = app.Services.CreateScope())
 // Middleware pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Planora API v1"));
-}
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Planora API v1"));
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAngularApp");

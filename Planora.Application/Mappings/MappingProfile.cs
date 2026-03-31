@@ -1,3 +1,4 @@
+// Planora.Application/Mappings/MappingProfile.cs
 using AutoMapper;
 using Planora.Application.DTOs.Auth;
 using Planora.Application.DTOs.Backlog;
@@ -56,14 +57,22 @@ public class MappingProfile : Profile
 
         // Sprint mappings
         CreateMap<Sprint, SprintDto>()
-            .ForMember(dest => dest.TaskCount, opt => opt.MapFrom(src => src.Tasks.Count))
+            .ForMember(dest => dest.TasksCount, opt => opt.MapFrom(src => src.Tasks.Count))
+            .ForMember(dest => dest.CompletedTasksCount, opt => opt.MapFrom(src =>
+                src.Tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done)))
             .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore());
 
         CreateMap<CreateSprintDto, Sprint>();
         CreateMap<UpdateSprintDto, Sprint>();
 
-        // BacklogItem mappings
-        CreateMap<BacklogItem, BacklogItemDto>();
+        // ✅ BacklogItem mappings CORRIGÉ - Ajoute le mapping pour SprintName
+        CreateMap<BacklogItem, BacklogItemDto>()
+            .ForMember(dest => dest.SprintName, opt => opt.MapFrom(src =>
+                src.Sprint != null ? src.Sprint.Name : null))
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src =>
+                src.Project != null ? src.Project.Name : null))
+            .ForMember(dest => dest.AssignedToName, opt => opt.Ignore()); // À mapper si nécessaire
+
         CreateMap<CreateBacklogItemDto, BacklogItem>();
     }
 }

@@ -1,0 +1,256 @@
+// src/app/features/sprints/history/sprint-history.component.scss
+.history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.history-header {
+  margin-bottom: 32px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-btn {
+  margin-left: -12px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin: 0;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+}
+
+  .stat-card .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #4f46e5;
+  }
+
+  .stat-card .stat-label {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 8px;
+  }
+
+.sprints-timeline {
+  position: relative;
+  padding-left: 40px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 16px;
+  top: 20px;
+  bottom: 20px;
+  width: 2px;
+  background: linear-gradient(to bottom, #4f46e5, #818cf8);
+}
+
+.sprint-card {
+  position: relative;
+  display: flex;
+  margin-bottom: 32px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -40px;
+  top: 24px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px #e5e7eb;
+}
+
+.sprint-content {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s;
+}
+
+  .sprint-content:hover {
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+.sprint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sprint-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+  .sprint-title mat-icon {
+    color: #4f46e5;
+  }
+
+  .sprint-title h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+.sprint-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+  .sprint-status.closed {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+.sprint-goal, .sprint-dates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+  .sprint-goal mat-icon, .sprint-dates mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+.sprint-stats {
+  display: flex;
+  gap: 24px;
+  margin: 16px 0;
+  padding: 12px 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+  .stat-item .stat-label {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .stat-item .stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+    .stat-item .stat-value.success {
+      color: #10b981;
+    }
+
+.sprint-progress {
+  margin: 16px 0;
+}
+
+.view-sprint-btn {
+  width: 100%;
+  padding: 8px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  transition: background 0.2s;
+}
+
+  .view-sprint-btn:hover {
+    background: #e5e7eb;
+  }
+
+.empty-history {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+  .empty-history mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+  }
+
+  .empty-history h3 {
+    margin: 0 0 8px 0;
+    color: #374151;
+  }
+
+  .empty-history p {
+    color: #6b7280;
+    margin-bottom: 24px;
+  }
+
+@media (max-width: 768px) {
+  .history-container {
+    padding: 16px;
+  }
+
+  .sprints-timeline {
+    padding-left: 20px;
+  }
+
+  .timeline-line {
+    left: 0;
+  }
+
+  .timeline-dot {
+    left: -24px;
+  }
+}

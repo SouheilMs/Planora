@@ -1,3 +1,4 @@
+// src/app/core/services/task.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -12,6 +13,16 @@ export class TaskService {
   getTasksByProject(projectId: string, page = 1, pageSize = 10): Observable<ApiResponse<PagedResult<Task>>> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<ApiResponse<PagedResult<Task>>>(`${this.apiUrl}/project/${projectId}`, { params });
+  }
+ 
+
+  getTasksByProjectIncludingClosedSprints(projectId: string, page = 1, pageSize = 10): Observable<ApiResponse<PagedResult<Task>>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<PagedResult<Task>>>(`${this.apiUrl}/project/${projectId}/all-tasks`, { params });
+  }
+  getAllTasks(page = 1, pageSize = 10): Observable<ApiResponse<PagedResult<Task>>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<PagedResult<Task>>>(`${this.apiUrl}/all`, { params });
   }
 
   getTask(id: string): Observable<ApiResponse<Task>> {

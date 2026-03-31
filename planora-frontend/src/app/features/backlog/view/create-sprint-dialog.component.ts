@@ -31,9 +31,7 @@ import { SprintService } from '../../../core/services/sprint.service';
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Nom du sprint</mat-label>
           <input matInput formControlName="name" placeholder="Ex: Sprint 1" autofocus>
-          <mat-error *ngIf="sprintForm.get('name')?.hasError('required')">
-            Le nom est requis
-          </mat-error>
+          <mat-error *ngIf="sprintForm.get('name')?.hasError('required')">Le nom est requis</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -67,33 +65,14 @@ import { SprintService } from '../../../core/services/sprint.service';
     </mat-dialog-actions>
   `,
   styles: [`
-    .sprint-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      min-width: 450px;
-      padding-top: 8px;
-    }
-    .full-width {
-      width: 100%;
-    }
-    .date-row {
-      display: flex;
-      gap: 16px;
-    }
-    .half-width {
-      width: calc(50% - 8px);
-    }
+    .sprint-form { display: flex; flex-direction: column; gap: 16px; min-width: 450px; padding-top: 8px; }
+    .full-width { width: 100%; }
+    .date-row { display: flex; gap: 16px; }
+    .half-width { width: calc(50% - 8px); }
     @media (max-width: 600px) {
-      .date-row {
-        flex-direction: column;
-      }
-      .half-width {
-        width: 100%;
-      }
-      .sprint-form {
-        min-width: auto;
-      }
+      .date-row { flex-direction: column; }
+      .half-width { width: 100%; }
+      .sprint-form { min-width: auto; }
     }
   `]
 })

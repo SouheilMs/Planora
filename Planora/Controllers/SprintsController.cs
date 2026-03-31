@@ -64,7 +64,6 @@ public class SprintsController : ControllerBase
     [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> UpdateSprint(Guid id, [FromBody] UpdateSprintDto dto)
     {
-        // ✅ Pas besoin de conversion, dto.Status est déjà de type SprintStatus?
         var result = await _sprintService.UpdateSprintAsync(id, dto);
         return Ok(ApiResponseDto<SprintDto>.SuccessResult(result, "Sprint updated successfully."));
     }
@@ -78,7 +77,7 @@ public class SprintsController : ControllerBase
         if (sprint == null)
             return NotFound(ApiResponseDto<object>.ErrorResult("Sprint not found."));
 
-        sprint.Status = SprintStatus.Closed;
+        sprint.Status = Domain.Enums.SprintStatus.Closed; // ✅ Spécifier explicitement
         sprint.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -105,12 +104,20 @@ public class SprintsController : ControllerBase
         if (sprint == null)
             return NotFound(ApiResponseDto<object>.ErrorResult("Sprint not found."));
 
-        sprint.Status = SprintStatus.Active;
+        sprint.Status = Domain.Enums.SprintStatus.Active; // ✅ Spécifier explicitement
         sprint.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 
         var sprintDto = _mapper.Map<SprintDto>(sprint);
         return Ok(ApiResponseDto<SprintDto>.SuccessResult(sprintDto, "Sprint started successfully."));
+    }
+
+    /// <summary>Get completed sprints for a project</summary>
+    [HttpGet("project/{projectId:guid}/completed")]
+    public async Task<IActionResult> GetCompletedSprints(Guid projectId)
+    {
+        var result = await _sprintService.GetCompletedSprintsAsync(projectId);
+        return Ok(ApiResponseDto<object>.SuccessResult(result));
     }
 }

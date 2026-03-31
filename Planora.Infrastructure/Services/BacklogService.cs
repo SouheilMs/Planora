@@ -64,7 +64,6 @@ public class BacklogService : IBacklogService
         return _mapper.Map<BacklogItemDto>(item);
     }
 
-    // NOUVELLE MÉTHODE : Retirer du sprint
     public async Task<BacklogItemDto> RemoveFromSprintAsync(Guid id)
     {
         var item = await _unitOfWork.BacklogItems.GetByIdAsync(id)

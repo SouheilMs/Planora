@@ -1,4 +1,4 @@
-// backlog-view.component.ts - Version complète avec tous les imports
+// src/app/features/backlog/view/backlog-view.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -7,17 +7,20 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { BacklogService } from '../../../core/services/backlog.service';
 import { SprintService } from '../../../core/services/sprint.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { BacklogItem, TaskPriority, TaskStatus, Sprint, SprintStatus } from '../../../core/models'; // ✅ AJOUT TaskStatus
+import { BacklogItem, TaskPriority, TaskStatus, Sprint, SprintStatus } from '../../../core/models';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { AssignUserDialogComponent } from './assign-user-dialog.component';
+import { StoryPointsDialogComponent } from './story-points-dialog.component';
 import { BacklogCreateDialogComponent } from '../create/backlog-create-dialog.component';
 import { CreateSprintDialogComponent } from './create-sprint-dialog.component';
+import { ComplexityDialogComponent } from './complexity-dialog.component';
 
 @Component({
   selector: 'app-backlog-view',
@@ -28,8 +31,8 @@ import { CreateSprintDialogComponent } from './create-sprint-dialog.component';
     MatButtonModule,
     MatDialogModule,
     MatTooltipModule,
-    MatTableModule,
-    MatChipsModule,
+    MatMenuModule,
+    MatDividerModule,
     DragDropModule,
     LoadingComponent,
     CreateSprintDialogComponent
@@ -51,10 +54,8 @@ export class BacklogViewComponent implements OnInit {
   sprints: Sprint[] = [];
   sprintItemsMap: Map<string, BacklogItem[]> = new Map();
   loading = true;
-  displayedColumns: string[] = ['ticket', 'assignee', 'priority', 'complexity', 'actions'];
 
-  readonly sprintColors = ['#6366f1', '#059669', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
-  readonly sprintColorsLight = ['#ede9fe', '#d1fae5', '#fef3c7', '#fee2e2', '#cffafe', '#fce7f3'];
+  private openSections = new Set<string>(['backlog']);
 
   get canManage(): boolean {
     return this.authService.hasRole(['Admin', 'ProjectManager']);
@@ -70,16 +71,15 @@ export class BacklogViewComponent implements OnInit {
     this.sprintService.getSprintsByProject(this.projectId).subscribe({
       next: (response: any) => {
         if (response.success) {
-          // Afficher uniquement les sprints en PLANNING
           this.sprints = response.data.filter((s: Sprint) => s.status === SprintStatus.Planning);
-          this.sprints.forEach(s => this.sprintItemsMap.set(s.id, []));
+          this.sprints.forEach(s => {
+            this.sprintItemsMap.set(s.id, []);
+            this.openSections.add(s.id);
+          });
         }
         this.loadBacklogItems();
       },
-      error: () => {
-        console.error('Erreur chargement sprints');
-        this.loadBacklogItems();
-      }
+      error: () => this.loadBacklogItems()
     });
   }
 
@@ -90,7 +90,10 @@ export class BacklogViewComponent implements OnInit {
         if (response.success) {
           this.backlogItems = response.data.filter((item: BacklogItem) => !item.sprintId);
           this.sprints.forEach(sprint => {
-            this.sprintItemsMap.set(sprint.id, response.data.filter((item: BacklogItem) => item.sprintId === sprint.id));
+            this.sprintItemsMap.set(
+              sprint.id,
+              response.data.filter((item: BacklogItem) => item.sprintId === sprint.id)
+            );
           });
         }
       },
@@ -101,6 +104,20 @@ export class BacklogViewComponent implements OnInit {
     });
   }
 
+  // ===== SECTION TOGGLE =====
+  toggleSprint(id: string): void {
+    if (this.openSections.has(id)) {
+      this.openSections.delete(id);
+    } else {
+      this.openSections.add(id);
+    }
+  }
+
+  isSectionOpen(id: string): boolean {
+    return this.openSections.has(id);
+  }
+
+  // ===== SPRINT HELPERS =====
   getSprintItems(sprintId: string): BacklogItem[] {
     return this.sprintItemsMap.get(sprintId) ?? [];
   }
@@ -109,33 +126,190 @@ export class BacklogViewComponent implements OnInit {
     return this.sprints.map(s => 'sprint-' + s.id);
   }
 
-  getAllListIds(excludeId: string): string[] {
-    const ids = ['backlog-list', ...this.sprints.map(s => 'sprint-' + s.id)];
-    return ids.filter(id => id !== excludeId);
+  getSprintTicketsByStatus(sprintId: string, status: number): number {
+    return this.getSprintItems(sprintId).filter(i => i.status === status).length;
   }
 
-  getActiveSprints(): Sprint[] {
-    return this.sprints.filter(s => s.status === SprintStatus.Active);
+  getBacklogTicketsByStatus(status: number): number {
+    return this.backlogItems.filter(i => i.status === status).length;
   }
 
-  getSprintColor(index: number): string {
-    return this.sprintColors[index % this.sprintColors.length];
+  getSprintDotClass(status: number): string {
+    return ['dot-planning', 'dot-active', 'dot-closed'][status] ?? 'dot-planning';
   }
 
-  getSprintColorLight(index: number): string {
-    return this.sprintColorsLight[index % this.sprintColorsLight.length];
+  // ===== DRAG & DROP =====
+  onDrop(event: CdkDragDrop<BacklogItem[]>, targetId: string): void {
+    if (event.previousContainer === event.container) return;
+
+    const item: BacklogItem = event.item.data;
+    const isMovingToBacklog = targetId === 'backlog-list';
+    const destinationSprintId = isMovingToBacklog ? null : targetId.replace('sprint-', '');
+
+    if (event.previousContainer.id === 'backlog-list') {
+      this.backlogItems = this.backlogItems.filter(i => i.id !== item.id);
+    } else {
+      const sourceSprintId = event.previousContainer.id.replace('sprint-', '');
+      const sourceList = this.sprintItemsMap.get(sourceSprintId);
+      if (sourceList) {
+        const idx = sourceList.findIndex(i => i.id === item.id);
+        if (idx !== -1) sourceList.splice(idx, 1);
+      }
+    }
+
+    if (isMovingToBacklog) {
+      item.sprintId = null;
+      this.backlogItems = [item, ...this.backlogItems];
+    } else {
+      item.sprintId = destinationSprintId;
+      item.status = TaskStatus.Todo;
+      const destList = this.sprintItemsMap.get(destinationSprintId!);
+      if (destList) destList.push(item);
+    }
+
+    this.sprintItemsMap = new Map(this.sprintItemsMap);
+
+    const call$ = isMovingToBacklog
+      ? this.backlogService.removeFromSprint(item.id)
+      : this.backlogService.moveToSprint(item.id, destinationSprintId!);
+
+    call$.subscribe({
+      error: () => {
+        this.loadData();
+        this.snackBar.open('Erreur de synchronisation', 'Fermer', { duration: 3000 });
+      }
+    });
+
+    if (isMovingToBacklog) {
+      this.snackBar.open('↩️ Retour au backlog', 'Fermer', { duration: 2000 });
+    } else {
+      const sprint = this.sprints.find(s => s.id === destinationSprintId);
+      this.snackBar.open(`✅ Déplacé vers ${sprint?.name}`, 'Fermer', { duration: 2000 });
+    }
   }
 
+  // ===== STATUS =====
+  changeStatus(item: BacklogItem, status: number): void {
+    item.status = status;
+    this.backlogService.updateBacklogItemStatus(item.id, status).subscribe({
+      error: () => this.snackBar.open('Erreur mise à jour statut', 'Fermer', { duration: 3000 })
+    });
+  }
+
+  getStatusLabel(status: number): string {
+    return ['À FAIRE', 'EN COURS', 'TERMINÉ'][status] ?? 'À FAIRE';
+  }
+
+  getStatusPillClass(status: number): string {
+    return ['status-todo', 'status-inprogress', 'status-done'][status] ?? 'status-todo';
+  }
+
+  // ===== PRIORITY =====
+  getPriorityLabel(priority: TaskPriority): string {
+    return ['Faible', 'Moyenne', 'Haute', 'Critique'][priority] ?? '';
+  }
+
+  getPriorityDotClass(priority: TaskPriority): string {
+    return ['dot-low', 'dot-medium', 'dot-high', 'dot-critical'][priority] ?? 'dot-low';
+  }
+
+  // ===== COMPLEXITY =====
+  getPriorityClass(priority: TaskPriority): string {
+    const classes = ['priority-low', 'priority-medium', 'priority-high', 'priority-critical'];
+    return classes[priority] ?? '';
+  }
+
+  getComplexityLabel(complexity: number): string {
+    return ['XS', 'S', 'M', 'L', 'XL'][complexity] ?? 'M';
+  }
+
+  getComplexityClass(complexity: number): string {
+    return ['complexity-xs', 'complexity-s', 'complexity-m', 'complexity-l', 'complexity-xl'][complexity] ?? 'complexity-m';
+  }
+
+  getComplexityTextLabel(complexity: number): string {
+    const labels = ['Très facile', 'Facile', 'Moyenne', 'Difficile', 'Très difficile'];
+    return labels[complexity] ?? 'Moyenne';
+  }
+
+  getComplexityTextClass(complexity: number): string {
+    const classes = ['complexity-xs', 'complexity-s', 'complexity-m', 'complexity-l', 'complexity-xl'];
+    return classes[complexity] ?? 'complexity-m';
+  }
+
+  // ===== STORY POINTS =====
+  setStoryPoints(item: BacklogItem): void {
+    const ref = this.dialog.open(StoryPointsDialogComponent, {
+      width: '380px',
+      data: { currentPoints: (item as any).storyPoints ?? null }
+    });
+    ref.afterClosed().subscribe((points: number | null | undefined) => {
+      if (points === undefined) return;
+      this.backlogService.updateComplexity(item.id, points ?? 0).subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            (item as any).storyPoints = points;
+            const label = points === -1 ? 'Non estimé' : `${points} pts`;
+            this.snackBar.open(`⏱️ Estimation : ${label}`, 'Fermer', { duration: 2000 });
+          }
+        },
+        error: () => this.snackBar.open('❌ Erreur mise à jour', 'Fermer', { duration: 3000 })
+      });
+    });
+  }
+
+  getStoryPointsLabel(item: BacklogItem): string {
+    const pts = (item as any).storyPoints;
+    if (pts === null || pts === undefined) return '';
+    if (pts === -1) return '?';
+    return `${pts} pts`;
+  }
+
+  // ===== COMPLEXITY DIALOG =====
+  openSetComplexity(item: BacklogItem): void {
+    const ref = this.dialog.open(ComplexityDialogComponent, {
+      width: '380px',
+      data: { currentComplexity: item.complexity ?? 2 }
+    });
+    ref.afterClosed().subscribe((complexity: number | null | undefined) => {
+      if (complexity === undefined) return;
+      this.backlogService.updateComplexity(item.id, complexity ?? 0).subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            item.complexity = complexity ?? 0;
+            this.snackBar.open(`📊 Complexité: ${this.getComplexityTextLabel(item.complexity)}`, 'Fermer', { duration: 2000 });
+            this.loadData();
+          }
+        },
+        error: () => this.snackBar.open('❌ Erreur mise à jour complexité', 'Fermer', { duration: 3000 })
+      });
+    });
+  }
+
+  // ===== SPRINT STATUS =====
+  getSprintStatusLabel(status: number): string {
+    return ['Planning', 'Actif', 'Fermé'][status] ?? '';
+  }
+
+  getSprintStatusClass(status: number): string {
+    return ['status-planning', 'status-active', 'status-closed'][status] ?? '';
+  }
+
+  // ===== AVATAR =====
+  getInitials(userId: string): string {
+    return userId.slice(0, 2).toUpperCase();
+  }
+
+  // ===== ACTIONS =====
   createNewSprint(): void {
-    const dialogRef = this.dialog.open(CreateSprintDialogComponent, {
+    const ref = this.dialog.open(CreateSprintDialogComponent, {
       width: '550px',
       data: { projectId: this.projectId }
     });
-
-    dialogRef.afterClosed().subscribe((result: any) => {
+    ref.afterClosed().subscribe((result: any) => {
       if (result) {
         this.loadData();
-        this.snackBar.open('Nouveau sprint créé avec succès !', 'Fermer', { duration: 3000 });
+        this.snackBar.open('Sprint créé !', 'Fermer', { duration: 3000 });
       }
     });
   }
@@ -144,118 +318,16 @@ export class BacklogViewComponent implements OnInit {
     this.sprintService.startSprint(sprintId).subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.sprints = [];
           this.router.navigate(['/projects', this.projectId, 'board'], {
-            queryParams: { sprintId: sprintId }
+            queryParams: { sprintId }
           });
-          this.snackBar.open('Sprint démarré ! Bon travail !', 'Fermer', { duration: 3000 });
+          this.snackBar.open('Sprint démarré !', 'Fermer', { duration: 3000 });
         } else {
           this.snackBar.open('Erreur lors du démarrage', 'Fermer', { duration: 3000 });
         }
       },
-      error: (err) => {
-        console.error('Erreur:', err);
-        this.snackBar.open('Erreur lors du démarrage du sprint', 'Fermer', { duration: 3000 });
-      }
+      error: () => this.snackBar.open('Erreur lors du démarrage du sprint', 'Fermer', { duration: 3000 })
     });
-  }
-
-  // ✅ Méthode onDrop complète et corrigée
-  onDrop(event: CdkDragDrop<BacklogItem[]>, targetId: string): void {
-    const item: BacklogItem = event.item.data;
-    console.log('Item dropped:', item);
-    console.log('Target:', targetId);
-
-    if (event.previousContainer === event.container) {
-      return;
-    }
-
-    let destinationSprintId: string | null = null;
-    let isMovingToBacklog = false;
-
-    if (targetId === 'backlog-list') {
-      isMovingToBacklog = true;
-    } else {
-      destinationSprintId = targetId.replace('sprint-', '');
-    }
-
-    console.log('Destination sprint ID:', destinationSprintId);
-
-    // 1. RETIRER L'ITEM DE L'ANCIEN EMPLACEMENT
-    if (event.previousContainer.id === 'backlog-list') {
-      const index = this.backlogItems.findIndex(i => i.id === item.id);
-      if (index !== -1) {
-        this.backlogItems.splice(index, 1);
-      }
-    } else {
-      const sourceSprintId = event.previousContainer.id.replace('sprint-', '');
-      const sourceList = this.sprintItemsMap.get(sourceSprintId);
-      if (sourceList) {
-        const index = sourceList.findIndex(i => i.id === item.id);
-        if (index !== -1) {
-          sourceList.splice(index, 1);
-        }
-      }
-    }
-
-    // 2. AJOUTER L'ITEM À LA NOUVELLE DESTINATION
-    if (isMovingToBacklog) {
-      item.sprintId = null;
-      this.backlogItems.unshift(item);
-    } else {
-      // ✅ Utilisation de TaskStatus.Todo (maintenant importé)
-      item.sprintId = destinationSprintId;
-      item.status = TaskStatus.Todo;
-      console.log('Item sprintId mis à jour:', item.sprintId);
-      console.log('Item status mis à jour:', item.status);
-
-      const destList = this.sprintItemsMap.get(destinationSprintId!);
-      if (destList) {
-        destList.push(item);
-      }
-    }
-
-    // 3. FORCER LA MISE À JOUR DE L'AFFICHAGE
-    this.backlogItems = [...this.backlogItems];
-    const newMap = new Map(this.sprintItemsMap);
-    this.sprintItemsMap = newMap;
-
-    // 4. APPEL API EN ARRIÈRE-PLAN
-    if (isMovingToBacklog) {
-      this.backlogService.removeFromSprint(item.id).subscribe({
-        next: (response: any) => {
-          if (!response.success) {
-            this.loadData();
-            this.snackBar.open('Erreur de synchronisation', 'Fermer', { duration: 3000 });
-          }
-        },
-        error: () => {
-          this.loadData();
-          this.snackBar.open('Erreur de synchronisation', 'Fermer', { duration: 3000 });
-        }
-      });
-    } else {
-      this.backlogService.moveToSprint(item.id, destinationSprintId!).subscribe({
-        next: (response: any) => {
-          if (!response.success) {
-            this.loadData();
-            this.snackBar.open('Erreur de synchronisation', 'Fermer', { duration: 3000 });
-          }
-        },
-        error: () => {
-          this.loadData();
-          this.snackBar.open('Erreur de synchronisation', 'Fermer', { duration: 3000 });
-        }
-      });
-    }
-
-    // 5. MESSAGE DE CONFIRMATION
-    if (isMovingToBacklog) {
-      this.snackBar.open('↩️ Retour au backlog', 'Fermer', { duration: 2000 });
-    } else {
-      const sprint = this.sprints.find(s => s.id === destinationSprintId);
-      this.snackBar.open(`✅ Déplacé vers ${sprint?.name}`, 'Fermer', { duration: 2000 });
-    }
   }
 
   openCreate(): void {
@@ -269,7 +341,13 @@ export class BacklogViewComponent implements OnInit {
   }
 
   editItem(item: BacklogItem): void {
-    console.log('Edit item', item);
+    const ref = this.dialog.open(BacklogCreateDialogComponent, {
+      width: '550px',
+      data: { projectId: this.projectId, item }
+    });
+    ref.afterClosed().subscribe((result: any) => {
+      if (result) this.loadData();
+    });
   }
 
   deleteItem(item: BacklogItem): void {
@@ -288,45 +366,49 @@ export class BacklogViewComponent implements OnInit {
         next: (response: any) => {
           if (response.success) {
             this.backlogItems = this.backlogItems.filter(i => i.id !== item.id);
-            this.snackBar.open('Élément supprimé', 'Fermer', { duration: 2000 });
+            this.snackBar.open('Ticket supprimé', 'Fermer', { duration: 2000 });
           }
         },
-        error: () => {
-          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
-        }
+        error: () => this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 })
       });
     });
   }
 
-  getPriorityLabel(priority: TaskPriority): string {
-    const labels = ['Faible', 'Moyenne', 'Haute', 'Critique'];
-    return labels[priority] ?? '';
+  assignTask(item: BacklogItem): void {
+    const ref = this.dialog.open(AssignUserDialogComponent, {
+      width: '400px',
+      data: { itemId: item.id, currentUserId: item.assignedToId }
+    });
+    ref.afterClosed().subscribe((userId: string | null) => {
+      if (userId !== undefined) {
+        this.backlogService.assignToUser(item.id, userId).subscribe({
+          next: (response: any) => {
+            if (response.success) {
+              item.assignedToId = userId || undefined;
+              this.snackBar.open('✅ Tâche assignée !', 'Fermer', { duration: 2000 });
+            }
+          },
+          error: () => this.snackBar.open('❌ Erreur lors de l\'assignation', 'Fermer', { duration: 3000 })
+        });
+      }
+    });
+  }
+  // src/app/features/backlog/view/backlog-view.component.ts
+
+  // Ajoute ces méthodes après getBacklogTicketsByStatus()
+
+  getBacklogStoryPointsByStatus(status: number): number {
+    return this.backlogItems
+      .filter(i => i.status === status)
+      .reduce((sum, item) => sum + (item.storyPoints || 0), 0);
   }
 
-  getPriorityClass(priority: TaskPriority): string {
-    const classes = ['priority-low', 'priority-medium', 'priority-high', 'priority-critical'];
-    return classes[priority] ?? '';
+  getSprintStoryPointsByStatus(sprintId: string, status: number): number {
+    return this.getSprintItems(sprintId)
+      .filter(i => i.status === status)
+      .reduce((sum, item) => sum + (item.storyPoints || 0), 0);
   }
-
-  getComplexityLabel(complexity: number): string {
-    const labels = ['XS', 'S', 'M', 'L', 'XL'];
-    return labels[complexity] ?? 'M';
-  }
-
-  getComplexityClass(complexity: number): string {
-    const classes = ['complexity-xs', 'complexity-s', 'complexity-m', 'complexity-l', 'complexity-xl'];
-    return classes[complexity] ?? 'complexity-m';
-  }
-
-  getSprintStatusLabel(status: number): string {
-    return ['Planning', 'Actif', 'Fermé'][status] ?? '';
-  }
-
-  getSprintStatusClass(status: number): string {
-    return ['status-planning', 'status-active', 'status-closed'][status] ?? '';
-  }
-
-  goToSprintBoard(): void {
-    this.router.navigate(['/projects', this.projectId, 'board']);
+  goToHistory(): void {
+    this.router.navigate(['/projects', this.projectId, 'history']);
   }
 }
