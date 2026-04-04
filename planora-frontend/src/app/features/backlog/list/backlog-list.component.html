@@ -1,0 +1,176 @@
+<div class="backlog-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button mat-button [routerLink]="['/projects', projectId]" class="back-btn">
+        <mat-icon>arrow_back</mat-icon> Retour au projet
+      </button>
+      <div class="title-row">
+        <div class="title-icon">
+          <mat-icon>view_kanban</mat-icon>
+        </div>
+        <div>
+          <h1>Backlog</h1>
+          <p class="subtitle">{{ items.length }} éléments · {{ sprints.length }} sprints disponibles</p>
+        </div>
+      </div>
+    </div>
+    <button class="add-btn" (click)="openCreate()">
+      <mat-icon>add</mat-icon> Ajouter un élément
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <app-loading *ngIf="loading"></app-loading>
+
+  <ng-container *ngIf="!loading">
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-pill" style="--c: #8b5cf6; --bg: #ede9fe">
+        <mat-icon>list_alt</mat-icon>
+        <span>{{ backlogItems.length }} en backlog</span>
+      </div>
+      <div class="stat-pill" style="--c: #059669; --bg: #d1fae5"
+           *ngFor="let sprint of sprints">
+        <mat-icon>sprint</mat-icon>
+        <span>{{ getSprintItems(sprint.id).length }} dans {{ sprint.name }}</span>
+      </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board">
+      <!-- Backlog Column -->
+      <div class="kanban-col backlog-col">
+        <div class="col-header" style="--accent: #8b5cf6">
+          <div class="col-header-left">
+            <div class="col-dot" style="background: #8b5cf6"></div>
+            <span class="col-title">Backlog</span>
+            <span class="col-badge" style="background: #ede9fe; color: #7c3aed">
+              {{ backlogItems.length }}
+            </span>
+          </div>
+          <mat-icon class="col-icon" style="color: #8b5cf6">inbox</mat-icon>
+        </div>
+
+        <div class="drop-zone"
+             cdkDropList
+             id="backlog"
+             [cdkDropListData]="backlogItems"
+             [cdkDropListConnectedTo]="getSprintIds()"
+             (cdkDropListDropped)="onDrop($event, null)">
+          <div *ngIf="backlogItems.length === 0" class="empty-drop">
+            <mat-icon>drag_indicator</mat-icon>
+            <span>Glisse des tâches ici</span>
+          </div>
+
+          <div class="kanban-card"
+               *ngFor="let item of backlogItems"
+               cdkDrag
+               [cdkDragData]="item">
+            <div class="drag-handle" cdkDragHandle>
+              <mat-icon>drag_indicator</mat-icon>
+            </div>
+            <div class="card-body">
+              <div class="card-title">{{ item.title }}</div>
+              <div class="card-description" *ngIf="item.description">
+                {{ item.description | slice:0:60 }}{{ item.description.length > 60 ? '…' : '' }}
+              </div>
+              <div class="card-footer">
+                <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
+                  {{ getPriorityLabel(item.priority) }}
+                </span>
+                <div class="card-actions">
+                  <button mat-icon-button class="action-btn"
+                          (click)="cyclePriority(item)"
+                          matTooltip="Changer priorité">
+                    <mat-icon>swap_vert</mat-icon>
+                  </button>
+                  <button mat-icon-button class="action-btn danger"
+                          (click)="deleteItem(item)"
+                          *ngIf="canManage"
+                          matTooltip="Supprimer">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div *cdkDragPlaceholder class="drag-placeholder"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sprint Columns -->
+      <div class="kanban-col sprint-col"
+           *ngFor="let sprint of sprints; let i = index">
+        <div class="col-header" [style]="'--accent:' + getSprintColor(i)">
+          <div class="col-header-left">
+            <div class="col-dot" [style]="'background:' + getSprintColor(i)"></div>
+            <div>
+              <span class="col-title">{{ sprint.name }}</span>
+              <span class="sprint-status" [ngClass]="getSprintStatusClass(sprint.status)">
+                {{ getSprintStatusLabel(sprint.status) }}
+              </span>
+            </div>
+            <span class="col-badge"
+                  [style]="'background:' + getSprintColorLight(i) + '; color:' + getSprintColor(i)">
+              {{ getSprintItems(sprint.id).length }}
+            </span>
+          </div>
+          <mat-icon class="col-icon" [style]="'color:' + getSprintColor(i)">sprint</mat-icon>
+        </div>
+
+        <ng-container *ngIf="sprintItemsMap.get(sprint.id) as sprintItems">
+          <div class="drop-zone"
+               cdkDropList
+               [id]="sprint.id"
+               [cdkDropListData]="sprintItems"
+               [cdkDropListConnectedTo]="getAllListIds(sprint.id)"
+               (cdkDropListDropped)="onDrop($event, sprint.id)">
+            <div *ngIf="sprintItems.length === 0" class="empty-drop">
+              <mat-icon>drag_indicator</mat-icon>
+              <span>Glisse des éléments du backlog ici</span>
+            </div>
+
+            <div class="kanban-card sprint-card"
+                 *ngFor="let item of sprintItems"
+                 cdkDrag
+                 [cdkDragData]="item"
+                 [style]="'--sprint-color:' + getSprintColor(i)">
+              <div class="sprint-accent-bar"
+                   [style]="'background:' + getSprintColor(i)"></div>
+              <div class="drag-handle" cdkDragHandle>
+                <mat-icon>drag_indicator</mat-icon>
+              </div>
+              <div class="card-body">
+                <div class="card-title">{{ item.title }}</div>
+                <div class="card-description" *ngIf="item.description">
+                  {{ item.description | slice:0:60 }}{{ item.description.length > 60 ? '…' : '' }}
+                </div>
+                <div class="card-footer">
+                  <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
+                    {{ getPriorityLabel(item.priority) }}
+                  </span>
+                  <div class="card-actions">
+                    <button mat-icon-button class="action-btn danger"
+                            (click)="removeFromSprint(item)"
+                            matTooltip="Retirer du sprint">
+                      <mat-icon>undo</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div *cdkDragPlaceholder class="drag-placeholder"></div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Empty state si pas de sprints -->
+      <div class="no-sprints" *ngIf="sprints.length === 0">
+        <mat-icon>sprint</mat-icon>
+        <p>Aucun sprint disponible</p>
+        <small>Crée un sprint pour pouvoir déplacer des éléments</small>
+      </div>
+    </div>
+  </ng-container>
+</div>

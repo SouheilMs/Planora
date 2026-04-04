@@ -1,0 +1,396 @@
+.backlog-page {
+  padding: 24px;
+  min-height: 100vh;
+  background: #f8f7ff;
+}
+
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  color: #6b7280;
+  margin-bottom: 8px;
+  display: flex;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.title-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+  .title-icon mat-icon {
+    color: #fff;
+    font-size: 24px;
+  }
+
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 2px 0 0;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+  .add-btn mat-icon {
+    font-size: 18px;
+  }
+
+  .add-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .add-btn:active {
+    transform: translateY(0);
+  }
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--c);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+  .stat-pill mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+/* Kanban board */
+.kanban-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  align-items: flex-start;
+}
+
+.kanban-col {
+  flex: 0 0 300px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Column header */
+.col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 2px solid var(--accent);
+  background: #fff;
+}
+
+.col-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.col-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.col-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.col-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.col-icon {
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+.sprint-status {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-planning {
+  color: #6b7280;
+}
+
+.status-active {
+  color: #059669;
+}
+
+.status-closed {
+  color: #dc2626;
+}
+
+/* Drop zone */
+.drop-zone {
+  padding: 12px;
+  min-height: 200px;
+  transition: background 0.2s;
+}
+
+  .drop-zone.cdk-drop-list-dragging {
+    background: #f5f3ff;
+  }
+
+  .drop-zone.cdk-drop-list-receiving {
+    background: #ecfdf5;
+    border: 2px dashed #10b981;
+  }
+
+/* Empty drop */
+.empty-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 32px 16px;
+  border: 2px dashed #e5e7eb;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+  .empty-drop mat-icon {
+    font-size: 24px;
+    opacity: 0.5;
+  }
+
+/* Cards */
+.kanban-card {
+  position: relative;
+  display: flex;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: grab;
+  transition: box-shadow 0.15s, transform 0.15s;
+  overflow: hidden;
+}
+
+  .kanban-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .kanban-card:active {
+    cursor: grabbing;
+  }
+
+.sprint-card {
+  border-left: 3px solid var(--sprint-color, #6366f1);
+}
+
+.sprint-accent-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 8px 4px 8px 8px;
+  color: #d1d5db;
+  cursor: grab;
+}
+
+  .drag-handle mat-icon {
+    font-size: 18px;
+  }
+
+  .drag-handle:hover {
+    color: #9ca3af;
+  }
+
+.card-body {
+  flex: 1;
+  padding: 10px 10px 10px 4px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.card-description {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Priority badges */
+.priority-badge {
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.priority-low {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.priority-medium {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.priority-high {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.priority-critical {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Card actions */
+.card-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.action-btn {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+  .action-btn mat-icon {
+    font-size: 16px;
+    color: #9ca3af;
+  }
+
+  .action-btn:hover mat-icon {
+    color: #374151;
+  }
+
+  .action-btn.danger:hover mat-icon {
+    color: #ef4444;
+  }
+
+/* Drag placeholder */
+.drag-placeholder {
+  background: #f5f3ff;
+  border: 2px dashed #c4b5fd;
+  border-radius: 10px;
+  height: 60px;
+  margin-bottom: 8px;
+}
+
+/* CDK drag preview */
+.cdk-drag-preview {
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: rotate(2deg);
+}
+
+/* No sprints */
+.no-sprints {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  background: #fff;
+  border-radius: 16px;
+  border: 2px dashed #e5e7eb;
+  color: #9ca3af;
+  text-align: center;
+}
+
+  .no-sprints mat-icon {
+    font-size: 36px;
+    opacity: 0.4;
+  }
+
+  .no-sprints p {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .no-sprints small {
+    font-size: 12px;
+  }

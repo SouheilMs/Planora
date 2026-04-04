@@ -1,0 +1,53 @@
+<div class="task-card" [class.draggable]="draggable">
+  <div class="task-card-header">
+    <div class="task-id" *ngIf="task.code">
+      {{ task.code }}
+    </div>
+    <div class="task-actions">
+      <button mat-icon-button
+              (click)="edit()"
+              matTooltip="Modifier"
+              class="edit-btn">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button
+              (click)="delete()"
+              matTooltip="Supprimer"
+              class="delete-btn">
+        <mat-icon>delete_outline</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="task-title">
+    {{ task.title }}
+  </div>
+
+  <div class="task-description" *ngIf="task.description">
+    {{ task.description | slice:0:80 }}{{ task.description.length > 80 ? '…' : '' }}
+  </div>
+
+  <div class="task-footer">
+    <div class="task-badges">
+      <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+        {{ getPriorityLabel(task.priority) }}
+      </span>
+      <span class="status-badge"
+            *ngIf="showStatus && task.status !== undefined"
+            [ngClass]="getStatusClass(task.status)">
+        {{ getStatusLabel(task.status) }}
+      </span>
+      <span class="sprint-badge" *ngIf="showSprint && task.sprintName">
+        <mat-icon>sprint</mat-icon>
+        {{ task.sprintName }}
+      </span>
+    </div>
+
+    <div class="assignee" *ngIf="task.assignedToName">
+      <div class="assignee-avatar">
+        {{ task.assignedToName.charAt(0) }}
+      </div>
+      <span class="assignee-name">{{ task.assignedToName }}</span>
+    </div>
+  </div>
+</div>

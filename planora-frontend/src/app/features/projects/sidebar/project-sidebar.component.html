@@ -1,0 +1,64 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <a routerLink="/dashboard" class="logo">
+      <mat-icon>linear_scale</mat-icon>
+      <span>Planora</span>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+      <mat-icon>dashboard</mat-icon>
+      <span>Dashboard</span>
+    </a>
+    <a routerLink="/projects" routerLinkActive="active" class="nav-item">
+      <mat-icon>folder_open</mat-icon>
+      <span>Projects</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="project-section" *ngIf="currentProject">
+    <div class="project-header">
+      <div class="project-avatar" [style.background]="currentProject.color || '#4f46e5'">
+        {{ currentProject.name?.charAt(0) || 'P' }}
+      </div>
+      <div class="project-name">{{ currentProject.name }}</div>
+    </div>
+
+    <div class="project-nav">
+      <a [routerLink]="['/projects', currentProject.id, 'backlog']"
+         routerLinkActive="active"
+         class="project-nav-item">
+        <mat-icon>inbox</mat-icon>
+        <span>Backlog</span>
+      </a>
+      <a [routerLink]="['/projects', currentProject.id, 'tasks']"
+         routerLinkActive="active"
+         class="project-nav-item">
+        <mat-icon>task_alt</mat-icon>
+        <span>Tâches</span>
+      </a>
+      <a [routerLink]="['/projects', currentProject.id, 'sprints']"
+         routerLinkActive="active"
+         class="project-nav-item">
+        <mat-icon>sprint</mat-icon>
+        <span>Sprints</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ userInitials }}</div>
+      <div class="user-details">
+        <div class="user-name">{{ userName }}</div>
+        <div class="user-email">{{ userEmail }}</div>
+      </div>
+      <button mat-icon-button (click)="logout()" matTooltip="Déconnexion">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

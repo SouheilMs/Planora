@@ -1,0 +1,117 @@
+<div class="page-container">
+  <app-loading *ngIf="loading"></app-loading>
+
+  <ng-container *ngIf="!loading && project">
+    <div class="page-header">
+      <div>
+        <button mat-button [routerLink]="['/projects']" class="back-btn">
+          <mat-icon>arrow_back</mat-icon> Projects
+        </button>
+        <h1>{{ project.name }}</h1>
+        <p class="text-secondary">{{ project.description }}</p>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Info Card -->
+      <div class="planora-card info-card">
+        <h3 class="section-title">Project Info</h3>
+        <div class="info-list">
+          <div class="info-item">
+            <mat-icon>person</mat-icon>
+            <div>
+              <div class="info-label">Manager</div>
+              <div class="info-value">{{ project.projectManagerName }}</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <mat-icon>calendar_today</mat-icon>
+            <div>
+              <div class="info-label">Start Date</div>
+              <div class="info-value">{{ project.startDate | date:'mediumDate' }}</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <mat-icon>event</mat-icon>
+            <div>
+              <div class="info-label">End Date</div>
+              <div class="info-value">{{ project.endDate | date:'mediumDate' }}</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <mat-icon>task_alt</mat-icon>
+            <div>
+              <div class="info-label">Tasks</div>
+              <div class="info-value">{{ project.completedTasks }} / {{ project.totalTasks }} completed</div>
+            </div>
+          </div>
+        </div>
+        <div class="progress-section">
+          <div class="progress-header">
+            <span class="info-label">Progress</span>
+            <span class="progress-pct">{{ project.progressPercentage | number:'1.0-0' }}%</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="project.progressPercentage" class="project-bar"></mat-progress-bar>
+        </div>
+      </div>
+
+      <!-- Team Card -->
+      <div class="planora-card">
+        <h3 class="section-title">Team Members</h3>
+        <div *ngIf="project.members?.length" class="members-list">
+          <div class="member-item" *ngFor="let m of project.members">
+            <div class="member-avatar">{{ m.fullName?.[0] || '?' }}</div>
+            <div>
+              <div class="member-name">{{ m.fullName }}</div>
+              <div class="member-email">{{ m.email }}</div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="!project.members?.length" class="empty-state" style="padding: 32px 0">
+          <mat-icon>people_outline</mat-icon>
+          <h3>No members</h3>
+          <p>No team members assigned yet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Cards -->
+    <div class="nav-grid">
+      <a class="nav-card" [routerLink]="['/projects', project.id, 'tasks']">
+        <div class="nav-card-icon tasks">
+          <mat-icon>task_alt</mat-icon>
+        </div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Tasks</div>
+          <div class="nav-card-subtitle">Manage project tasks</div>
+        </div>
+        <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
+      </a>
+      <a class="nav-card" [routerLink]="['/projects', project.id, 'sprints']">
+        <div class="nav-card-icon sprints">
+          <mat-icon>sprint</mat-icon>
+        </div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Sprints</div>
+          <div class="nav-card-subtitle">Plan and track sprints</div>
+        </div>
+        <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
+      </a>
+      <a class="nav-card" [routerLink]="['/projects', project.id, 'backlog']">
+        <div class="nav-card-icon backlog">
+          <mat-icon>list_alt</mat-icon>
+        </div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Backlog</div>
+          <div class="nav-card-subtitle">View and organize backlog</div>
+        </div>
+        <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
+      </a>
+    </div>
+  </ng-container>
+
+  <div *ngIf="!loading && !project" class="empty-state" style="padding: 64px">
+    <mat-icon>folder_off</mat-icon>
+    <h3>Project not found</h3>
+  </div>
+</div>

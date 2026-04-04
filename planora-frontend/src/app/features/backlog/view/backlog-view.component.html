@@ -1,0 +1,247 @@
+<!-- src/app/features/backlog/view/backlog-view.component.html -->
+<div class="backlog-view">
+
+  <!-- Header -->
+  <div class="backlog-header">
+    <div class="header-left">
+      <div class="title-icon">
+        <mat-icon>view_kanban</mat-icon>
+      </div>
+      <div>
+        <h1>Backlog et Sprints</h1>
+        <p class="subtitle">Gérez vos tickets et sprints</p>
+      </div>
+      
+    </div>
+  </div>
+
+  <app-loading *ngIf="loading"></app-loading>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ===== SPRINTS ===== -->
+    <div class="sections-wrap">
+
+      <!-- Boucle sur les sprints -->
+      <div class="bk-section" *ngFor="let sprint of sprints; let i = index">
+
+        <!-- Section header sprint -->
+        <div class="section-header" (click)="toggleSprint(sprint.id)">
+          <mat-icon class="chevron" [class.open]="isSectionOpen(sprint.id)">chevron_right</mat-icon>
+
+          <span class="sprint-status-dot" [ngClass]="getSprintDotClass(sprint.status)"></span>
+          <span class="section-name">{{ sprint.name }}</span>
+          <span class="section-count">· {{ getSprintItems(sprint.id).length }} ticket{{ getSprintItems(sprint.id).length > 1 ? 's' : '' }}</span>
+          <span class="sprint-active-badge" *ngIf="sprint.status === 1">Actif</span>
+          <span class="sprint-dates" *ngIf="sprint.startDate">
+            {{ sprint.startDate | date:'dd MMM' }} – {{ sprint.endDate | date:'dd MMM' }}
+          </span>
+
+          <!-- Badges story points pour le sprint -->
+          <div class="sp-badges">
+            <span class="sp-badge" matTooltip="Story points - À faire">
+              {{ getSprintStoryPointsByStatus(sprint.id, 0) }} pts
+            </span>
+            <span class="sp-badge blue" matTooltip="Story points - En cours">
+              {{ getSprintStoryPointsByStatus(sprint.id, 1) }} pts
+            </span>
+            <span class="sp-badge" matTooltip="Story points - Terminé">
+              {{ getSprintStoryPointsByStatus(sprint.id, 2) }} pts
+            </span>
+            <mat-icon class="settings-icon">settings</mat-icon>
+          </div>
+
+          <div class="section-actions" (click)="$event.stopPropagation()">
+            <button class="btn-start-sprint" (click)="startSprint(sprint.id)">
+              <mat-icon>play_arrow</mat-icon>
+              Démarrer le sprint
+            </button>
+          </div>
+        </div>
+
+        <!-- Ticket list sprint -->
+        <div class="ticket-list" *ngIf="isSectionOpen(sprint.id)"
+             cdkDropList
+             [id]="'sprint-' + sprint.id"
+             [cdkDropListData]="getSprintItems(sprint.id)"
+             [cdkDropListConnectedTo]="['backlog-list']"
+             (cdkDropListDropped)="onDrop($event, 'sprint-' + sprint.id)">
+
+          <div class="ticket-row"
+               *ngFor="let item of getSprintItems(sprint.id)"
+               cdkDrag
+               [cdkDragData]="item">
+            <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+            <div class="ticket-checkbox done-cb">
+              <mat-icon>check</mat-icon>
+            </div>
+            <span class="ticket-id">{{ item.id.slice(-6) }}</span>
+            <span class="ticket-title">{{ item.title }}</span>
+            <span class="status-pill" [ngClass]="getStatusPillClass(item.status)" [matMenuTriggerFor]="statusMenu">
+              {{ getStatusLabel(item.status) }}
+              <mat-icon>arrow_drop_down</mat-icon>
+            </span>
+            <mat-menu #statusMenu="matMenu">
+              <button mat-menu-item (click)="changeStatus(item, 0)">À faire</button>
+              <button mat-menu-item (click)="changeStatus(item, 1)">En cours</button>
+              <button mat-menu-item (click)="changeStatus(item, 2)">Terminé</button>
+            </mat-menu>
+            <span class="priority-dot" [ngClass]="getPriorityDotClass(item.priority)" [matTooltip]="getPriorityLabel(item.priority)"></span>
+            <div class="assign-avatar" [matTooltip]="item.assignedToId ? 'Assigné' : 'Non assigné'" (click)="assignTask(item)">
+              <mat-icon *ngIf="!item.assignedToId">person</mat-icon>
+              <span *ngIf="item.assignedToId">{{ getInitials(item.assignedToId) }}</span>
+            </div>
+            <!-- Badge complexité -->
+            <span class="story-chip"
+                  *ngIf="item.complexity !== null && item.complexity !== undefined"
+                  [ngClass]="getComplexityClass(item.complexity)"
+                  (click)="openSetComplexity(item)">
+              {{ getComplexityLabel(item.complexity) }}
+            </span>
+            <div class="row-actions">
+              <button mat-icon-button [matMenuTriggerFor]="sprintRowMenu" class="row-menu-btn">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #sprintRowMenu="matMenu">
+                <button mat-menu-item (click)="assignTask(item)">
+                  <mat-icon>person_add</mat-icon><span>Assigner à...</span>
+                </button>
+                <button mat-menu-item (click)="openSetComplexity(item)">
+                  <mat-icon>timeline</mat-icon><span>Complexité</span>
+                </button>
+                <button mat-menu-item (click)="setStoryPoints(item)">
+                  <mat-icon>hourglass_empty</mat-icon><span>Estimation durée</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="deleteItem(item)" class="danger-item">
+                  <mat-icon>delete</mat-icon><span>Supprimer</span>
+                </button>
+              </mat-menu>
+            </div>
+          </div>
+
+          <div class="empty-sprint-drop" *ngIf="getSprintItems(sprint.id).length === 0">
+            <mat-icon>drag_indicator</mat-icon>
+            Glissez des tickets ici
+          </div>
+        </div>
+
+        <!-- Create row sprint -->
+        <div class="create-row" *ngIf="isSectionOpen(sprint.id)" (click)="openCreate()">
+          <mat-icon>add</mat-icon> Créer un ticket
+        </div>
+      </div>
+
+      <!-- No sprint state -->
+      <div class="no-sprint-row" *ngIf="sprints.length === 0">
+        <mat-icon>sprint</mat-icon>
+        <span>Aucun sprint — </span>
+        <button class="link-btn" (click)="createNewSprint()">Créer un sprint</button>
+      </div>
+
+      <!-- ===== BACKLOG SECTION ===== -->
+      <div class="bk-section">
+        <div class="section-header" (click)="toggleSprint('backlog')">
+          <mat-icon class="chevron" [class.open]="isSectionOpen('backlog')">chevron_right</mat-icon>
+          <span class="section-name">Backlog</span>
+          <span class="section-count">&nbsp;({{ backlogItems.length }} ticket{{ backlogItems.length > 1 ? 's' : '' }})</span>
+
+          <!-- Badges story points pour le backlog -->
+          <div class="sp-badges">
+            <span class="sp-badge" matTooltip="Story points - À faire">
+              {{ getBacklogStoryPointsByStatus(0) }} pts
+            </span>
+            <span class="sp-badge blue" matTooltip="Story points - En cours">
+              {{ getBacklogStoryPointsByStatus(1) }} pts
+            </span>
+            <span class="sp-badge" matTooltip="Story points - Terminé">
+              {{ getBacklogStoryPointsByStatus(2) }} pts
+            </span>
+            <mat-icon class="settings-icon">settings</mat-icon>
+          </div>
+
+          <div class="section-actions" (click)="$event.stopPropagation()">
+            <button class="btn-create-sprint" (click)="createNewSprint()">Créer un sprint</button>
+          </div>
+        </div>
+
+        <!-- Ticket list backlog -->
+        <div class="ticket-list" *ngIf="isSectionOpen('backlog')"
+             cdkDropList
+             id="backlog-list"
+             [cdkDropListData]="backlogItems"
+             [cdkDropListConnectedTo]="getSprintListIds()"
+             (cdkDropListDropped)="onDrop($event, 'backlog-list')">
+
+          <div class="ticket-row"
+               *ngFor="let item of backlogItems"
+               cdkDrag
+               [cdkDragData]="item">
+            <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+            <div class="ticket-checkbox" [class.checked]="false">
+              <mat-icon *ngIf="false">check</mat-icon>
+            </div>
+            <span class="ticket-id">#{{ item.id.slice(-6) }}</span>
+            <span class="ticket-title">{{ item.title }}</span>
+            <span class="status-pill" [ngClass]="getStatusPillClass(item.status)" [matMenuTriggerFor]="statusMenuB">
+              {{ getStatusLabel(item.status) }}
+              <mat-icon>arrow_drop_down</mat-icon>
+            </span>
+            <mat-menu #statusMenuB="matMenu">
+              <button mat-menu-item (click)="changeStatus(item, 0)">À faire</button>
+              <button mat-menu-item (click)="changeStatus(item, 1)">En cours</button>
+              <button mat-menu-item (click)="changeStatus(item, 2)">Terminé</button>
+            </mat-menu>
+            <span class="priority-dot" [ngClass]="getPriorityDotClass(item.priority)" [matTooltip]="getPriorityLabel(item.priority)"></span>
+            <div class="assign-avatar" [matTooltip]="item.assignedToId ? 'Assigné' : 'Non assigné'" (click)="assignTask(item)">
+              <mat-icon *ngIf="!item.assignedToId">person</mat-icon>
+              <span *ngIf="item.assignedToId">{{ getInitials(item.assignedToId) }}</span>
+            </div>
+            <!-- Badge complexité -->
+            <span class="story-chip"
+                  *ngIf="item.complexity !== null && item.complexity !== undefined"
+                  [ngClass]="getComplexityClass(item.complexity)"
+                  (click)="openSetComplexity(item)">
+              {{ getComplexityLabel(item.complexity) }}
+            </span>
+            <div class="row-actions">
+              <button mat-icon-button (click)="editItem(item)" class="row-menu-btn" matTooltip="Modifier">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button [matMenuTriggerFor]="backlogRowMenu" class="row-menu-btn">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #backlogRowMenu="matMenu">
+                <button mat-menu-item (click)="assignTask(item)">
+                  <mat-icon>person_add</mat-icon><span>Assigner à...</span>
+                </button>
+                <button mat-menu-item (click)="openSetComplexity(item)">
+                  <mat-icon>timeline</mat-icon><span>Complexité</span>
+                </button>
+                <button mat-menu-item (click)="setStoryPoints(item)">
+                  <mat-icon>hourglass_empty</mat-icon><span>Estimation durée</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="deleteItem(item)" class="danger-item">
+                  <mat-icon>delete</mat-icon><span>Supprimer</span>
+                </button>
+              </mat-menu>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div class="empty-backlog-row" *ngIf="backlogItems.length === 0">
+            <mat-icon>inbox</mat-icon>
+            <span>Backlog vide — créez votre premier ticket</span>
+          </div>
+        </div>
+
+        <!-- Create row backlog -->
+        <div class="create-row" *ngIf="isSectionOpen('backlog')" (click)="openCreate()">
+          <mat-icon>add</mat-icon> Créer
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+</div>
