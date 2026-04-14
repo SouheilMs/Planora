@@ -40,7 +40,7 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Annuler</button>
+      <button mat-button [mat-dialog-close]="undefined">Annuler</button>
       <button mat-button class="save-btn" (click)="save()" [disabled]="complexityControl.value === null">Enregistrer</button>
     </mat-dialog-actions>
   `,

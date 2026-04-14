@@ -58,7 +58,7 @@ import { SprintService } from '../../../core/services/sprint.service';
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Annuler</button>
+      <button mat-button [mat-dialog-close]="undefined">Annuler</button>
       <button mat-raised-button color="primary" (click)="save()" [disabled]="sprintForm.invalid || saving">
         {{ saving ? 'Création...' : 'Créer' }}
       </button>

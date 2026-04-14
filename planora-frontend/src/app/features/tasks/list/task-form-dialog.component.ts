@@ -11,8 +11,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TaskService } from '../../../core/services/task.service';
 import { SprintService } from '../../../core/services/sprint.service';
-import { UserService } from '../../../core/services/user.service';
-import { Task, TaskStatus, TaskPriority, Sprint, User } from '../../../core/models';
+import { ProjectService } from '../../../core/services/project.service';
+import { Task, TaskStatus, TaskPriority, Sprint, ProjectMember } from '../../../core/models';
 
 @Component({
   selector: 'app-task-form-dialog',
@@ -83,7 +83,7 @@ import { Task, TaskStatus, TaskPriority, Sprint, User } from '../../../core/mode
           <mat-label>Assigné à</mat-label>
           <mat-select formControlName="assignedToId">
             <mat-option value="">Non assigné</mat-option>
-            <mat-option *ngFor="let u of users" [value]="u.id">{{ u.fullName }}</mat-option>
+            <mat-option *ngFor="let u of users" [value]="u.userId">{{ u.fullName }}</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -98,7 +98,7 @@ import { Task, TaskStatus, TaskPriority, Sprint, User } from '../../../core/mode
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Annuler</button>
+      <button mat-button [mat-dialog-close]="undefined">Annuler</button>
       <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
         {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
       </button>
@@ -139,12 +139,12 @@ export class TaskFormDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private taskService = inject(TaskService);
   private sprintService = inject(SprintService);
-  private userService = inject(UserService);
+  private projectService = inject(ProjectService);
   private snackBar = inject(MatSnackBar);
   private dialogRef = inject(MatDialogRef<TaskFormDialogComponent>);
 
   sprints: Sprint[] = [];
-  users: User[] = [];
+  users: ProjectMember[] = [];
   saving = false;
 
   form = this.fb.group({
@@ -170,11 +170,11 @@ export class TaskFormDialogComponent implements OnInit {
       }
     });
 
-    // Charger les utilisateurs
-    this.userService.getUsers(1, 100).subscribe({
+    // Charger les membres du projet pour l'assignation
+    this.projectService.getProject(this.data.projectId).subscribe({
       next: (response) => {
         if (response.success) {
-          this.users = response.data.items;
+          this.users = response.data.members ?? [];
         }
       }
     });

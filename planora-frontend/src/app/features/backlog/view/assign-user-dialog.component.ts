@@ -6,8 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
-import { UserService } from '../../../core/services/user.service';
-import { User } from '../../../core/models';
+import { ProjectService } from '../../../core/services/project.service';
+import { ProjectMember } from '../../../core/models';
 
 @Component({
   selector: 'app-assign-user-dialog',
@@ -27,35 +27,35 @@ import { User } from '../../../core/models';
         <mat-label>Choisir un utilisateur</mat-label>
         <mat-select [formControl]="userControl">
           <mat-option [value]="null">Non assigné</mat-option>
-          <mat-option *ngFor="let user of users" [value]="user.id">
+          <mat-option *ngFor="let user of users" [value]="user.userId">
             {{ user.fullName }}
           </mat-option>
         </mat-select>
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Annuler</button>
+      <button mat-button [mat-dialog-close]="undefined">Annuler</button>
       <button mat-raised-button color="primary" (click)="save()">Assigner</button>
     </mat-dialog-actions>
   `,
   styles: ['.full-width { width: 100%; }']
 })
 export class AssignUserDialogComponent {
-  private userService = inject(UserService);
+  private projectService = inject(ProjectService);
   private dialogRef = inject(MatDialogRef<AssignUserDialogComponent>);
 
-  users: User[] = [];
+  users: ProjectMember[] = [];
   userControl = new FormControl<string | null>(null);
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { itemId: string; currentUserId: string | null }) {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { itemId: string; projectId: string; currentUserId: string | null }) {
     this.userControl.setValue(data.currentUserId);
     this.loadUsers();
   }
 
   loadUsers(): void {
-    this.userService.getUsers(1, 100).subscribe({
+    this.projectService.getProject(this.data.projectId).subscribe({
       next: (response: any) => {
-        if (response.success) this.users = response.data.items;
+        if (response.success) this.users = response.data.members ?? [];
       }
     });
   }

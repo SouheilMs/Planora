@@ -33,7 +33,7 @@ const STORY_POINTS = [1, 2, 3, 5, 8, 13, 21];
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Annuler</button>
+      <button mat-button [mat-dialog-close]="undefined">Annuler</button>
       <button mat-button class="save-btn" (click)="save()" [disabled]="pointControl.value === null">Enregistrer</button>
     </mat-dialog-actions>
   `,

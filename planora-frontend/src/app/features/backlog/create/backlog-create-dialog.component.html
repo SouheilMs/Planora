@@ -30,13 +30,9 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Complexité</mat-label>
-        <mat-select formControlName="complexity">
-          <mat-option [value]="0">XS - Très facile</mat-option>
-          <mat-option [value]="1">S - Facile</mat-option>
-          <mat-option [value]="2">M - Moyenne</mat-option>
-          <mat-option [value]="3">L - Difficile</mat-option>
-          <mat-option [value]="4">XL - Très difficile</mat-option>
+        <mat-label>Story points</mat-label>
+        <mat-select formControlName="storyPoints">
+          <mat-option *ngFor="let pt of storyPointOptions" [value]="pt">{{ pt }} pts</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
@@ -45,7 +41,7 @@
       <mat-label>Assigné à</mat-label>
       <mat-select formControlName="assignedToId">
         <mat-option value="">Non assigné</mat-option>
-        <mat-option *ngFor="let user of users" [value]="user.id">
+        <mat-option *ngFor="let user of users" [value]="user.userId">
           {{ user.fullName }}
         </mat-option>
       </mat-select>
@@ -54,7 +50,7 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Annuler</button>
+  <button mat-button [mat-dialog-close]="undefined">Annuler</button>
   <button class="save-btn" (click)="save()" [disabled]="form.invalid || saving">
     <mat-icon>{{ saving ? 'hourglass_empty' : 'add' }}</mat-icon>
     {{ saving ? 'Enregistrement...' : 'Ajouter' }}
