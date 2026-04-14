@@ -6,8 +6,6 @@ using Planora.Infrastructure.Data;
 using Planora.Infrastructure.Identity;
 using Planora.Middleware;
 using Serilog;
-using System;
-using System.Threading.Tasks;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
