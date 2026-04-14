@@ -5,9 +5,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter } from 'rxjs/operators';
-// CORRECTION: chemins depuis shared/components/sidebar -> src/app
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { ApiResponse, Project } from '../../../core/models';
 
 @Component({
   selector: 'app-sidebar',
@@ -30,7 +30,7 @@ export class SidebarComponent implements OnInit {
   private projectService = inject(ProjectService);
   private router = inject(Router);
 
-  currentProject: any = null;
+  currentProject: Project | null = null;
   showProjectNav = false;
   userName = '';
   userEmail = '';
@@ -76,12 +76,12 @@ export class SidebarComponent implements OnInit {
 
   private loadProject(projectId: string): void {
     this.projectService.getProject(projectId).subscribe({
-      next: (response: any) => {
+      next: (response: ApiResponse<Project>) => {
         if (response.success) {
           this.currentProject = response.data;
         }
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.error('Erreur chargement projet', err);
       }
     });
@@ -90,7 +90,7 @@ export class SidebarComponent implements OnInit {
   getProjectColor(): string {
     return this.currentProject?.color || '#4f46e5';
   }
-  // dashboard.component.ts
+
   goToAllTasks(): void {
     this.router.navigate(['/tasks/all']);
   }

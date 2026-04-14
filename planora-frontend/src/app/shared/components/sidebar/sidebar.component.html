@@ -44,7 +44,7 @@
       <div class="project-header" [class.collapsed]="collapsed">
         <div class="project-avatar" [style.background]="getProjectColor()"
           [matTooltip]="collapsed ? currentProject.name : ''" [matTooltipPosition]="'right'">
-          {{ currentProject.name?.charAt(0) || 'P' }}
+          {{ currentProject.name.charAt(0) || 'P' }}
         </div>
         <span class="project-name" *ngIf="!collapsed">{{ currentProject.name }}</span>
       </div>

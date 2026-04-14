@@ -13,7 +13,7 @@ import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { BacklogService } from '../../../core/services/backlog.service';
 import { SprintService } from '../../../core/services/sprint.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { BacklogItem, TaskPriority, TaskStatus, Sprint, SprintStatus } from '../../../core/models';
+import { ApiResponse, BacklogItem, TaskPriority, TaskStatus, Sprint, SprintStatus } from '../../../core/models';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { AssignUserDialogComponent } from './assign-user-dialog.component';
@@ -68,7 +68,7 @@ export class BacklogViewComponent implements OnInit {
   loadData(): void {
     this.loading = true;
     this.sprintService.getSprintsByProject(this.projectId).subscribe({
-      next: (response: any) => {
+      next: (response: ApiResponse<Sprint[]>) => {
         if (response.success) {
           this.sprints = response.data.filter((s: Sprint) => s.status === SprintStatus.Planning);
           this.sprints.forEach(s => {
@@ -84,7 +84,7 @@ export class BacklogViewComponent implements OnInit {
 
   loadBacklogItems(): void {
     this.backlogService.getBacklogByProject(this.projectId).subscribe({
-      next: (response: any) => {
+      next: (response: ApiResponse<BacklogItem[]>) => {
         this.loading = false;
         if (response.success) {
           this.backlogItems = response.data.filter((item: BacklogItem) => !item.sprintId);
@@ -240,14 +240,14 @@ export class BacklogViewComponent implements OnInit {
   setStoryPoints(item: BacklogItem): void {
     const ref = this.dialog.open(StoryPointsDialogComponent, {
       width: '380px',
-      data: { currentPoints: (item as any).storyPoints ?? null }
+      data: { currentPoints: item.storyPoints ?? null }
     });
     ref.afterClosed().subscribe((points: number | null | undefined) => {
       if (points === undefined) return;
       this.backlogService.updateComplexity(item.id, points ?? 0).subscribe({
-        next: (response: any) => {
+        next: (response: ApiResponse<BacklogItem>) => {
           if (response.success) {
-            (item as any).storyPoints = points;
+            item.storyPoints = points;
             const label = points === -1 ? 'Non estimé' : `${points} pts`;
             this.snackBar.open(`⏱️ Estimation : ${label}`, 'Fermer', { duration: 2000 });
           }
@@ -258,7 +258,7 @@ export class BacklogViewComponent implements OnInit {
   }
 
   getStoryPointsLabel(item: BacklogItem): string {
-    const pts = (item as any).storyPoints;
+    const pts = item.storyPoints;
     if (pts === null || pts === undefined) return '';
     if (pts === -1) return '?';
     return `${pts} pts`;
@@ -273,7 +273,7 @@ export class BacklogViewComponent implements OnInit {
     ref.afterClosed().subscribe((complexity: number | null | undefined) => {
       if (complexity === undefined) return;
       this.backlogService.updateComplexity(item.id, complexity ?? 0).subscribe({
-        next: (response: any) => {
+        next: (response: ApiResponse<BacklogItem>) => {
           if (response.success) {
             item.complexity = complexity ?? 0;
             this.snackBar.open(`📊 Complexité: ${this.getComplexityTextLabel(item.complexity)}`, 'Fermer', { duration: 2000 });
@@ -305,7 +305,7 @@ export class BacklogViewComponent implements OnInit {
       width: '550px',
       data: { projectId: this.projectId }
     });
-    ref.afterClosed().subscribe((result: any) => {
+    ref.afterClosed().subscribe((result: boolean | undefined) => {
       if (result) {
         this.loadData();
         this.snackBar.open('Sprint créé !', 'Fermer', { duration: 3000 });
@@ -315,7 +315,7 @@ export class BacklogViewComponent implements OnInit {
 
   startSprint(sprintId: string): void {
     this.sprintService.startSprint(sprintId).subscribe({
-      next: (response: any) => {
+      next: (response: ApiResponse<Sprint>) => {
         if (response.success) {
           this.router.navigate(['/projects', this.projectId, 'board'], {
             queryParams: { sprintId }
@@ -334,7 +334,7 @@ export class BacklogViewComponent implements OnInit {
       width: '550px',
       data: { projectId: this.projectId, sprintId: sprintId ?? null }
     });
-    ref.afterClosed().subscribe((result: any) => {
+    ref.afterClosed().subscribe((result: boolean | undefined) => {
       if (result) this.loadData();
     });
   }
@@ -344,7 +344,7 @@ export class BacklogViewComponent implements OnInit {
       width: '550px',
       data: { projectId: this.projectId, item }
     });
-    ref.afterClosed().subscribe((result: any) => {
+    ref.afterClosed().subscribe((result: boolean | undefined) => {
       if (result) this.loadData();
     });
   }
@@ -362,7 +362,7 @@ export class BacklogViewComponent implements OnInit {
     ref.afterClosed().subscribe((confirmed: boolean) => {
       if (!confirmed) return;
       this.backlogService.deleteBacklogItem(item.id).subscribe({
-        next: (response: any) => {
+        next: (response: ApiResponse<boolean>) => {
           if (response.success) {
             this.backlogItems = this.backlogItems.filter(i => i.id !== item.id);
             this.snackBar.open('Ticket supprimé', 'Fermer', { duration: 2000 });
@@ -378,10 +378,10 @@ export class BacklogViewComponent implements OnInit {
       width: '400px',
       data: { itemId: item.id, projectId: this.projectId, currentUserId: item.assignedToId }
     });
-    ref.afterClosed().subscribe((userId: string | null) => {
+    ref.afterClosed().subscribe((userId: string | null | undefined) => {
       if (userId !== undefined) {
         this.backlogService.assignToUser(item.id, userId).subscribe({
-          next: (response: any) => {
+          next: (response: ApiResponse<BacklogItem>) => {
             if (response.success) {
               item.assignedToId = userId || undefined;
               this.snackBar.open('✅ Tâche assignée !', 'Fermer', { duration: 2000 });
@@ -392,9 +392,6 @@ export class BacklogViewComponent implements OnInit {
       }
     });
   }
-  // src/app/features/backlog/view/backlog-view.component.ts
-
-  // Ajoute ces méthodes après getBacklogTicketsByStatus()
 
   getBacklogStoryPointsByStatus(status: number): number {
     return this.backlogItems

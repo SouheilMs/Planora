@@ -4,9 +4,9 @@ import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/ro
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { filter } from 'rxjs/operators';
-// CORRECTION: 3 niveaux vers le haut (features/projects/sidebar -> src/app)
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { ApiResponse, Project } from '../../../core/models';
 
 @Component({
   selector: 'app-project-sidebar',
@@ -20,7 +20,7 @@ export class ProjectSidebarComponent implements OnInit {
   private projectService = inject(ProjectService);
   private router = inject(Router);
 
-  currentProject: any = null;
+  currentProject: Project | null = null;
   userName = '';
   userEmail = '';
   userInitials = '';
@@ -55,12 +55,12 @@ export class ProjectSidebarComponent implements OnInit {
 
   private loadProject(projectId: string): void {
     this.projectService.getProject(projectId).subscribe({
-      next: (response: any) => {
+      next: (response: ApiResponse<Project>) => {
         if (response.success) {
           this.currentProject = response.data;
         }
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.error('Erreur chargement projet', err);
       }
     });

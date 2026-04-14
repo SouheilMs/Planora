@@ -7,7 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ProjectService } from '../../../core/services/project.service';
-import { ProjectMember } from '../../../core/models';
+import { ApiResponse, Project, ProjectMember } from '../../../core/models';
 
 @Component({
   selector: 'app-assign-user-dialog',
@@ -54,7 +54,7 @@ export class AssignUserDialogComponent {
 
   loadUsers(): void {
     this.projectService.getProject(this.data.projectId).subscribe({
-      next: (response: any) => {
+      next: (response: ApiResponse<Project>) => {
         if (response.success) this.users = response.data.members ?? [];
       }
     });

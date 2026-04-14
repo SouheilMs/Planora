@@ -53,6 +53,7 @@ export interface Project {
   id: string;
   workspaceId: string;
   workspaceOwnerId: string;
+  color?: string;
   name: string;
   description: string;
   startDate: string;
@@ -70,6 +71,25 @@ export interface ProjectMember {
   userId: string;
   fullName: string;
   email: string;
+}
+
+export interface ProjectInviteableUser {
+  userId: string;
+  fullName: string;
+  email: string;
+}
+
+export interface ProjectInvitation {
+  id: string;
+  projectId: string;
+  projectName: string;
+  invitedUserId: string;
+  invitedUserName: string;
+  invitedByUserId: string;
+  invitedByUserName: string;
+  status: number;
+  createdAt: string;
+  respondedAt?: string | null;
 }
 
 export interface CreateProjectRequest {

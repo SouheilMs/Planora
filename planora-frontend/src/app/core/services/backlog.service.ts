@@ -1,7 +1,7 @@
 // src/app/core/services/backlog.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, catchError, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, BacklogItem, CreateBacklogItemRequest, TaskPriority, TaskStatus, PagedResult } from '../models';
 
@@ -19,7 +19,6 @@ export class BacklogService {
     return this.http.get<ApiResponse<BacklogItem[]>>(`${this.apiUrl}/project/${projectId}`);
   }
 
-  // ✅ AJOUTER CETTE MÉTHODE
   getAllBacklogItemsForProject(projectId: string, page = 1, pageSize = 10): Observable<ApiResponse<PagedResult<BacklogItem>>> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<ApiResponse<PagedResult<BacklogItem>>>(`${this.apiUrl}/project/${projectId}/all-items`, { params });
@@ -38,7 +37,6 @@ export class BacklogService {
   }
 
   updateBacklogItemStatus(id: string, status: TaskStatus): Observable<ApiResponse<BacklogItem>> {
-    console.log('Appel API updateStatus:', id, status);
     return this.http.patch<ApiResponse<BacklogItem>>(`${this.apiUrl}/${id}/status`, { status });
   }
 

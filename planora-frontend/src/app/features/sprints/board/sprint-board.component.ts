@@ -75,7 +75,6 @@ export class SprintBoardComponent implements OnInit {
   }
 
   forceRefresh(): void {
-    console.log('=== FORCE REFRESH ===');
     this.loadSprintItems();
     this.snackBar.open('Rafraîchissement forcé', 'Fermer', { duration: 2000 });
   }
@@ -150,7 +149,7 @@ export class SprintBoardComponent implements OnInit {
       if (!confirmed) return;
 
       this.sprintService.closeSprint(this.selectedSprintId!).subscribe({
-        next: (response: any) => {
+        next: (response: ApiResponse<Sprint>) => {
           if (response.success) {
             this.snackBar.open('✓ Sprint terminé !', 'Fermer', { duration: 3000 });
             this.loadSprints();
@@ -164,7 +163,6 @@ export class SprintBoardComponent implements OnInit {
   }
 
   fixTicketStatuses(): void {
-    console.log('=== CORRECTION DES STATUTS ===');
     this.backlogService.getBacklogByProject(this.projectId).subscribe({
       next: (response: ApiResponse<BacklogItem[]>) => {
         if (response.success) {
@@ -174,17 +172,13 @@ export class SprintBoardComponent implements OnInit {
               (item.status !== TaskStatus.Todo && item.status !== TaskStatus.InProgress && item.status !== TaskStatus.Done))
           );
 
-          console.log('Tickets à corriger:', itemsToFix.length);
-
           if (itemsToFix.length === 0) {
             this.snackBar.open('Aucun ticket à corriger', 'Fermer', { duration: 2000 });
             return;
           }
 
           let fixedCount = 0;
-          // ✅ Correction : ajout du typage explicite (item: BacklogItem)
           itemsToFix.forEach((item: BacklogItem) => {
-            console.log(`Correction du ticket: ${item.title} - ancien status: ${item.status}`);
             this.backlogService.updateBacklogItemStatus(item.id, TaskStatus.Todo).subscribe({
               next: () => {
                 fixedCount++;
@@ -203,14 +197,11 @@ export class SprintBoardComponent implements OnInit {
     });
   }
 
-  // sprint-board.component.ts
   loadSprints(): void {
     this.loading = true;
     this.sprintService.getSprintsByProject(this.projectId).subscribe({
       next: (response: ApiResponse<Sprint[]>) => {
         if (response.success) {
-          // ✅ Afficher TOUS les sprints (Planning + Active)
-          // Exclure seulement les sprints fermés (Closed)
           this.sprints = response.data.filter(s => s.status !== SprintStatus.Closed);
 
           if (this.selectedSprintId) {
@@ -241,7 +232,6 @@ export class SprintBoardComponent implements OnInit {
   }
   loadSprintItems(): void {
     if (!this.selectedSprintId) {
-      console.log('Aucun sprint sélectionné');
       return;
     }
 
@@ -282,9 +272,6 @@ export class SprintBoardComponent implements OnInit {
     this.loadSprintItems();
   }
 
-
-
-
   onDrop(event: CdkDragDrop<BacklogItem[]>, newStatus: TaskStatus): void {
     if (event.previousContainer === event.container) {
       return;
@@ -292,7 +279,6 @@ export class SprintBoardComponent implements OnInit {
 
     const item = event.previousContainer.data[event.previousIndex];
 
-    // Mettre à jour l'UI immédiatement
     transferArrayItem(
       event.previousContainer.data,
       event.container.data,
@@ -300,10 +286,8 @@ export class SprintBoardComponent implements OnInit {
       event.currentIndex
     );
 
-    // Mettre à jour le statut localement
     item.status = newStatus;
 
-    // Appel API pour sauvegarder le nouveau statut
     this.backlogService.updateBacklogItemStatus(item.id, newStatus).subscribe({
       next: (response) => {
         if (response.success) {
@@ -320,20 +304,6 @@ export class SprintBoardComponent implements OnInit {
       }
     });
   }
-  private restoreDragState(
-    event: CdkDragDrop<BacklogItem[]>,
-    originalContainerData: BacklogItem[],
-    originalTargetData: BacklogItem[],
-    originalStatus: TaskStatus
-  ): void {
-    event.previousContainer.data.splice(0, event.previousContainer.data.length, ...originalContainerData);
-    event.container.data.splice(0, event.container.data.length, ...originalTargetData);
-
-    const restoredItem = originalContainerData[event.previousIndex];
-    if (restoredItem) {
-      restoredItem.status = originalStatus;
-    }
-  }
 
   createItem(): void {
     const ref = this.dialog.open(BacklogCreateDialogComponent, {
@@ -343,18 +313,18 @@ export class SprintBoardComponent implements OnInit {
         sprintId: this.selectedSprintId
       }
     });
-    ref.afterClosed().subscribe((result: any) => {
+    ref.afterClosed().subscribe((result: boolean | undefined) => {
       if (result) this.loadSprintItems();
     });
   }
 
   editItem(item: BacklogItem): void {
-    console.log('Edit item', item);
+    void item;
     this.snackBar.open('Fonctionnalité à venir', 'Fermer', { duration: 2000 });
   }
 
   deleteItem(item: BacklogItem): void {
-    console.log('Delete item', item);
+    void item;
     this.snackBar.open('Fonctionnalité à venir', 'Fermer', { duration: 2000 });
   }
 
@@ -440,6 +410,4 @@ export class SprintBoardComponent implements OnInit {
   goToHistory(): void {
     this.router.navigate(['/projects', this.projectId, 'history']);
   }
-
-
 }
