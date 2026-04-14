@@ -44,7 +44,6 @@ public class ProjectsController : ControllerBase
 
     /// <summary>Create a new project</summary>
     [HttpPost]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -56,7 +55,6 @@ public class ProjectsController : ControllerBase
 
     /// <summary>Update a project</summary>
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> UpdateProject(Guid id, [FromBody] UpdateProjectDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -77,7 +75,6 @@ public class ProjectsController : ControllerBase
 
     /// <summary>Add member to project</summary>
     [HttpPost("{id:guid}/members/{userId}")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> AddMember(Guid id, string userId)
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -89,7 +86,6 @@ public class ProjectsController : ControllerBase
 
     /// <summary>Remove member from project</summary>
     [HttpDelete("{id:guid}/members/{userId}")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> RemoveMember(Guid id, string userId)
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -97,5 +93,60 @@ public class ProjectsController : ControllerBase
 
         await _projectService.RemoveMemberAsync(id, userId, currentUserId);
         return Ok(ApiResponseDto<object>.SuccessResult(null!, "Member removed successfully."));
+    }
+
+    /// <summary>Get inviteable workspace members for a project</summary>
+    [HttpGet("{id:guid}/inviteable-members")]
+    public async Task<IActionResult> GetInviteableMembers(Guid id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _projectService.GetInviteableUsersAsync(id, userId);
+        return Ok(ApiResponseDto<object>.SuccessResult(result));
+    }
+
+    /// <summary>Invite a workspace member to a project</summary>
+    [HttpPost("{id:guid}/invitations")]
+    public async Task<IActionResult> InviteMember(Guid id, [FromBody] InviteProjectMemberDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _projectService.InviteMemberAsync(id, dto, userId);
+        return Ok(ApiResponseDto<ProjectInvitationDto>.SuccessResult(result, "Invitation sent successfully."));
+    }
+
+    /// <summary>Get pending project invitations for the current user</summary>
+    [HttpGet("invitations/pending")]
+    public async Task<IActionResult> GetPendingInvitations()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _projectService.GetPendingInvitationsAsync(userId);
+        return Ok(ApiResponseDto<object>.SuccessResult(result));
+    }
+
+    /// <summary>Accept a project invitation</summary>
+    [HttpPost("invitations/{invitationId:guid}/accept")]
+    public async Task<IActionResult> AcceptInvitation(Guid invitationId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _projectService.AcceptProjectInvitationAsync(invitationId, userId);
+        return Ok(ApiResponseDto<object>.SuccessResult(null!, "Invitation accepted successfully."));
+    }
+
+    /// <summary>Reject a project invitation</summary>
+    [HttpPost("invitations/{invitationId:guid}/reject")]
+    public async Task<IActionResult> RejectInvitation(Guid invitationId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _projectService.RejectProjectInvitationAsync(invitationId, userId);
+        return Ok(ApiResponseDto<object>.SuccessResult(null!, "Invitation rejected successfully."));
     }
 }
