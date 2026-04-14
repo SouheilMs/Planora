@@ -51,23 +51,24 @@
             <span class="info-label">Progress</span>
             <span class="progress-pct">{{ project.progressPercentage | number:'1.0-0' }}%</span>
           </div>
-          <mat-progress-bar mode="determinate" [value]="project.progressPercentage" class="project-bar"></mat-progress-bar>
+          <mat-progress-bar mode="determinate" [value]="project.progressPercentage"
+            class="project-bar"></mat-progress-bar>
         </div>
       </div>
 
       <!-- Team Card -->
       <div class="planora-card">
         <h3 class="section-title">Team Members</h3>
-        <div *ngIf="project.members?.length" class="members-list">
+        <div *ngIf="project.members.length" class="members-list">
           <div class="member-item" *ngFor="let m of project.members">
-            <div class="member-avatar">{{ m.fullName?.[0] || '?' }}</div>
+            <div class="member-avatar">{{ m.fullName[0] || '?' }}</div>
             <div>
               <div class="member-name">{{ m.fullName }}</div>
               <div class="member-email">{{ m.email }}</div>
             </div>
           </div>
         </div>
-        <div *ngIf="!project.members?.length" class="empty-state" style="padding: 32px 0">
+        <div *ngIf="!project.members.length" class="empty-state" style="padding: 32px 0">
           <mat-icon>people_outline</mat-icon>
           <h3>No members</h3>
           <p>No team members assigned yet</p>

@@ -28,7 +28,7 @@ const STORY_POINTS = [1, 2, 3, 5, 8, 13, 21];
       <div class="selected-label" *ngIf="pointControl.value !== null">
         <ng-container *ngIf="pointControl.value === -1">Non estimé</ng-container>
         <ng-container *ngIf="pointControl.value !== -1">
-          <span class="pt-display">{{ pointControl.value }}</span> point{{ (pointControl.value ?? 0) > 1 ? 's' : '' }} — {{ getEffortLabel(pointControl.value ?? 0) }}
+          <span class="pt-display">{{ pointControl.value }}</span> point{{ pointControl.value > 1 ? 's' : '' }} — {{ getEffortLabel(pointControl.value) }}
         </ng-container>
       </div>
     </mat-dialog-content>
