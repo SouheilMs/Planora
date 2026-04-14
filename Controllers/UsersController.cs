@@ -20,7 +20,6 @@ public class UsersController : ControllerBase
 
     /// <summary>Get all users with pagination</summary>
     [HttpGet]
-    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
     {
         var result = await _userService.GetUsersAsync(page, pageSize, search);
