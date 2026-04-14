@@ -34,8 +34,7 @@ import { ComplexityDialogComponent } from './complexity-dialog.component';
     MatMenuModule,
     MatDividerModule,
     DragDropModule,
-    LoadingComponent,
-    CreateSprintDialogComponent
+    LoadingComponent
   ],
   templateUrl: './backlog-view.component.html',
   styleUrls: ['./backlog-view.component.scss']

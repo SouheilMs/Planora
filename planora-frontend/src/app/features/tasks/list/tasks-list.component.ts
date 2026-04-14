@@ -22,7 +22,6 @@ import { TaskCardComponent, TaskCardData } from '../card/task-card.component';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
