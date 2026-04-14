@@ -369,19 +369,12 @@ h3 {
   box-shadow: var(--shadow-sm) !important;
 }
 
-// Fix dialog and card title spacing globally
-h2[mat-dialog-title],
-h1[mat-dialog-title] {
-  margin-bottom: 1rem !important;
-}
-
 mat-dialog-content {
-  margin-top: 0 !important;
-  padding-top: 1.5rem !important;
+  padding-top: 1rem !important;
 }
 
 mat-card-content {
-  margin-top: 0 !important;
+  padding-top: 1rem !important;
 }
 
 .mat-mdc-raised-button.mat-primary {
