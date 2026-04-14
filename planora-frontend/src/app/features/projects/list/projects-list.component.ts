@@ -79,6 +79,10 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                   {{ p.description | slice:0:60 }}{{ (p.description?.length ?? 0) > 60 ? '…' : '' }}
                 </td>
               </ng-container>
+              <ng-container matColumnDef="workspace">
+                <th mat-header-cell *matHeaderCellDef>Workspace</th>
+                <td mat-cell *matCellDef="let p">{{ p.workspaceName }}</td>
+              </ng-container>
               <ng-container matColumnDef="manager">
                 <th mat-header-cell *matHeaderCellDef>Manager</th>
                 <td mat-cell *matCellDef="let p">{{ p.projectManagerName }}</td>
@@ -160,7 +164,7 @@ export class ProjectsListComponent implements OnInit {
   currentPage = 1;
   loading = true;
   searchCtrl = new FormControl('');
-  displayedColumns = ['name', 'description', 'manager', 'members', 'progress', 'actions'];
+  displayedColumns = ['name', 'description', 'workspace', 'manager', 'members', 'progress', 'actions'];
 
   get canManage(): boolean {
     return this.authService.isAuthenticated;

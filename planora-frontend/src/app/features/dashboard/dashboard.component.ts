@@ -131,6 +131,10 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
                   <a [routerLink]="['/projects', p.projectId]" class="planora-link">{{ p.projectName }}</a>
                 </td>
               </ng-container>
+              <ng-container matColumnDef="workspaceName">
+                <th mat-header-cell *matHeaderCellDef>Workspace</th>
+                <td mat-cell *matCellDef="let p">{{ p.workspaceName }}</td>
+              </ng-container>
               <ng-container matColumnDef="totalTasks">
                 <th mat-header-cell *matHeaderCellDef>Tasks</th>
                 <td mat-cell *matCellDef="let p">{{ p.totalTasks }}</td>
@@ -231,7 +235,7 @@ export class DashboardComponent implements OnInit {
 
   loading = true;
   data: DashboardData | null = null;
-  displayedColumns = ['projectName', 'totalTasks', 'completedTasks', 'progress'];
+  displayedColumns = ['projectName', 'workspaceName', 'totalTasks', 'completedTasks', 'progress'];
 
   ngOnInit(): void {
     this.dashboardService.getDashboard().subscribe({

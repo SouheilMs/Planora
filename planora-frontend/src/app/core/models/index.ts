@@ -52,6 +52,7 @@ export interface RefreshRequest {
 export interface Project {
   id: string;
   workspaceId: string;
+  workspaceName: string;
   workspaceOwnerId: string;
   color?: string;
   name: string;
@@ -290,6 +291,7 @@ export interface DashboardData {
 export interface ProjectProgress {
   projectId: string;
   projectName: string;
+  workspaceName: string;
   progressPercentage: number;
   totalTasks: number;
   completedTasks: number;
