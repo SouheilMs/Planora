@@ -22,15 +22,15 @@ import { ProjectFormDialogComponent } from './project-form-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
-    selector: 'app-projects-list',
-    imports: [
-        CommonModule, RouterLink, ReactiveFormsModule,
-        MatCardModule, MatTableModule, MatButtonModule, MatIconModule,
-        MatFormFieldModule, MatInputModule, MatPaginatorModule,
-        MatProgressBarModule, MatSnackBarModule, MatDialogModule,
-        MatTooltipModule, LoadingComponent
-    ],
-    template: `
+  selector: 'app-projects-list',
+  imports: [
+    CommonModule, RouterLink, ReactiveFormsModule,
+    MatCardModule, MatTableModule, MatButtonModule, MatIconModule,
+    MatFormFieldModule, MatInputModule, MatPaginatorModule,
+    MatProgressBarModule, MatSnackBarModule, MatDialogModule,
+    MatTooltipModule, LoadingComponent
+  ],
+  template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -88,7 +88,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                 <td mat-cell *matCellDef="let p">
                   <span class="member-count">
                     <mat-icon style="font-size:14px;width:14px;height:14px;vertical-align:middle">people</mat-icon>
-                    {{ p.members?.length || 0 }}
+                    {{ p.memberCount || 0 }}
                   </span>
                 </td>
               </ng-container>
@@ -133,7 +133,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       </div>
     </div>
     `,
-    styles: [`
+  styles: [`
     .primary-btn {
       background: #4f46e5 !important;
       color: #fff !important;
@@ -163,7 +163,7 @@ export class ProjectsListComponent implements OnInit {
   displayedColumns = ['name', 'description', 'manager', 'members', 'progress', 'actions'];
 
   get canManage(): boolean {
-    return this.authService.hasRole(['Admin', 'ProjectManager']);
+    return this.authService.isAuthenticated;
   }
 
   get isAdmin(): boolean {

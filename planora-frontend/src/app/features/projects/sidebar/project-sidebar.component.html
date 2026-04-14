@@ -15,6 +15,10 @@
       <mat-icon>folder_open</mat-icon>
       <span>Projects</span>
     </a>
+    <a routerLink="/workspaces" routerLinkActive="active" class="nav-item">
+      <mat-icon>groups</mat-icon>
+      <span>Workspaces</span>
+    </a>
   </nav>
 
   <div class="sidebar-divider"></div>
@@ -28,21 +32,15 @@
     </div>
 
     <div class="project-nav">
-      <a [routerLink]="['/projects', currentProject.id, 'backlog']"
-         routerLinkActive="active"
-         class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'backlog']" routerLinkActive="active" class="project-nav-item">
         <mat-icon>inbox</mat-icon>
         <span>Backlog</span>
       </a>
-      <a [routerLink]="['/projects', currentProject.id, 'tasks']"
-         routerLinkActive="active"
-         class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'tasks']" routerLinkActive="active" class="project-nav-item">
         <mat-icon>task_alt</mat-icon>
         <span>Tâches</span>
       </a>
-      <a [routerLink]="['/projects', currentProject.id, 'sprints']"
-         routerLinkActive="active"
-         class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'sprints']" routerLinkActive="active" class="project-nav-item">
         <mat-icon>sprint</mat-icon>
         <span>Sprints</span>
       </a>

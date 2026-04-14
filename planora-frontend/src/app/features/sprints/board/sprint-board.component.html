@@ -15,10 +15,8 @@
         <mat-icon>add</mat-icon>
         Créer un ticket
       </button>
-      <button class="complete-sprint-btn"
-              (click)="completeSprint()"
-              [disabled]="isCompleteButtonDisabled()"
-              matTooltip="{{ getCompleteButtonTooltip() }}">
+      <button class="complete-sprint-btn" (click)="completeSprint()" [disabled]="isCompleteButtonDisabled()"
+        matTooltip="{{ getCompleteButtonTooltip() }}">
         <mat-icon>check_circle</mat-icon>
         Terminer le sprint
       </button>
@@ -44,6 +42,12 @@
   <ng-container *ngIf="!loading && selectedSprint">
     <div class="sprint-info">
       <div class="sprint-name">{{ selectedSprint.name }}</div>
+      <div class="sprint-points-summary">
+        <span class="points-chip total">Total: {{ getSelectedSprintTotalPoints() }} pts</span>
+        <span class="points-chip">A faire: {{ getSelectedSprintPointsByStatus(STATUS_TODO) }} pts</span>
+        <span class="points-chip">En cours: {{ getSelectedSprintPointsByStatus(STATUS_IN_PROGRESS) }} pts</span>
+        <span class="points-chip done">Termine: {{ getSelectedSprintPointsByStatus(STATUS_DONE) }} pts</span>
+      </div>
       <div class="sprint-goal" *ngIf="selectedSprint.goal">
         <mat-icon>flag</mat-icon>
         {{ selectedSprint.goal }}
@@ -64,12 +68,8 @@
             <span class="count">{{ todoItems.length }}</span>
           </div>
         </div>
-        <div class="task-list"
-             cdkDropList
-             id="todoList"
-             [cdkDropListData]="todoItems"
-             [cdkDropListConnectedTo]="['inprogressList', 'doneList']"
-             (cdkDropListDropped)="onDrop($event, STATUS_TODO)">
+        <div class="task-list" cdkDropList id="todoList" [cdkDropListData]="todoItems"
+          [cdkDropListConnectedTo]="['inprogressList', 'doneList']" (cdkDropListDropped)="onDrop($event, STATUS_TODO)">
           <div class="task-item" *ngFor="let item of todoItems" cdkDrag>
             <div class="task-card">
               <div class="task-card-header">
@@ -92,6 +92,7 @@
                   <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
                     {{ getPriorityLabel(item.priority) }}
                   </span>
+                  <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
                 </div>
               </div>
             </div>
@@ -112,12 +113,8 @@
             <span class="count">{{ inProgressItems.length }}</span>
           </div>
         </div>
-        <div class="task-list"
-             cdkDropList
-             id="inprogressList"
-             [cdkDropListData]="inProgressItems"
-             [cdkDropListConnectedTo]="['todoList', 'doneList']"
-             (cdkDropListDropped)="onDrop($event, STATUS_IN_PROGRESS)">
+        <div class="task-list" cdkDropList id="inprogressList" [cdkDropListData]="inProgressItems"
+          [cdkDropListConnectedTo]="['todoList', 'doneList']" (cdkDropListDropped)="onDrop($event, STATUS_IN_PROGRESS)">
           <div class="task-item" *ngFor="let item of inProgressItems" cdkDrag>
             <div class="task-card">
               <div class="task-card-header">
@@ -140,6 +137,7 @@
                   <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
                     {{ getPriorityLabel(item.priority) }}
                   </span>
+                  <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
                 </div>
               </div>
             </div>
@@ -160,12 +158,8 @@
             <span class="count">{{ doneItems.length }}</span>
           </div>
         </div>
-        <div class="task-list"
-             cdkDropList
-             id="doneList"
-             [cdkDropListData]="doneItems"
-             [cdkDropListConnectedTo]="['todoList', 'inprogressList']"
-             (cdkDropListDropped)="onDrop($event, STATUS_DONE)">
+        <div class="task-list" cdkDropList id="doneList" [cdkDropListData]="doneItems"
+          [cdkDropListConnectedTo]="['todoList', 'inprogressList']" (cdkDropListDropped)="onDrop($event, STATUS_DONE)">
           <div class="task-item" *ngFor="let item of doneItems" cdkDrag>
             <div class="task-card">
               <div class="task-card-header">
@@ -188,6 +182,7 @@
                   <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
                     {{ getPriorityLabel(item.priority) }}
                   </span>
+                  <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
                 </div>
               </div>
             </div>

@@ -9,9 +9,10 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
-import { UserService } from '../../../core/services/user.service';
-import { Project, User } from '../../../core/models';
+import { WorkspaceService } from '../../../core/services/workspace.service';
+import { Project, Workspace, WorkspaceMember } from '../../../core/models';
 
 @Component({
   selector: 'app-project-form-dialog',
@@ -44,6 +45,17 @@ import { Project, User } from '../../../core/models';
         </mat-form-field>
         <div class="row">
           <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Workspace</mat-label>
+            <mat-select formControlName="workspaceId" (selectionChange)="onWorkspaceChanged()" [disabled]="!!data">
+              @for (workspace of ownedWorkspaces; track workspace.id) {
+                <mat-option [value]="workspace.id">{{ workspace.name }}</mat-option>
+              }
+            </mat-select>
+            @if (form.get('workspaceId')?.hasError('required')) {
+              <mat-error>Required</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="half-width">
             <mat-label>Start Date</mat-label>
             <input matInput [matDatepicker]="startPicker" formControlName="startDate">
             <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
@@ -56,17 +68,17 @@ import { Project, User } from '../../../core/models';
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
         </div>
-        <!-- <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Project Manager</mat-label>
           <mat-select formControlName="projectManagerId">
-            @for (u of users; track u) {
-              <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+            @for (u of workspaceMembers; track u.userId) {
+              <mat-option [value]="u.userId">{{ u.fullName }}</mat-option>
             }
           </mat-select>
           @if (form.get('projectManagerId')?.hasError('required')) {
             <mat-error>Required</mat-error>
           }
-        </mat-form-field> -->
+        </mat-form-field>
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -86,36 +98,73 @@ import { Project, User } from '../../../core/models';
 export class ProjectFormDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private projectService = inject(ProjectService);
-  private userService = inject(UserService);
+  private workspaceService = inject(WorkspaceService);
+  private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private dialogRef = inject(MatDialogRef<ProjectFormDialogComponent>);
 
-  users: User[] = [];
+  workspaces: Workspace[] = [];
+  workspaceMembers: WorkspaceMember[] = [];
   saving = false;
 
+  get ownedWorkspaces(): Workspace[] {
+    const currentUserId = this.authService.currentUser?.userId;
+    if (!currentUserId) return [];
+    return this.workspaces.filter(workspace => workspace.ownerId === currentUserId || workspace.projectManagerId === currentUserId);
+  }
+
   form = this.fb.group({
+    workspaceId: ['', Validators.required],
     name: ['', Validators.required],
     description: [''],
     startDate: [null as Date | null],
     endDate: [null as Date | null],
-    // projectManagerId: ['', Validators.required]
+    projectManagerId: ['', Validators.required]
   });
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: Project | null) { }
 
   ngOnInit(): void {
-    this.userService.getUsers(1, 100).subscribe(r => {
-      if (r.success) this.users = r.data.items;
+    this.workspaceService.getWorkspaces().subscribe(r => {
+      if (r.success) {
+        this.workspaces = r.data;
+        if (!this.data && this.ownedWorkspaces.length === 1) {
+          this.form.patchValue({ workspaceId: this.ownedWorkspaces[0].id });
+          this.onWorkspaceChanged();
+        }
+      }
     });
+
     if (this.data) {
       this.form.patchValue({
+        workspaceId: this.data.workspaceId,
         name: this.data.name,
         description: this.data.description,
         startDate: this.data.startDate ? new Date(this.data.startDate) : null,
         endDate: this.data.endDate ? new Date(this.data.endDate) : null,
-        // projectManagerId: this.data.projectManagerId
+        projectManagerId: this.data.projectManagerId
       });
+      this.onWorkspaceChanged();
     }
+  }
+
+  onWorkspaceChanged(): void {
+    const workspaceId = this.form.value.workspaceId;
+    if (!workspaceId) {
+      this.workspaceMembers = [];
+      return;
+    }
+
+    this.workspaceService.getMembers(workspaceId).subscribe({
+      next: response => {
+        if (response.success) {
+          this.workspaceMembers = response.data;
+        }
+      },
+      error: () => {
+        this.workspaceMembers = [];
+      }
+    });
   }
 
   save(): void {
@@ -123,14 +172,22 @@ export class ProjectFormDialogComponent implements OnInit {
     this.saving = true;
     const value = this.form.value;
     const payload = {
+      workspaceId: value.workspaceId!,
       name: value.name!,
       description: value.description || '',
       startDate: value.startDate ? (value.startDate as Date).toISOString() : '',
       endDate: value.endDate ? (value.endDate as Date).toISOString() : '',
-      // projectManagerId: value.projectManagerId!
+      projectManagerId: value.projectManagerId!
+    };
+    const updatePayload = {
+      name: payload.name,
+      description: payload.description,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+      projectManagerId: payload.projectManagerId
     };
     const obs = this.data
-      ? this.projectService.updateProject(this.data.id, payload)
+      ? this.projectService.updateProject(this.data.id, updatePayload)
       : this.projectService.createProject(payload);
     obs.subscribe({
       next: response => {

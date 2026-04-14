@@ -281,10 +281,10 @@ export class SprintBoardComponent implements OnInit {
     this.selectedSprintId = sprintId;
     this.loadSprintItems();
   }
-  
 
 
- 
+
+
   onDrop(event: CdkDragDrop<BacklogItem[]>, newStatus: TaskStatus): void {
     if (event.previousContainer === event.container) {
       return;
@@ -382,6 +382,26 @@ export class SprintBoardComponent implements OnInit {
     const classes = ['planning', 'active', 'closed'];
     return classes[status] ?? '';
   }
+
+  getItemStoryPoints(item: BacklogItem): number {
+    return item.storyPoints ?? item.complexity ?? 0;
+  }
+
+  getSelectedSprintTotalPoints(): number {
+    return [...this.todoItems, ...this.inProgressItems, ...this.doneItems]
+      .reduce((sum, item) => sum + this.getItemStoryPoints(item), 0);
+  }
+
+  getSelectedSprintPointsByStatus(status: TaskStatus): number {
+    const source = status === TaskStatus.Todo
+      ? this.todoItems
+      : status === TaskStatus.InProgress
+        ? this.inProgressItems
+        : this.doneItems;
+
+    return source.reduce((sum, item) => sum + this.getItemStoryPoints(item), 0);
+  }
+
   isCompleteButtonDisabled(): boolean {
     if (!this.selectedSprint) return true;
 

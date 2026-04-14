@@ -27,7 +27,7 @@ import { BacklogCreateDialogComponent } from '../create/backlog-create-dialog.co
     CommonModule, RouterLink, ReactiveFormsModule, FormsModule,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatSnackBarModule, MatDialogModule, MatTooltipModule,
-    MatChipsModule, DragDropModule, LoadingComponent, ConfirmDialogComponent
+    MatChipsModule, DragDropModule, LoadingComponent
   ],
   templateUrl: './backlog-list.component.html',
   styleUrls: ['./backlog-list.component.css']
@@ -136,7 +136,7 @@ export class BacklogListComponent implements OnInit {
         }
       });
     } else {
-      this.backlogService.updatePriority(item.id, 0).subscribe({
+      this.backlogService.removeFromSprint(item.id).subscribe({
         next: () => {
           item.sprintId = null;
           this.snackBar.open('↩️ Retour au backlog', 'Fermer', { duration: 2000 });
@@ -149,7 +149,7 @@ export class BacklogListComponent implements OnInit {
   removeFromSprint(item: BacklogItem): void {
     const sprintId = item.sprintId;
     if (!sprintId) return;
-    this.backlogService.updatePriority(item.id, item.priority).subscribe({
+    this.backlogService.removeFromSprint(item.id).subscribe({
       next: () => {
         const sprintList = this.sprintItemsMap.get(sprintId) ?? [];
         const idx = sprintList.findIndex(i => i.id === item.id);

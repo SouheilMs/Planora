@@ -59,8 +59,8 @@
       <!-- Team Card -->
       <div class="planora-card">
         <h3 class="section-title">Team Members</h3>
-        <div *ngIf="project.members.length" class="members-list">
-          <div class="member-item" *ngFor="let m of project.members">
+        <div *ngIf="(project.members?.length || 0) > 0" class="members-list">
+          <div class="member-item" *ngFor="let m of (project.members || []); trackBy: trackByUserId">
             <div class="member-avatar">{{ m.fullName[0] || '?' }}</div>
             <div>
               <div class="member-name">{{ m.fullName }}</div>
@@ -68,10 +68,28 @@
             </div>
           </div>
         </div>
-        <div *ngIf="!project.members.length" class="empty-state" style="padding: 32px 0">
+        <div *ngIf="(project.members?.length || 0) === 0" class="empty-state" style="padding: 32px 0">
           <mat-icon>people_outline</mat-icon>
           <h3>No members</h3>
           <p>No team members assigned yet</p>
+        </div>
+
+        <div *ngIf="canManageMembers" class="invite-panel">
+          <h4 class="section-title">Invite Member to Project</h4>
+          <form class="invite-form" [formGroup]="memberForm" (ngSubmit)="addMember()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Workspace member</mat-label>
+              <mat-select formControlName="userId">
+                <mat-option *ngFor="let member of availableWorkspaceMembers; trackBy: trackByUserId"
+                  [value]="member.userId">
+                  {{ member.fullName }} ({{ member.email }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <button mat-raised-button color="primary" [disabled]="memberForm.invalid || addingMember">
+              {{ addingMember ? 'Adding...' : 'Add Member' }}
+            </button>
+          </form>
         </div>
       </div>
     </div>

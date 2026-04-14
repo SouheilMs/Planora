@@ -9,9 +9,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { BacklogService } from '../../../core/services/backlog.service';
-import { TaskPriority } from '../../../core/models';
-import { UserService } from '../../../core/services/user.service';
-import { User } from '../../../core/models';
+import { ProjectService } from '../../../core/services/project.service';
+import { WorkspaceService } from '../../../core/services/workspace.service';
+import { TaskPriority, WorkspaceMember } from '../../../core/models';
+
+const STORY_POINT_OPTIONS = [1, 2, 3, 5, 8, 13, 21];
 
 @Component({
   selector: 'app-backlog-create-dialog',
@@ -27,34 +29,47 @@ import { User } from '../../../core/models';
 export class BacklogCreateDialogComponent {
   private fb = inject(FormBuilder);
   private backlogService = inject(BacklogService);
-  private userService = inject(UserService);
+  private projectService = inject(ProjectService);
+  private workspaceService = inject(WorkspaceService);
   private snackBar = inject(MatSnackBar);
   private dialogRef = inject(MatDialogRef<BacklogCreateDialogComponent>);
 
   saving = false;
-  users: User[] = [];
+  users: WorkspaceMember[] = [];
+  readonly storyPointOptions = STORY_POINT_OPTIONS;
 
   form = this.fb.group({
     title: ['', Validators.required],
     description: [''],
     priority: [TaskPriority.Medium],
-    complexity: [2],
+    storyPoints: [3],
     assignedToId: ['']
   });
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { projectId: string }) {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { projectId: string; sprintId?: string | null }) {
     this.loadUsers();
   }
 
   loadUsers(): void {
-    this.userService.getUsers(1, 100).subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          this.users = response.data.items;
+    this.projectService.getProject(this.data.projectId).subscribe({
+      next: (projectResponse) => {
+        if (!projectResponse.success) {
+          return;
         }
+
+        this.workspaceService.getMembers(projectResponse.data.workspaceId).subscribe({
+          next: (membersResponse) => {
+            if (membersResponse.success) {
+              this.users = membersResponse.data;
+            }
+          },
+          error: () => {
+            this.snackBar.open('Erreur chargement des membres workspace', 'Fermer', { duration: 3000 });
+          }
+        });
       },
       error: () => {
-        console.error('Erreur chargement utilisateurs');
+        this.snackBar.open('Erreur chargement du projet', 'Fermer', { duration: 3000 });
       }
     });
   }
@@ -76,20 +91,46 @@ export class BacklogCreateDialogComponent {
       request.assignedToId = value.assignedToId;
     }
 
-    // Ajouter complexity si renseigné
-    if (value.complexity !== undefined && value.complexity !== null) {
-      request.complexity = value.complexity;
+    if (value.storyPoints !== undefined && value.storyPoints !== null) {
+      request.storyPoints = value.storyPoints;
+      request.complexity = value.storyPoints;
+    }
+
+    if (this.data.sprintId) {
+      request.sprintId = this.data.sprintId;
     }
 
     this.backlogService.createBacklogItem(request).subscribe({
       next: (response: any) => {
-        this.saving = false;
-        if (response.success) {
-          this.snackBar.open('✅ Élément ajouté !', 'Fermer', { duration: 2000 });
-          this.dialogRef.close(true);
-        } else {
+        if (!response.success) {
+          this.saving = false;
           this.snackBar.open(response.message || 'Erreur', 'Fermer', { duration: 4000 });
+          return;
         }
+
+        const createdItemId = response.data?.id as string | undefined;
+        const createdSprintId = response.data?.sprintId as string | null | undefined;
+        const targetSprintId = this.data.sprintId ?? null;
+
+        if (targetSprintId && createdItemId && createdSprintId !== targetSprintId) {
+          this.backlogService.moveToSprint(createdItemId, targetSprintId).subscribe({
+            next: () => {
+              this.saving = false;
+              this.snackBar.open('✅ Élément ajouté au sprint !', 'Fermer', { duration: 2000 });
+              this.dialogRef.close(true);
+            },
+            error: () => {
+              this.saving = false;
+              this.snackBar.open('Créé, mais impossible de l\'ajouter au sprint', 'Fermer', { duration: 4000 });
+              this.dialogRef.close(true);
+            }
+          });
+          return;
+        }
+
+        this.saving = false;
+        this.snackBar.open('✅ Élément ajouté !', 'Fermer', { duration: 2000 });
+        this.dialogRef.close(true);
       },
       error: (err: any) => {
         this.saving = false;

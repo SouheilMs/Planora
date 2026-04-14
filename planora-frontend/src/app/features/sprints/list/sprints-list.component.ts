@@ -17,13 +17,13 @@ import { SprintFormDialogComponent } from './sprint-form-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
-    selector: 'app-sprints-list',
-    imports: [
-        CommonModule, RouterLink, MatCardModule, MatTableModule,
-        MatButtonModule, MatIconModule, MatProgressBarModule,
-        MatSnackBarModule, MatDialogModule, MatTooltipModule, LoadingComponent
-    ],
-    template: `
+  selector: 'app-sprints-list',
+  imports: [
+    CommonModule, RouterLink, MatCardModule, MatTableModule,
+    MatButtonModule, MatIconModule, MatProgressBarModule,
+    MatSnackBarModule, MatDialogModule, MatTooltipModule, LoadingComponent
+  ],
+  template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -32,7 +32,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
           </button>
           <h1>Sprints</h1>
         </div>
-        @if (canManage) {
+        @if (canCreateSprint) {
           <button mat-raised-button class="primary-btn" (click)="openCreate()">
             <mat-icon>add</mat-icon> New Sprint
           </button>
@@ -126,7 +126,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       </div>
     </div>
     `,
-    styles: [`
+  styles: [`
     .back-btn { color: #6b7280; margin-bottom: 4px; }
     .primary-btn { background: #4f46e5 !important; color: #fff !important; border-radius: 8px !important; }
     .actions-cell { text-align: right; white-space: nowrap; }
@@ -158,6 +158,10 @@ export class SprintsListComponent implements OnInit {
 
   get canManage(): boolean {
     return this.authService.hasRole(['Admin', 'ProjectManager']);
+  }
+
+  get canCreateSprint(): boolean {
+    return this.authService.hasRole(['Admin', 'ProjectManager', 'Member']);
   }
 
   ngOnInit(): void {
