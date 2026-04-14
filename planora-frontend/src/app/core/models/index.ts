@@ -51,13 +51,16 @@ export interface RefreshRequest {
 
 export interface Project {
   id: string;
+  workspaceId: string;
+  workspaceOwnerId: string;
   name: string;
   description: string;
   startDate: string;
   endDate: string;
   projectManagerId: string;
   projectManagerName: string;
-  members: ProjectMember[];
+  members?: ProjectMember[];
+  memberCount: number;
   totalTasks: number;
   completedTasks: number;
   progressPercentage: number;
@@ -70,11 +73,62 @@ export interface ProjectMember {
 }
 
 export interface CreateProjectRequest {
+  workspaceId: string;
   name: string;
   description: string;
   startDate: string;
   endDate: string;
-  // projectManagerId: string;
+  projectManagerId: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  ownerName: string;
+  projectManagerId: string;
+  projectManagerName: string;
+  memberCount: number;
+  projectCount: number;
+  createdAt: string;
+}
+
+export interface WorkspaceMember {
+  userId: string;
+  fullName: string;
+  email: string;
+  joinedAt: string;
+}
+
+export interface WorkspaceInvitation {
+  id: string;
+  workspaceId: string;
+  workspaceName: string;
+  email: string;
+  invitedByUserId: string;
+  expiresAt: string;
+  accepted: boolean;
+  createdAt: string;
+}
+
+export interface WorkspaceInviteableUser {
+  userId: string;
+  fullName: string;
+  email: string;
+}
+
+export interface CreateWorkspaceRequest {
+  name: string;
+  description: string;
+}
+
+export interface SetWorkspaceProjectManagerRequest {
+  userId: string;
+}
+
+export interface InviteWorkspaceUserRequest {
+  userId: string;
 }
 
 export interface Task {
@@ -181,6 +235,9 @@ export interface CreateBacklogItemRequest {
   description: string;
   priority: TaskPriority;
   projectId: string;
+  assignedToId?: string;
+  complexity?: number;
+  sprintId?: string | null;
 }
 
 export interface User {
