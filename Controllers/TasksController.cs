@@ -43,7 +43,10 @@ public class TasksController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
     {
-        var result = await _taskService.CreateTaskAsync(dto);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _taskService.CreateTaskAsync(dto, userId);
         return CreatedAtAction(nameof(GetTask), new { id = result.Id }, ApiResponseDto<TaskDto>.SuccessResult(result, "Task created successfully."));
     }
 
@@ -51,16 +54,21 @@ public class TasksController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateTask(Guid id, [FromBody] UpdateTaskDto dto)
     {
-        var result = await _taskService.UpdateTaskAsync(id, dto);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _taskService.UpdateTaskAsync(id, dto, userId);
         return Ok(ApiResponseDto<TaskDto>.SuccessResult(result, "Task updated successfully."));
     }
 
     /// <summary>Delete a task</summary>
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> DeleteTask(Guid id)
     {
-        await _taskService.DeleteTaskAsync(id);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _taskService.DeleteTaskAsync(id, userId);
         return Ok(ApiResponseDto<object>.SuccessResult(null!, "Task deleted successfully."));
     }
 
@@ -90,7 +98,7 @@ public class TasksController : ControllerBase
         var result = await _taskService.GetAllTasksAsync(page, pageSize);
         return Ok(ApiResponseDto<object>.SuccessResult(result));
     }
-   
+
     /// <summary>Get tasks for a project including closed sprints</summary>
     [HttpGet("project/{projectId:guid}/all-tasks")]
     public async Task<IActionResult> GetTasksIncludingClosedSprints(Guid projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
