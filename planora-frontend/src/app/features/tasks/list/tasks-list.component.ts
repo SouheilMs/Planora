@@ -98,9 +98,16 @@ export class TasksListComponent implements OnInit {
 
   openEdit(itemData: TaskCardData): void {
     const item = this.backlogItems.find(i => i.id === itemData.id);
-    if (item) {
-      this.snackBar.open('Modification à venir', 'Fermer', { duration: 2000 });
-    }
+    if (!item) return;
+
+    const ref = this.dialog.open(BacklogCreateDialogComponent, {
+      width: '550px',
+      data: {
+        projectId: this.projectId || '',
+        item: item
+      }
+    });
+    ref.afterClosed().subscribe((result: any) => { if (result) this.loadBacklogItems(); });
   }
 
   deleteBacklogItem(itemData: TaskCardData): void {

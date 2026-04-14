@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, BacklogItem, CreateBacklogItemRequest, TaskPriority, TaskStatus, PagedResult } from '../models';
+import { ApiResponse, BacklogItem, CreateBacklogItemRequest, UpdateBacklogItemRequest, TaskPriority, TaskStatus, PagedResult } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class BacklogService {
@@ -30,6 +30,10 @@ export class BacklogService {
 
   createBacklogItem(request: CreateBacklogItemRequest): Observable<ApiResponse<BacklogItem>> {
     return this.http.post<ApiResponse<BacklogItem>>(this.apiUrl, request);
+  }
+
+  updateBacklogItem(id: string, request: UpdateBacklogItemRequest): Observable<ApiResponse<BacklogItem>> {
+    return this.http.put<ApiResponse<BacklogItem>>(`${this.apiUrl}/${id}`, request);
   }
 
   updatePriority(id: string, priority: TaskPriority): Observable<ApiResponse<BacklogItem>> {
@@ -83,6 +87,10 @@ export class BacklogService {
 
   assignToUser(id: string, userId: string | null): Observable<ApiResponse<BacklogItem>> {
     return this.http.patch<ApiResponse<BacklogItem>>(`${this.apiUrl}/${id}/assign`, { assignedToId: userId });
+  }
+
+  updateAssignment(id: string, userId: string | null): Observable<ApiResponse<BacklogItem>> {
+    return this.assignToUser(id, userId);
   }
 
   updateComplexity(id: string, complexity: number): Observable<ApiResponse<BacklogItem>> {

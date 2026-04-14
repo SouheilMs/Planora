@@ -261,6 +261,14 @@ export interface CreateBacklogItemRequest {
   sprintId?: string | null;
 }
 
+export interface UpdateBacklogItemRequest {
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  assignedToId?: string | null;
+  complexity?: number;
+}
+
 export interface User {
   id: string;
   firstName: string;

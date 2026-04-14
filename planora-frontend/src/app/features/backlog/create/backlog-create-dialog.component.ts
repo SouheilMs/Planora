@@ -37,6 +37,7 @@ export class BacklogCreateDialogComponent {
   saving = false;
   users: WorkspaceMember[] = [];
   readonly storyPointOptions = STORY_POINT_OPTIONS;
+  isEditMode = false;
 
   form = this.fb.group({
     title: ['', Validators.required],
@@ -46,7 +47,17 @@ export class BacklogCreateDialogComponent {
     assignedToId: ['']
   });
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { projectId: string; sprintId?: string | null }) {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { projectId: string; sprintId?: string | null; item?: any }) {
+    this.isEditMode = !!data.item;
+    if (this.isEditMode && data.item) {
+      this.form.patchValue({
+        title: data.item.title,
+        description: data.item.description,
+        priority: data.item.priority,
+        storyPoints: data.item.storyPoints ?? data.item.complexity ?? 3,
+        assignedToId: data.item.assignedToId || ''
+      });
+    }
     this.loadUsers();
   }
 
@@ -79,6 +90,16 @@ export class BacklogCreateDialogComponent {
     this.saving = true;
     const value = this.form.value;
 
+    if (this.isEditMode && this.data.item) {
+      // Edit mode: update existing item
+      this.updateBacklogItem(value);
+    } else {
+      // Create mode: create new item
+      this.createBacklogItem(value);
+    }
+  }
+
+  private createBacklogItem(value: any): void {
     const request: any = {
       title: value.title!,
       description: value.description || '',
@@ -135,6 +156,33 @@ export class BacklogCreateDialogComponent {
       error: (err: any) => {
         this.saving = false;
         this.snackBar.open(err?.error?.message || 'Erreur', 'Fermer', { duration: 4000 });
+      }
+    });
+  }
+
+  private updateBacklogItem(value: any): void {
+    const itemId = this.data.item.id;
+    const request = {
+      title: value.title || '',
+      description: value.description || '',
+      priority: value.priority as TaskPriority,
+      assignedToId: value.assignedToId || null,
+      complexity: value.storyPoints ?? null
+    };
+
+    this.backlogService.updateBacklogItem(itemId, request).subscribe({
+      next: (response: any) => {
+        this.saving = false;
+        if (response?.success === false) {
+          this.snackBar.open(response.message || 'Erreur lors de la modification', 'Fermer', { duration: 4000 });
+          return;
+        }
+        this.snackBar.open('✅ Élément modifié !', 'Fermer', { duration: 2000 });
+        this.dialogRef.close(true);
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.snackBar.open(err?.error?.message || 'Erreur lors de la modification', 'Fermer', { duration: 4000 });
       }
     });
   }
