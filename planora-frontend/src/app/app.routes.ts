@@ -33,6 +33,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/projects/list/projects-list.component').then(m => m.ProjectsListComponent)
       },
 
+      // Workspaces
+      {
+        path: 'workspaces',
+        loadComponent: () => import('./features/workspaces/workspaces.component').then(m => m.WorkspacesComponent)
+      },
+
       // Project detail (page d'accueil du projet)
       {
         path: 'projects/:projectId',
@@ -78,7 +84,7 @@ export const routes: Routes = [
         path: 'projects/:projectId/history/:sprintId',
         loadComponent: () => import('./features/sprints/history/details/sprint-detail.component').then(m => m.SprintDetailComponent)
       },
- 
+
       {
         path: 'tasks',
         loadComponent: () => import('./features/tasks/list/tasks-list.component').then(m => m.TasksListComponent)

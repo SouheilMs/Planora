@@ -66,7 +66,12 @@ export class SidebarComponent implements OnInit {
 
   private extractProjectId(url: string): string | null {
     const match = url.match(/\/projects\/([^\/]+)/);
-    return match ? match[1] : null;
+    const projectId = match ? match[1] : null;
+    if (!projectId || projectId === 'null' || projectId === 'undefined') {
+      return null;
+    }
+
+    return projectId;
   }
 
   private loadProject(projectId: string): void {

@@ -1,16 +1,19 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, inject, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '../../../core/services/auth.service';
+import { WorkspaceInvitation } from '../../../core/models';
+import { WorkspaceService } from '../../../core/services/workspace.service';
 
 @Component({
-    selector: 'app-navbar',
-    imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
-    template: `
+  selector: 'app-navbar',
+  imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, MatBadgeModule],
+  template: `
     <header class="navbar">
       <div class="navbar-left">
         <button mat-icon-button class="toggle-btn" (click)="toggleSidebar.emit()" matTooltip="Toggle sidebar">
@@ -23,6 +26,11 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
     
       <div class="navbar-right">
+        @if (pendingInvitations.length) {
+          <button mat-icon-button [matMenuTriggerFor]="invitationsMenu" matTooltip="Workspace invitations" [matBadge]="pendingInvitations.length" matBadgeColor="warn">
+            <mat-icon>notifications</mat-icon>
+          </button>
+        }
         @if (authService.user$ | async; as user) {
           @if (user.roles.length) {
             <span class="role-chip">{{ user.roles[0] }}</span>
@@ -35,6 +43,26 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="avatar">{{ getInitials(user.fullName) }}</div>
           </button>
         }
+
+        <mat-menu #invitationsMenu="matMenu" class="user-menu">
+          @if (pendingInvitations.length === 0) {
+            <button mat-menu-item disabled>
+              <span>No pending invitations</span>
+            </button>
+          }
+          @for (invitation of pendingInvitations; track invitation.id) {
+            <div class="invite-menu-item" mat-menu-item (click)="$event.stopPropagation()">
+              <div class="invite-content">
+                <strong>{{ invitation.workspaceName }}</strong>
+                <span>{{ invitation.email }}</span>
+              </div>
+              <div class="invite-actions">
+                <button mat-button color="primary" (click)="acceptInvitation(invitation)">Accept</button>
+                <button mat-button color="warn" (click)="rejectInvitation(invitation)">Reject</button>
+              </div>
+            </div>
+          }
+        </mat-menu>
     
         <mat-menu #menu="matMenu" class="user-menu">
           <button mat-menu-item (click)="logout()">
@@ -45,7 +73,7 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
     </header>
     `,
-    styles: [`
+  styles: [`
     .navbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;
       height: 64px;
@@ -89,14 +117,62 @@ import { AuthService } from '../../../core/services/auth.service';
       color: #fff; font-size: 0.875rem; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
     }
+    .invite-menu-item {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      padding: 12px 16px;
+      min-width: 280px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .invite-content { display: flex; flex-direction: column; gap: 2px; }
+    .invite-content span { font-size: 0.75rem; color: #6b7280; }
+    .invite-actions { display: flex; gap: 8px; }
   `]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   authService = inject(AuthService);
+  private workspaceService = inject(WorkspaceService);
   @Output() toggleSidebar = new EventEmitter<void>();
+  pendingInvitations: WorkspaceInvitation[] = [];
+
+  ngOnInit(): void {
+    this.loadPendingInvitations();
+  }
+
+  loadPendingInvitations(): void {
+    this.workspaceService.getPendingInvitations().subscribe({
+      next: response => {
+        if (response.success) {
+          this.pendingInvitations = response.data;
+        }
+      }
+    });
+  }
 
   logout(): void {
     this.authService.logout();
+  }
+
+  acceptInvitation(invitation: WorkspaceInvitation): void {
+    this.workspaceService.acceptInvitation(invitation.id).subscribe({
+      next: response => {
+        if (response.success) {
+          this.loadPendingInvitations();
+        }
+      }
+    });
+  }
+
+  rejectInvitation(invitation: WorkspaceInvitation): void {
+    this.workspaceService.rejectInvitation(invitation.id).subscribe({
+      next: response => {
+        if (response.success) {
+          this.loadPendingInvitations();
+        }
+      }
+    });
   }
 
   getInitials(name: string): string {
