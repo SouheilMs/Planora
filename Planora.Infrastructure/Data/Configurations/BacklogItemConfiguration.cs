@@ -18,6 +18,11 @@ public class BacklogItemConfiguration : IEntityTypeConfiguration<BacklogItem>
             .HasForeignKey(b => b.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasOne(b => b.AssignedTo)
+            .WithMany(u => u.BacklogItems)
+            .HasForeignKey(b => b.AssignedToId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasQueryFilter(b => !b.IsDeleted);
     }
 }

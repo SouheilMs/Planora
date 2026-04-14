@@ -10,8 +10,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
+    public DbSet<Workspace> Workspaces => Set<Workspace>();
+    public DbSet<WorkspaceUser> WorkspaceUsers => Set<WorkspaceUser>();
+    public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
     public DbSet<Project> Projects => Set<Project>();
-    public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+    public DbSet<ProjectUser> ProjectUsers => Set<ProjectUser>();
+    public DbSet<ProjectInvitation> ProjectInvitations => Set<ProjectInvitation>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<Sprint> Sprints => Set<Sprint>();

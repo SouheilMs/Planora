@@ -12,6 +12,12 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.Name).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Description).HasMaxLength(1000);
         builder.HasIndex(p => p.Name);
+        builder.HasIndex(p => p.WorkspaceId);
+
+        builder.HasOne(p => p.Workspace)
+            .WithMany(w => w.Projects)
+            .HasForeignKey(p => p.WorkspaceId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(p => p.ProjectManager)
             .WithMany(u => u.ManagedProjects)
