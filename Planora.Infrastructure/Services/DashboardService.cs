@@ -23,7 +23,7 @@ public class DashboardService : IDashboardService
         }
 
         var visibleProjectIds = await _dbContext.Projects
-            .Where(p => p.ProjectManagerId == userId || p.Members.Any(m => m.UserId == userId))
+            .Where(p => p.Workspace.OwnerId == userId || p.ProjectManagerId == userId || p.Users.Any(u => u.UserId == userId))
             .Select(p => p.Id)
             .ToListAsync();
 

@@ -8,8 +8,12 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _context;
 
+    public IRepository<Workspace> Workspaces { get; }
+    public IRepository<WorkspaceUser> WorkspaceUsers { get; }
+    public IRepository<WorkspaceInvitation> WorkspaceInvitations { get; }
     public IRepository<Project> Projects { get; }
-    public IRepository<ProjectMember> ProjectMembers { get; }
+    public IRepository<ProjectUser> ProjectUsers { get; }
+    public IRepository<ProjectInvitation> ProjectInvitations { get; }
     public IRepository<TaskItem> Tasks { get; }
     public IRepository<Comment> Comments { get; }
     public IRepository<Sprint> Sprints { get; }
@@ -18,8 +22,12 @@ public class UnitOfWork : IUnitOfWork
     public UnitOfWork(ApplicationDbContext context)
     {
         _context = context;
+        Workspaces = new Repository<Workspace>(context);
+        WorkspaceUsers = new Repository<WorkspaceUser>(context);
+        WorkspaceInvitations = new Repository<WorkspaceInvitation>(context);
         Projects = new Repository<Project>(context);
-        ProjectMembers = new Repository<ProjectMember>(context);
+        ProjectUsers = new Repository<ProjectUser>(context);
+        ProjectInvitations = new Repository<ProjectInvitation>(context);
         Tasks = new Repository<TaskItem>(context);
         Comments = new Repository<Comment>(context);
         Sprints = new Repository<Sprint>(context);
