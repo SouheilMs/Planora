@@ -8,6 +8,7 @@ using Planora.Domain.Enums;
 using Planora.Infrastructure.Data;
 using AutoMapper;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Planora.Controllers;
@@ -51,65 +52,57 @@ public class SprintsController : ControllerBase
 
     /// <summary>Create a new sprint</summary>
     [HttpPost]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> CreateSprint([FromBody] CreateSprintDto dto)
     {
-        var result = await _sprintService.CreateSprintAsync(dto);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _sprintService.CreateSprintAsync(dto, userId);
         return CreatedAtAction(nameof(GetSprint), new { id = result.Id },
             ApiResponseDto<SprintDto>.SuccessResult(result, "Sprint created successfully."));
     }
 
     /// <summary>Update a sprint</summary>
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> UpdateSprint(Guid id, [FromBody] UpdateSprintDto dto)
     {
-        var result = await _sprintService.UpdateSprintAsync(id, dto);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _sprintService.UpdateSprintAsync(id, dto, userId);
         return Ok(ApiResponseDto<SprintDto>.SuccessResult(result, "Sprint updated successfully."));
     }
 
     /// <summary>Close a sprint (set status to Closed)</summary>
     [HttpPatch("{id:guid}/close")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> CloseSprint(Guid id)
     {
-        var sprint = await _context.Sprints.FindAsync(id);
-        if (sprint == null)
-            return NotFound(ApiResponseDto<object>.ErrorResult("Sprint not found."));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
 
-        sprint.Status = Domain.Enums.SprintStatus.Closed; // ✅ Spécifier explicitement
-        sprint.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        var sprintDto = _mapper.Map<SprintDto>(sprint);
+        var sprintDto = await _sprintService.CloseSprintAsync(id, userId);
         return Ok(ApiResponseDto<SprintDto>.SuccessResult(sprintDto, "Sprint closed successfully."));
     }
 
     /// <summary>Delete a sprint</summary>
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> DeleteSprint(Guid id)
     {
-        await _sprintService.DeleteSprintAsync(id);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _sprintService.DeleteSprintAsync(id, userId);
         return Ok(ApiResponseDto<object>.SuccessResult(null!, "Sprint deleted successfully."));
     }
 
     /// <summary>Start a sprint (set status to Active)</summary>
     [HttpPatch("{id:guid}/start")]
-    [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> StartSprint(Guid id)
     {
-        var sprint = await _context.Sprints.FindAsync(id);
-        if (sprint == null)
-            return NotFound(ApiResponseDto<object>.ErrorResult("Sprint not found."));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
 
-        sprint.Status = Domain.Enums.SprintStatus.Active; // ✅ Spécifier explicitement
-        sprint.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        var sprintDto = _mapper.Map<SprintDto>(sprint);
+        var sprintDto = await _sprintService.StartSprintAsync(id, userId);
         return Ok(ApiResponseDto<SprintDto>.SuccessResult(sprintDto, "Sprint started successfully."));
     }
 
