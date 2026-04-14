@@ -319,13 +319,46 @@ export class SprintBoardComponent implements OnInit {
   }
 
   editItem(item: BacklogItem): void {
-    void item;
-    this.snackBar.open('Fonctionnalité à venir', 'Fermer', { duration: 2000 });
+    const ref = this.dialog.open(BacklogCreateDialogComponent, {
+      width: '550px',
+      data: {
+        projectId: this.projectId,
+        sprintId: this.selectedSprintId,
+        item
+      }
+    });
+
+    ref.afterClosed().subscribe((result: boolean | undefined) => {
+      if (result) this.loadSprintItems();
+    });
   }
 
   deleteItem(item: BacklogItem): void {
-    void item;
-    this.snackBar.open('Fonctionnalité à venir', 'Fermer', { duration: 2000 });
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Supprimer le ticket',
+        message: `Êtes-vous sûr de vouloir supprimer "${item.title}" ?`,
+        confirmLabel: 'Supprimer',
+        danger: true
+      }
+    });
+
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+
+      this.backlogService.deleteBacklogItem(item.id).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.snackBar.open('Ticket supprimé', 'Fermer', { duration: 3000 });
+            this.loadSprintItems();
+          }
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
+        }
+      });
+    });
   }
 
   getPriorityLabel(priority: TaskPriority): string {
