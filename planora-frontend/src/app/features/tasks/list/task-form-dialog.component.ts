@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,7 +18,6 @@ import { Task, TaskStatus, TaskPriority, Sprint, ProjectMember } from '../../../
   selector: 'app-task-form-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -36,7 +35,9 @@ import { Task, TaskStatus, TaskPriority, Sprint, ProjectMember } from '../../../
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Titre</mat-label>
           <input matInput formControlName="title" placeholder="Titre de la tâche">
-          <mat-error *ngIf="form.get('title')?.hasError('required')">Requis</mat-error>
+          @if (form.get('title')?.hasError('required')) {
+            <mat-error>Requis</mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -83,7 +84,9 @@ import { Task, TaskStatus, TaskPriority, Sprint, ProjectMember } from '../../../
           <mat-label>Assigné à</mat-label>
           <mat-select formControlName="assignedToId">
             <mat-option value="">Non assigné</mat-option>
-            <mat-option *ngFor="let u of users" [value]="u.userId">{{ u.fullName }}</mat-option>
+            @for (u of users; track u.userId) {
+              <mat-option [value]="u.userId">{{ u.fullName }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -91,7 +94,9 @@ import { Task, TaskStatus, TaskPriority, Sprint, ProjectMember } from '../../../
           <mat-label>Sprint (optionnel)</mat-label>
           <mat-select formControlName="sprintId">
             <mat-option value="">Aucun sprint</mat-option>
-            <mat-option *ngFor="let s of sprints" [value]="s.id">{{ s.name }}</mat-option>
+            @for (s of sprints; track s.id) {
+              <mat-option [value]="s.id">{{ s.name }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </form>

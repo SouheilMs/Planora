@@ -12,6 +12,7 @@ import { WorkspaceService } from '../../../core/services/workspace.service';
 
 @Component({
   selector: 'app-navbar',
+  standalone: true,
   imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, MatBadgeModule],
   template: `
     <header class="navbar">

@@ -19,7 +19,6 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
     CommonModule, RouterLink, MatCardModule, MatProgressBarModule,
     MatTableModule, MatIconModule, MatButtonModule, MatSnackBarModule, LoadingComponent
   ],
-  // Utiliser template au lieu de templateUrl
   template: `
     <div class="page-container">
       <div class="page-header">

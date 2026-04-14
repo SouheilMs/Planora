@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -30,7 +30,7 @@ import { BacklogCreateDialogComponent } from '../create/backlog-create-dialog.co
     MatChipsModule, DragDropModule, LoadingComponent
   ],
   templateUrl: './backlog-list.component.html',
-  styleUrls: ['./backlog-list.component.css']
+  styleUrls: ['./backlog-list.component.scss']
 })
 export class BacklogListComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -182,6 +182,34 @@ export class BacklogListComponent implements OnInit {
     });
   }
 
+  moveToSprint(item: BacklogItem): void {
+    if (this.sprints.length === 0) {
+      this.snackBar.open('Aucun sprint disponible', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    const ref = this.dialog.open(MoveToSprintDialogComponent, {
+      width: '420px',
+      data: { sprints: this.sprints }
+    });
+
+    ref.afterClosed().subscribe((sprintId: string | undefined) => {
+      if (!sprintId) return;
+
+      this.backlogService.moveToSprint(item.id, sprintId).subscribe({
+        next: response => {
+          if (response.success) {
+            this.snackBar.open('Élément déplacé vers le sprint', 'Fermer', { duration: 2000 });
+            this.loadAll();
+          }
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors du déplacement', 'Fermer', { duration: 3000 });
+        }
+      });
+    });
+  }
+
   deleteItem(item: BacklogItem): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '380px',
@@ -221,3 +249,32 @@ export class BacklogListComponent implements OnInit {
     return ['status-planning', 'status-active', 'status-closed'][status] ?? '';
   }
 }
+
+@Component({
+  standalone: true,
+  selector: 'app-move-to-sprint-dialog',
+  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatSelectModule, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>Move to Sprint</h2>
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Select Sprint</mat-label>
+        <mat-select [(ngModel)]="selectedSprintId" [ngModelOptions]="{standalone: true}">
+          @for (s of data.sprints; track s) {
+            <mat-option [value]="s.id">{{ s.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-raised-button color="primary" [mat-dialog-close]="selectedSprintId" [disabled]="!selectedSprintId">Move</button>
+    </mat-dialog-actions>
+    `,
+  styles: [`.full-width { width: 100%; min-width: 250px; }`]
+})
+export class MoveToSprintDialogComponent {
+  selectedSprintId = '';
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { sprints: Sprint[] }) { }
+}
+

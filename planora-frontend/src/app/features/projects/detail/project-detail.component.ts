@@ -21,8 +21,8 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
   standalone: true,
   imports: [
     CommonModule, RouterLink, MatCardModule, MatButtonModule,
-    MatIconModule, MatChipsModule, MatProgressBarModule, MatFormFieldModule, MatSelectModule, ReactiveFormsModule,
-    MatSnackBarModule, LoadingComponent
+    MatIconModule, MatChipsModule, MatProgressBarModule, MatFormFieldModule,
+    MatSelectModule, ReactiveFormsModule, MatSnackBarModule, LoadingComponent
   ],
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css']

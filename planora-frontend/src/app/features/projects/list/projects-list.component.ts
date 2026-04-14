@@ -23,6 +23,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 
 @Component({
   selector: 'app-projects-list',
+  standalone: true,
   imports: [
     CommonModule, RouterLink, ReactiveFormsModule,
     MatCardModule, MatTableModule, MatButtonModule, MatIconModule,

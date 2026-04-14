@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';

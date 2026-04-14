@@ -16,6 +16,7 @@ import { Project, Workspace, WorkspaceMember } from '../../../core/models';
 
 @Component({
   selector: 'app-project-form-dialog',
+  standalone: true,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,

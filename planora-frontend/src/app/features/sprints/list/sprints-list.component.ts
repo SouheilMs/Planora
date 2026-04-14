@@ -18,6 +18,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 
 @Component({
   selector: 'app-sprints-list',
+  standalone: true,
   imports: [
     CommonModule, RouterLink, MatCardModule, MatTableModule,
     MatButtonModule, MatIconModule, MatProgressBarModule,
