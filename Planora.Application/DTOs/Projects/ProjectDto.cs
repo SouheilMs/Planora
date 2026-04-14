@@ -4,6 +4,7 @@ public class ProjectDto
 {
     public Guid Id { get; set; }
     public Guid WorkspaceId { get; set; }
+    public string WorkspaceName { get; set; } = string.Empty;
     public string WorkspaceOwnerId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

@@ -417,18 +417,31 @@ public class ProjectService : IProjectService
 
     private IQueryable<Project> ProjectQuery()
         => _dbContext.Projects
+            .Where(p => !p.IsDeleted)
             .Include(p => p.Workspace)
             .Include(p => p.ProjectManager)
             .Include(p => p.Users).ThenInclude(pu => pu.User)
+            .Include(p => p.BacklogItems)
             .Include(p => p.Tasks);
 
     private ProjectDto MapProjectDto(Project project)
     {
         var dto = _mapper.Map<ProjectDto>(project);
-        var tasks = project.Tasks.ToList();
-        dto.ProgressPercentage = tasks.Count > 0
-            ? Math.Round((double)tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done) / tasks.Count * 100, 2)
-            : 0;
+        var backlogItems = project.BacklogItems.Where(b => !b.IsDeleted).ToList();
+        if (backlogItems.Count > 0)
+        {
+            dto.ProgressPercentage = Math.Round(
+                (double)backlogItems.Count(t => t.Status == (int)Domain.Enums.TaskStatus.Done) / backlogItems.Count * 100,
+                2);
+        }
+        else
+        {
+            // Fallback for older data where progress may still be stored in TaskItem entities.
+            var tasks = project.Tasks.Where(t => !t.IsDeleted).ToList();
+            dto.ProgressPercentage = tasks.Count > 0
+                ? Math.Round((double)tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done) / tasks.Count * 100, 2)
+                : 0;
+        }
 
         if (project.ProjectManager != null && dto.Members.All(member => member.UserId != project.ProjectManagerId))
         {

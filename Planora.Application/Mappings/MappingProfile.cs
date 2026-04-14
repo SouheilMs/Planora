@@ -26,6 +26,7 @@ public class MappingProfile : Profile
 
         // Project mappings
         CreateMap<Project, ProjectDto>()
+            .ForMember(dest => dest.WorkspaceName, opt => opt.MapFrom(src => src.Workspace.Name))
             .ForMember(dest => dest.WorkspaceOwnerId, opt => opt.MapFrom(src => src.Workspace.OwnerId))
             .ForMember(dest => dest.ProjectManagerName, opt => opt.MapFrom(src =>
                 src.ProjectManager != null
