@@ -12,83 +12,94 @@
     </div>
   </div>
 
-  <app-loading *ngIf="loading"></app-loading>
+  @if (loading) {
+  <app-loading></app-loading>
+  }
 
-  <ng-container *ngIf="!loading">
-    <!-- Stats Cards -->
-    <div class="stats-cards" *ngIf="completedSprints.length > 0">
-      <div class="stat-card">
-        <div class="stat-value">{{ completedSprints.length }}</div>
-        <div class="stat-label">Sprints terminés</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{ getTotalCompletedTasks() }}</div>
-        <div class="stat-label">Tâches complétées</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{ getAverageCompletionRate() }}%</div>
-        <div class="stat-label">Taux de complétion moyen</div>
-      </div>
+  @if (!loading) {
+  <!-- Stats Cards -->
+  @if (completedSprints.length > 0) {
+  <div class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-value">{{ completedSprints.length }}</div>
+      <div class="stat-label">Sprints terminés</div>
     </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ getTotalCompletedTasks() }}</div>
+      <div class="stat-label">Tâches complétées</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ getAverageCompletionRate() }}%</div>
+      <div class="stat-label">Taux de complétion moyen</div>
+    </div>
+  </div>
+  }
 
-    <!-- Timeline -->
-    <div class="sprints-timeline" *ngIf="completedSprints.length > 0">
-      <div class="timeline-line"></div>
-      <div class="sprint-card" *ngFor="let sprint of completedSprints; let i = index">
-        <div class="timeline-dot" [style.background]="getSprintColor(i)"></div>
-        <div class="sprint-content">
-          <div class="sprint-header">
-            <div class="sprint-title">
-              <mat-icon>sprint</mat-icon>
-              <h3>{{ sprint.name }}</h3>
-            </div>
-            <span class="sprint-status closed">Terminé</span>
+  <!-- Timeline -->
+  @if (completedSprints.length > 0) {
+  <div class="sprints-timeline">
+    <div class="timeline-line"></div>
+    @for (sprint of completedSprints; let i = $index; track sprint.id) {
+    <div class="sprint-card">
+      <div class="timeline-dot" [style.background]="getSprintColor(i)"></div>
+      <div class="sprint-content">
+        <div class="sprint-header">
+          <div class="sprint-title">
+            <mat-icon>sprint</mat-icon>
+            <h3>{{ sprint.name }}</h3>
           </div>
-          <div class="sprint-goal" *ngIf="sprint.goal">
-            <mat-icon>flag</mat-icon>
-            <span>{{ sprint.goal }}</span>
-          </div>
-          <div class="sprint-dates">
-            <mat-icon>event</mat-icon>
-            <span>{{ sprint.startDate | date:'dd MMM yyyy' }} - {{ sprint.endDate | date:'dd MMM yyyy' }}</span>
-          </div>
-          <div class="sprint-stats">
-            <div class="stat-item">
-              <span class="stat-label">Tâches</span>
-              <span class="stat-value">{{ getSprintTasksCount(sprint.id) }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">Complétées</span>
-              <span class="stat-value success">{{ getSprintCompletedTasksCount(sprint.id) }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">Taux</span>
-              <span class="stat-value">{{ getSprintCompletionRate(sprint.id) }}%</span>
-            </div>
-          </div>
-          <div class="sprint-progress">
-            <mat-progress-bar mode="determinate"
-                              [value]="getSprintCompletionRate(sprint.id)"
-                              [color]="getSprintCompletionRate(sprint.id) >= 80 ? 'primary' : 'warn'">
-            </mat-progress-bar>
-          </div>
-          <button class="view-sprint-btn" (click)="viewSprint(sprint.id)">
-            <mat-icon>visibility</mat-icon>
-            Voir les détails
-          </button>
+          <span class="sprint-status closed">Terminé</span>
         </div>
+        @if (sprint.goal) {
+        <div class="sprint-goal">
+          <mat-icon>flag</mat-icon>
+          <span>{{ sprint.goal }}</span>
+        </div>
+        }
+        <div class="sprint-dates">
+          <mat-icon>event</mat-icon>
+          <span>{{ sprint.startDate | date:'dd MMM yyyy' }} - {{ sprint.endDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="sprint-stats">
+          <div class="stat-item">
+            <span class="stat-label">Tâches</span>
+            <span class="stat-value">{{ getSprintTasksCount(sprint.id) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Complétées</span>
+            <span class="stat-value success">{{ getSprintCompletedTasksCount(sprint.id) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Taux</span>
+            <span class="stat-value">{{ getSprintCompletionRate(sprint.id) }}%</span>
+          </div>
+        </div>
+        <div class="sprint-progress">
+          <mat-progress-bar mode="determinate" [value]="getSprintCompletionRate(sprint.id)"
+            [color]="getSprintCompletionRate(sprint.id) >= 80 ? 'primary' : 'warn'">
+          </mat-progress-bar>
+        </div>
+        <button class="view-sprint-btn" (click)="viewSprint(sprint.id)">
+          <mat-icon>visibility</mat-icon>
+          Voir les détails
+        </button>
       </div>
     </div>
+    }
+  </div>
+  }
 
-    <!-- Empty state -->
-    <div *ngIf="completedSprints.length === 0" class="empty-history">
-      <mat-icon>history</mat-icon>
-      <h3>Aucun sprint terminé</h3>
-      <p>Les sprints que vous terminerez apparaîtront ici</p>
-      <button mat-raised-button color="primary" routerLink="../board">
-        <mat-icon>sprint</mat-icon>
-        Voir le sprint actif
-      </button>
-    </div>
-  </ng-container>
+  <!-- Empty state -->
+  @if (completedSprints.length === 0) {
+  <div class="empty-history">
+    <mat-icon>history</mat-icon>
+    <h3>Aucun sprint terminé</h3>
+    <p>Les sprints que vous terminerez apparaîtront ici</p>
+    <button mat-raised-button color="primary" routerLink="../board">
+      <mat-icon>sprint</mat-icon>
+      Voir le sprint actif
+    </button>
+  </div>
+  }
+  }
 </div>

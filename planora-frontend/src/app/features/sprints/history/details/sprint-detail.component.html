@@ -8,129 +8,140 @@
       </button>
       <div>
         <h1>Détails du sprint</h1>
-        <p class="subtitle" *ngIf="sprint">Tickets du sprint "{{ sprint.name }}"</p>
+        @if (sprint) {
+        <p class="subtitle">Tickets du sprint "{{ sprint.name }}"</p>
+        }
       </div>
     </div>
   </div>
 
-  <app-loading *ngIf="loading"></app-loading>
+  @if (loading) {
+  <app-loading></app-loading>
+  }
 
-  <ng-container *ngIf="!loading && sprint">
-    <!-- Informations du sprint -->
-    <div class="sprint-info-card">
-      <div class="sprint-header">
-        <div class="sprint-title">
-          <mat-icon>sprint</mat-icon>
-          <h2>{{ sprint.name }}</h2>
-        </div>
-        <span class="sprint-status closed">Terminé</span>
+  @if (!loading && sprint) {
+  <!-- Informations du sprint -->
+  <div class="sprint-info-card">
+    <div class="sprint-header">
+      <div class="sprint-title">
+        <mat-icon>sprint</mat-icon>
+        <h2>{{ sprint.name }}</h2>
       </div>
-      <div class="sprint-goal" *ngIf="sprint.goal">
-        <mat-icon>flag</mat-icon>
-        <span>{{ sprint.goal }}</span>
-      </div>
-      <div class="sprint-dates">
-        <mat-icon>event</mat-icon>
-        <span>{{ sprint.startDate | date:'dd MMMM yyyy' }} - {{ sprint.endDate | date:'dd MMMM yyyy' }}</span>
-      </div>
-      <div class="sprint-duration">
-        <mat-icon>schedule</mat-icon>
-        <span>Durée : {{ getDuration() }} jours</span>
-      </div>
+      <span class="sprint-status closed">Terminé</span>
+    </div>
+    @if (sprint.goal) {
+    <div class="sprint-goal">
+      <mat-icon>flag</mat-icon>
+      <span>{{ sprint.goal }}</span>
+    </div>
+    }
+    <div class="sprint-dates">
+      <mat-icon>event</mat-icon>
+      <span>{{ sprint.startDate | date:'dd MMMM yyyy' }} - {{ sprint.endDate | date:'dd MMMM yyyy' }}</span>
+    </div>
+    <div class="sprint-duration">
+      <mat-icon>schedule</mat-icon>
+      <span>Durée : {{ getDuration() }} jours</span>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-value">{{ tasks.length }}</div>
+      <div class="stat-label">Total des tickets</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value">{{ getCompletedCount() }}</div>
+      <div class="stat-label">Tickets terminés</div>
     </div>
 
-    <!-- Statistiques -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">📋</div>
-        <div class="stat-value">{{ tasks.length }}</div>
-        <div class="stat-label">Total des tickets</div>
-      </div>
-      <div class="stat-card success">
-        <div class="stat-icon">✅</div>
-        <div class="stat-value">{{ getCompletedCount() }}</div>
-        <div class="stat-label">Tickets terminés</div>
-      </div>
-    
-      <div class="stat-card primary">
-        <div class="stat-icon">📊</div>
-        <div class="stat-value">{{ getCompletionRate() }}%</div>
-        <div class="stat-label">Taux de complétion</div>
-      </div>
+    <div class="stat-card primary">
+      <div class="stat-icon">📊</div>
+      <div class="stat-value">{{ getCompletionRate() }}%</div>
+      <div class="stat-label">Taux de complétion</div>
     </div>
+  </div>
 
-    <!-- Barre de progression -->
-    <div class="progress-card">
-      <div class="progress-header">
-        <span>Progression du sprint</span>
-        <span class="progress-value">{{ getCompletionRate() }}%</span>
-      </div>
-      <mat-progress-bar mode="determinate"
-                        [value]="getCompletionRate()"
-                        [color]="getCompletionRate() >= 80 ? 'primary' : 'warn'">
-      </mat-progress-bar>
+  <!-- Barre de progression -->
+  <div class="progress-card">
+    <div class="progress-header">
+      <span>Progression du sprint</span>
+      <span class="progress-value">{{ getCompletionRate() }}%</span>
     </div>
+    <mat-progress-bar mode="determinate" [value]="getCompletionRate()"
+      [color]="getCompletionRate() >= 80 ? 'primary' : 'warn'">
+    </mat-progress-bar>
+  </div>
 
-    <!-- Filtres -->
-    <div class="filter-bar">
-      <button class="filter-btn" [class.active]="statusFilter === 'all'" (click)="setFilter('all')">
-        Tous ({{ tasks.length }})
-      </button>
-     
-    </div>
+  <!-- Filtres -->
+  <div class="filter-bar">
+    <button class="filter-btn" [class.active]="statusFilter === 'all'" (click)="setFilter('all')">
+      Tous ({{ tasks.length }})
+    </button>
 
-    <!-- Tableau des tickets -->
-    <div class="tasks-card">
-      <div class="table-container">
-        <table class="tasks-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Titre</th>
-              <th>Description</th>
-              <th>Priorité</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let task of filteredTasks">
-              <td class="task-id">#{{ task.id.slice(-6) }}</td>
-              <td class="task-title">{{ task.title }}</td>
-              <!-- ✅ CORRECTION : description avec valeur par défaut -->
-              <td class="task-description">{{ (task.description || '') | slice:0:60 }}{{ (task.description || '').length > 60 ? '...' : '' }}</td>
-              <td>
-                <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
-                  {{ getPriorityLabel(task.priority) }}
-                </span>
-              </td>
-              <td>
-                <span class="status-badge" [ngClass]="getStatusClass(task.status)">
-                  {{ getStatusLabel(task.status) }}
-                </span>
-              </td>
-            </tr>
-            <tr *ngIf="filteredTasks.length === 0">
-              <td colspan="5" class="empty-row">
-                <mat-icon>inbox</mat-icon>
-                <span>Aucun ticket dans cette catégorie</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+  </div>
 
-    <!-- Bouton d'export -->
-    <div class="action-buttons">
-      <button class="export-btn" (click)="exportToCSV()">
-        <mat-icon>download</mat-icon>
-        Exporter en CSV
-      </button>
+  <!-- Tableau des tickets -->
+  <div class="tasks-card">
+    <div class="table-container">
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Titre</th>
+            <th>Description</th>
+            <th>Priorité</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (task of filteredTasks; track task.id) {
+          <tr>
+            <td class="task-id">#{{ task.id.slice(-6) }}</td>
+            <td class="task-title">{{ task.title }}</td>
+            <!-- ✅ CORRECTION : description avec valeur par défaut -->
+            <td class="task-description">{{ (task.description || '') | slice:0:60 }}{{ (task.description || '').length >
+              60 ? '...' : '' }}</td>
+            <td>
+              <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                {{ getPriorityLabel(task.priority) }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+                {{ getStatusLabel(task.status) }}
+              </span>
+            </td>
+          </tr>
+          }
+          @if (filteredTasks.length === 0) {
+          <tr>
+            <td colspan="5" class="empty-row">
+              <mat-icon>inbox</mat-icon>
+              <span>Aucun ticket dans cette catégorie</span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
-  </ng-container>
+  </div>
+
+  <!-- Bouton d'export -->
+  <div class="action-buttons">
+    <button class="export-btn" (click)="exportToCSV()">
+      <mat-icon>download</mat-icon>
+      Exporter en CSV
+    </button>
+  </div>
+  }
 
   <!-- Erreur -->
-  <div *ngIf="!loading && !sprint" class="error-state">
+  @if (!loading && !sprint) {
+  <div class="error-state">
     <mat-icon>error</mat-icon>
     <h3>Sprint non trouvé</h3>
     <p>Le sprint que vous recherchez n'existe pas ou a été supprimé.</p>
@@ -138,4 +149,5 @@
       Retour à l'historique
     </button>
   </div>
+  }
 </div>

@@ -23,7 +23,8 @@
 
   <div class="sidebar-divider"></div>
 
-  <div class="project-section" *ngIf="currentProject">
+  @if (currentProject) {
+  <div class="project-section">
     <div class="project-header">
       <div class="project-avatar" [style.background]="currentProject.color || '#4f46e5'">
         {{ currentProject.name?.charAt(0) || 'P' }}
@@ -46,6 +47,7 @@
       </a>
     </div>
   </div>
+  }
 
   <div class="sidebar-footer">
     <div class="user-info">

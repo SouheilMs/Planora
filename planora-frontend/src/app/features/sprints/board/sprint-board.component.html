@@ -23,10 +23,12 @@
     </div>
   </div>
 
-  <div class="sprint-selector" *ngIf="sprints.length > 0">
+  @if (sprints.length > 0) {
+  <div class="sprint-selector">
     <mat-icon>sprint</mat-icon>
     <mat-select [value]="selectedSprintId" (selectionChange)="onSprintChange($event.value)">
-      <mat-option *ngFor="let sprint of sprints" [value]="sprint.id">
+      @for (sprint of sprints; track sprint.id) {
+      <mat-option [value]="sprint.id">
         <div class="sprint-option">
           <span>{{ sprint.name }}</span>
           <span class="sprint-status" [ngClass]="getSprintStatusClass(sprint.status)">
@@ -34,169 +36,194 @@
           </span>
         </div>
       </mat-option>
+      }
     </mat-select>
   </div>
+  }
 
-  <app-loading *ngIf="loading"></app-loading>
+  @if (loading) {
+  <app-loading></app-loading>
+  }
 
-  <ng-container *ngIf="!loading && selectedSprint">
-    <div class="sprint-info">
-      <div class="sprint-name">{{ selectedSprint.name }}</div>
-      <div class="sprint-points-summary">
-        <span class="points-chip total">Total: {{ getSelectedSprintTotalPoints() }} pts</span>
-        <span class="points-chip">A faire: {{ getSelectedSprintPointsByStatus(STATUS_TODO) }} pts</span>
-        <span class="points-chip">En cours: {{ getSelectedSprintPointsByStatus(STATUS_IN_PROGRESS) }} pts</span>
-        <span class="points-chip done">Termine: {{ getSelectedSprintPointsByStatus(STATUS_DONE) }} pts</span>
+  @if (!loading && selectedSprint) {
+  <div class="sprint-info">
+    <div class="sprint-name">{{ selectedSprint.name }}</div>
+    <div class="sprint-points-summary">
+      <span class="points-chip total">Total: {{ getSelectedSprintTotalPoints() }} pts</span>
+      <span class="points-chip">A faire: {{ getSelectedSprintPointsByStatus(STATUS_TODO) }} pts</span>
+      <span class="points-chip">En cours: {{ getSelectedSprintPointsByStatus(STATUS_IN_PROGRESS) }} pts</span>
+      <span class="points-chip done">Termine: {{ getSelectedSprintPointsByStatus(STATUS_DONE) }} pts</span>
+    </div>
+    @if (selectedSprint.goal) {
+    <div class="sprint-goal">
+      <mat-icon>flag</mat-icon>
+      {{ selectedSprint.goal }}
+    </div>
+    }
+    <div class="sprint-dates">
+      <mat-icon>event</mat-icon>
+      {{ selectedSprint.startDate | date:'dd MMM' }} - {{ selectedSprint.endDate | date:'dd MMM yyyy' }}
+    </div>
+  </div>
+
+  <div class="kanban-board">
+    <!-- Colonne À faire -->
+    <div class="kanban-column">
+      <div class="column-header">
+        <div class="column-title">
+          <span class="column-dot todo"></span>
+          <h3>À faire</h3>
+          <span class="count">{{ todoItems.length }}</span>
+        </div>
       </div>
-      <div class="sprint-goal" *ngIf="selectedSprint.goal">
-        <mat-icon>flag</mat-icon>
-        {{ selectedSprint.goal }}
-      </div>
-      <div class="sprint-dates">
-        <mat-icon>event</mat-icon>
-        {{ selectedSprint.startDate | date:'dd MMM' }} - {{ selectedSprint.endDate | date:'dd MMM yyyy' }}
+      <div class="task-list" cdkDropList id="todoList" [cdkDropListData]="todoItems"
+        [cdkDropListConnectedTo]="['inprogressList', 'doneList']" (cdkDropListDropped)="onDrop($event, STATUS_TODO)">
+        @for (item of todoItems; track item.id) {
+        <div class="task-item" cdkDrag>
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-id">#{{ item.id.slice(-6) }}</div>
+              <div class="task-actions">
+                <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="deleteItem(item)" matTooltip="Supprimer">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="task-title">{{ item.title }}</div>
+            @if (item.description) {
+            <div class="task-description">
+              {{ item.description | slice:0:80 }}{{ item.description.length > 80 ? '...' : '' }}
+            </div>
+            }
+            <div class="task-footer">
+              <div class="task-badges">
+                <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
+                  {{ getPriorityLabel(item.priority) }}
+                </span>
+                <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+        @if (todoItems.length === 0) {
+        <div class="empty-column">
+          <mat-icon>inbox</mat-icon>
+          <p>Aucun ticket</p>
+        </div>
+        }
       </div>
     </div>
 
-    <div class="kanban-board">
-      <!-- Colonne À faire -->
-      <div class="kanban-column">
-        <div class="column-header">
-          <div class="column-title">
-            <span class="column-dot todo"></span>
-            <h3>À faire</h3>
-            <span class="count">{{ todoItems.length }}</span>
-          </div>
-        </div>
-        <div class="task-list" cdkDropList id="todoList" [cdkDropListData]="todoItems"
-          [cdkDropListConnectedTo]="['inprogressList', 'doneList']" (cdkDropListDropped)="onDrop($event, STATUS_TODO)">
-          <div class="task-item" *ngFor="let item of todoItems" cdkDrag>
-            <div class="task-card">
-              <div class="task-card-header">
-                <div class="task-id">#{{ item.id.slice(-6) }}</div>
-                <div class="task-actions">
-                  <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button (click)="deleteItem(item)" matTooltip="Supprimer">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
-                </div>
-              </div>
-              <div class="task-title">{{ item.title }}</div>
-              <div class="task-description" *ngIf="item.description">
-                {{ item.description | slice:0:80 }}{{ item.description.length > 80 ? '...' : '' }}
-              </div>
-              <div class="task-footer">
-                <div class="task-badges">
-                  <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
-                    {{ getPriorityLabel(item.priority) }}
-                  </span>
-                  <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div *ngIf="todoItems.length === 0" class="empty-column">
-            <mat-icon>inbox</mat-icon>
-            <p>Aucun ticket</p>
-          </div>
+    <!-- Colonne En cours -->
+    <div class="kanban-column">
+      <div class="column-header">
+        <div class="column-title">
+          <span class="column-dot inprogress"></span>
+          <h3>En cours</h3>
+          <span class="count">{{ inProgressItems.length }}</span>
         </div>
       </div>
-
-      <!-- Colonne En cours -->
-      <div class="kanban-column">
-        <div class="column-header">
-          <div class="column-title">
-            <span class="column-dot inprogress"></span>
-            <h3>En cours</h3>
-            <span class="count">{{ inProgressItems.length }}</span>
-          </div>
-        </div>
-        <div class="task-list" cdkDropList id="inprogressList" [cdkDropListData]="inProgressItems"
-          [cdkDropListConnectedTo]="['todoList', 'doneList']" (cdkDropListDropped)="onDrop($event, STATUS_IN_PROGRESS)">
-          <div class="task-item" *ngFor="let item of inProgressItems" cdkDrag>
-            <div class="task-card">
-              <div class="task-card-header">
-                <div class="task-id">#{{ item.id.slice(-6) }}</div>
-                <div class="task-actions">
-                  <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button (click)="deleteItem(item)" matTooltip="Supprimer">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
-                </div>
+      <div class="task-list" cdkDropList id="inprogressList" [cdkDropListData]="inProgressItems"
+        [cdkDropListConnectedTo]="['todoList', 'doneList']" (cdkDropListDropped)="onDrop($event, STATUS_IN_PROGRESS)">
+        @for (item of inProgressItems; track item.id) {
+        <div class="task-item" cdkDrag>
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-id">#{{ item.id.slice(-6) }}</div>
+              <div class="task-actions">
+                <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="deleteItem(item)" matTooltip="Supprimer">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
               </div>
-              <div class="task-title">{{ item.title }}</div>
-              <div class="task-description" *ngIf="item.description">
-                {{ item.description | slice:0:80 }}{{ item.description.length > 80 ? '...' : '' }}
-              </div>
-              <div class="task-footer">
-                <div class="task-badges">
-                  <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
-                    {{ getPriorityLabel(item.priority) }}
-                  </span>
-                  <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
-                </div>
+            </div>
+            <div class="task-title">{{ item.title }}</div>
+            @if (item.description) {
+            <div class="task-description">
+              {{ item.description | slice:0:80 }}{{ item.description.length > 80 ? '...' : '' }}
+            </div>
+            }
+            <div class="task-footer">
+              <div class="task-badges">
+                <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
+                  {{ getPriorityLabel(item.priority) }}
+                </span>
+                <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
               </div>
             </div>
           </div>
-          <div *ngIf="inProgressItems.length === 0" class="empty-column">
-            <mat-icon>play_circle</mat-icon>
-            <p>Aucun ticket en cours</p>
-          </div>
         </div>
-      </div>
-
-      <!-- Colonne Terminé -->
-      <div class="kanban-column">
-        <div class="column-header">
-          <div class="column-title">
-            <span class="column-dot done"></span>
-            <h3>Terminé</h3>
-            <span class="count">{{ doneItems.length }}</span>
-          </div>
+        }
+        @if (inProgressItems.length === 0) {
+        <div class="empty-column">
+          <mat-icon>play_circle</mat-icon>
+          <p>Aucun ticket en cours</p>
         </div>
-        <div class="task-list" cdkDropList id="doneList" [cdkDropListData]="doneItems"
-          [cdkDropListConnectedTo]="['todoList', 'inprogressList']" (cdkDropListDropped)="onDrop($event, STATUS_DONE)">
-          <div class="task-item" *ngFor="let item of doneItems" cdkDrag>
-            <div class="task-card">
-              <div class="task-card-header">
-                <div class="task-id">#{{ item.id.slice(-6) }}</div>
-                <div class="task-actions">
-                  <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button (click)="deleteItem(item)" matTooltip="Supprimer">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
-                </div>
-              </div>
-              <div class="task-title">{{ item.title }}</div>
-              <div class="task-description" *ngIf="item.description">
-                {{ item.description | slice:0:80 }}{{ item.description.length > 80 ? '...' : '' }}
-              </div>
-              <div class="task-footer">
-                <div class="task-badges">
-                  <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
-                    {{ getPriorityLabel(item.priority) }}
-                  </span>
-                  <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div *ngIf="doneItems.length === 0" class="empty-column">
-            <mat-icon>check_circle</mat-icon>
-            <p>Aucun ticket terminé</p>
-          </div>
-        </div>
+        }
       </div>
     </div>
-  </ng-container>
 
-  <div *ngIf="!loading && sprints.length === 0" class="no-sprint">
+    <!-- Colonne Terminé -->
+    <div class="kanban-column">
+      <div class="column-header">
+        <div class="column-title">
+          <span class="column-dot done"></span>
+          <h3>Terminé</h3>
+          <span class="count">{{ doneItems.length }}</span>
+        </div>
+      </div>
+      <div class="task-list" cdkDropList id="doneList" [cdkDropListData]="doneItems"
+        [cdkDropListConnectedTo]="['todoList', 'inprogressList']" (cdkDropListDropped)="onDrop($event, STATUS_DONE)">
+        @for (item of doneItems; track item.id) {
+        <div class="task-item" cdkDrag>
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-id">#{{ item.id.slice(-6) }}</div>
+              <div class="task-actions">
+                <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="deleteItem(item)" matTooltip="Supprimer">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="task-title">{{ item.title }}</div>
+            @if (item.description) {
+            <div class="task-description">
+              {{ item.description | slice:0:80 }}{{ item.description.length > 80 ? '...' : '' }}
+            </div>
+            }
+            <div class="task-footer">
+              <div class="task-badges">
+                <span class="priority-badge" [ngClass]="getPriorityClass(item.priority)">
+                  {{ getPriorityLabel(item.priority) }}
+                </span>
+                <span class="points-badge">{{ getItemStoryPoints(item) }} pts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+        @if (doneItems.length === 0) {
+        <div class="empty-column">
+          <mat-icon>check_circle</mat-icon>
+          <p>Aucun ticket terminé</p>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && sprints.length === 0) {
+  <div class="no-sprint">
     <mat-icon>sprint</mat-icon>
     <h3>Aucun sprint</h3>
     <p>Créez un sprint pour commencer à organiser vos tickets</p>
@@ -205,4 +232,5 @@
       Créer un sprint
     </button>
   </div>
+  }
 </div>
