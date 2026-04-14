@@ -329,10 +329,10 @@ export class BacklogViewComponent implements OnInit {
     });
   }
 
-  openCreate(): void {
+  openCreate(sprintId?: string): void {
     const ref = this.dialog.open(BacklogCreateDialogComponent, {
       width: '550px',
-      data: { projectId: this.projectId }
+      data: { projectId: this.projectId, sprintId: sprintId ?? null }
     });
     ref.afterClosed().subscribe((result: any) => {
       if (result) this.loadData();
@@ -376,7 +376,7 @@ export class BacklogViewComponent implements OnInit {
   assignTask(item: BacklogItem): void {
     const ref = this.dialog.open(AssignUserDialogComponent, {
       width: '400px',
-      data: { itemId: item.id, currentUserId: item.assignedToId }
+      data: { itemId: item.id, projectId: this.projectId, currentUserId: item.assignedToId }
     });
     ref.afterClosed().subscribe((userId: string | null) => {
       if (userId !== undefined) {
@@ -399,13 +399,23 @@ export class BacklogViewComponent implements OnInit {
   getBacklogStoryPointsByStatus(status: number): number {
     return this.backlogItems
       .filter(i => i.status === status)
-      .reduce((sum, item) => sum + (item.storyPoints || 0), 0);
+      .reduce((sum, item) => sum + (item.storyPoints ?? item.complexity ?? 0), 0);
   }
 
   getSprintStoryPointsByStatus(sprintId: string, status: number): number {
     return this.getSprintItems(sprintId)
       .filter(i => i.status === status)
-      .reduce((sum, item) => sum + (item.storyPoints || 0), 0);
+      .reduce((sum, item) => sum + (item.storyPoints ?? item.complexity ?? 0), 0);
+  }
+
+  getSprintTotalStoryPoints(sprintId: string): number {
+    return this.getSprintItems(sprintId)
+      .reduce((sum, item) => sum + (item.storyPoints ?? item.complexity ?? 0), 0);
+  }
+
+  getBacklogTotalStoryPoints(): number {
+    return this.backlogItems
+      .reduce((sum, item) => sum + (item.storyPoints ?? item.complexity ?? 0), 0);
   }
   goToHistory(): void {
     this.router.navigate(['/projects', this.projectId, 'history']);
