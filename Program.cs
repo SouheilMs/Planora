@@ -59,7 +59,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // CORS – allowed origins are configurable via Cors:AllowedOrigins in appsettings
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:4200", "http://localhost:5000"];
+    ?? ["http://localhost:4200"];
 
 builder.Services.AddCors(options =>
 {
