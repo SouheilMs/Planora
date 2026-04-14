@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { WorkspaceService } from '../../core/services/workspace.service';
 import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMember } from '../../core/models';
@@ -16,6 +18,7 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
@@ -23,6 +26,7 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
     MatInputModule,
     MatSelectModule,
     MatListModule,
+    MatIconModule,
     MatSnackBarModule
   ],
   template: `
@@ -34,9 +38,15 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
         </div>
       </div>
 
-      <div class="grid">
+      <div class="steps-card">
+        <div class="step"><span class="step-dot">1</span> Create a workspace</div>
+        <div class="step"><span class="step-dot">2</span> Select your workspace</div>
+        <div class="step"><span class="step-dot">3</span> Invite members & choose manager</div>
+      </div>
+
+      <div class="grid top-grid">
         <mat-card class="planora-card">
-          <h3>Create Workspace</h3>
+          <h3>Step 1: Create Workspace</h3>
           <form [formGroup]="createForm" (ngSubmit)="createWorkspace()" class="form">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Name</mat-label>
@@ -51,19 +61,39 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
         </mat-card>
 
         <mat-card class="planora-card">
-          <h3>Invite Member</h3>
+          <h3>Step 2: Select Workspace</h3>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Workspace</mat-label>
+            <mat-select [value]="selectedWorkspaceId" (selectionChange)="selectWorkspace($event.value)">
+              @for (workspace of workspaces; track workspace.id) {
+                <mat-option [value]="workspace.id">{{ workspace.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (selectedWorkspace) {
+            <div class="workspace-meta">
+              <div><strong>{{ selectedWorkspace.name }}</strong></div>
+              <div class="text-secondary">{{ selectedWorkspace.memberCount }} members · {{ selectedWorkspace.projectCount }} projects</div>
+              <div class="text-secondary">Manager: {{ selectedWorkspace.projectManagerName || 'Not set' }}</div>
+            </div>
+            <a mat-stroked-button color="primary" routerLink="/projects">
+              <mat-icon>folder_open</mat-icon>
+              Continue to Projects
+            </a>
+          } @else {
+            <p class="text-secondary">Create and select a workspace to unlock member invites and manager selection.</p>
+          }
+        </mat-card>
+      </div>
+
+      <div class="grid">
+        <mat-card class="planora-card" [class.disabled-card]="!selectedWorkspaceId">
+          <h3>Step 3A: Invite Members</h3>
           <form [formGroup]="inviteForm" (ngSubmit)="inviteMember()" class="form">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Workspace</mat-label>
-              <mat-select formControlName="workspaceId" (selectionChange)="onWorkspaceChanged()">
-                @for (workspace of workspaces; track workspace.id) {
-                  <mat-option [value]="workspace.id">{{ workspace.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
               <mat-label>User</mat-label>
-              <mat-select formControlName="userId">
+              <mat-select formControlName="userId" [disabled]="!selectedWorkspaceId">
                 @for (user of inviteableUsers; track user.userId || user.email || $index) {
                   <mat-option [value]="user.userId">{{ user.fullName }} ({{ user.email }})</mat-option>
                 }
@@ -73,22 +103,12 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
           </form>
         </mat-card>
 
-        <mat-card class="planora-card">
-          <h3>Project Manager</h3>
+        <mat-card class="planora-card" [class.disabled-card]="!selectedWorkspaceId">
+          <h3>Step 3B: Select Workspace Manager</h3>
           <form [formGroup]="managerForm" (ngSubmit)="setProjectManager()" class="form">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Workspace</mat-label>
-              <mat-select formControlName="workspaceId" (selectionChange)="onManagerWorkspaceChanged()">
-                @for (workspace of workspaces; track workspace.id) {
-                  <mat-option [value]="workspace.id">
-                    {{ workspace.name }} - {{ workspace.projectManagerName || 'No manager set' }}
-                  </mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
               <mat-label>Workspace member</mat-label>
-              <mat-select formControlName="userId">
+              <mat-select formControlName="userId" [disabled]="!selectedWorkspaceId">
                 @for (member of managerMembers; track member.userId) {
                   <mat-option [value]="member.userId">{{ member.fullName }} ({{ member.email }})</mat-option>
                 }
@@ -100,9 +120,12 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
       </div>
 
       <div class="grid">
-        <mat-card class="planora-card">
+        <mat-card class="planora-card" [class.disabled-card]="!selectedWorkspaceId">
           <h3>Workspace Members</h3>
-          @if (members.length === 0) {
+          @if (!selectedWorkspaceId) {
+            <p class="text-secondary">Select a workspace first.</p>
+          }
+          @if (selectedWorkspaceId && members.length === 0) {
             <p class="text-secondary">Select a workspace to view members.</p>
           }
           @if (members.length > 0) {
@@ -138,9 +161,41 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
     </div>
   `,
   styles: [`
+    .steps-card {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fff;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #374151;
+      font-weight: 500;
+    }
+    .step-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: #4f46e5;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .top-grid { align-items: start; }
     .form { display: flex; flex-direction: column; gap: 10px; }
     .full-width { width: 100%; }
+    .workspace-meta { margin-bottom: 12px; }
+    .disabled-card { opacity: 0.7; }
     .invitation-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
     .actions { display: flex; gap: 8px; }
   `]
@@ -155,30 +210,29 @@ export class WorkspacesComponent implements OnInit {
   managerMembers: WorkspaceMember[] = [];
   pendingInvitations: WorkspaceInvitation[] = [];
   inviteableUsers: WorkspaceInviteableUser[] = [];
+  selectedWorkspaceId = '';
+
+  get selectedWorkspace(): Workspace | null {
+    return this.workspaces.find(w => w.id === this.selectedWorkspaceId) ?? null;
+  }
 
   createForm = this.fb.group({
     name: ['', Validators.required],
     description: ['']
   });
 
-  inviteForm = this.fb.nonNullable.group({
-    workspaceId: ['', Validators.required],
-    userId: ['', Validators.required]
-  });
+  inviteForm = this.fb.nonNullable.group({ userId: ['', Validators.required] });
 
-  managerForm = this.fb.nonNullable.group({
-    workspaceId: ['', Validators.required],
-    userId: ['', Validators.required]
-  });
+  managerForm = this.fb.nonNullable.group({ userId: ['', Validators.required] });
 
   get canSendInvitation(): boolean {
-    const { workspaceId, userId } = this.inviteForm.getRawValue();
-    return !!workspaceId && !!userId;
+    const { userId } = this.inviteForm.getRawValue();
+    return !!this.selectedWorkspaceId && !!userId;
   }
 
   get canSetProjectManager(): boolean {
-    const { workspaceId, userId } = this.managerForm.getRawValue();
-    return !!workspaceId && !!userId;
+    const { userId } = this.managerForm.getRawValue();
+    return !!this.selectedWorkspaceId && !!userId;
   }
 
   private normalizeInviteableUsers(users: WorkspaceInviteableUser[]): WorkspaceInviteableUser[] {
@@ -198,6 +252,12 @@ export class WorkspacesComponent implements OnInit {
       next: response => {
         if (response.success) {
           this.workspaces = response.data;
+          if (!this.selectedWorkspaceId && this.workspaces.length > 0) {
+            this.selectWorkspace(this.workspaces[0].id);
+          }
+          if (this.selectedWorkspaceId && !this.workspaces.some(w => w.id === this.selectedWorkspaceId)) {
+            this.selectWorkspace(this.workspaces[0]?.id ?? '');
+          }
         }
       },
       error: () => this.snackBar.open('Failed to load workspaces', 'Close', { duration: 3000 })
@@ -225,29 +285,41 @@ export class WorkspacesComponent implements OnInit {
       next: response => {
         if (response.success) {
           this.snackBar.open('Workspace created successfully', 'Close', { duration: 3000 });
+          const createdWorkspaceId = response.data.id;
           this.createForm.reset();
           this.loadWorkspaces();
+          this.selectWorkspace(createdWorkspaceId);
         }
       },
       error: err => this.snackBar.open(err?.error?.message || 'Failed to create workspace', 'Close', { duration: 4000 })
     });
   }
 
-  onWorkspaceChanged(): void {
-    const workspaceId = this.inviteForm.value.workspaceId;
+  selectWorkspace(workspaceId: string): void {
+    this.selectedWorkspaceId = workspaceId;
+
     if (!workspaceId) {
       this.members = [];
       this.inviteableUsers = [];
       this.inviteForm.patchValue({ userId: '' });
+      this.managerMembers = [];
+      this.managerForm.patchValue({ userId: '' });
       return;
     }
 
     this.inviteForm.patchValue({ userId: '' });
+    this.managerForm.patchValue({ userId: '' });
 
     this.workspaceService.getMembers(workspaceId).subscribe({
       next: response => {
         if (response.success) {
           this.members = response.data;
+          this.managerMembers = response.data;
+          const managerId = this.selectedWorkspace?.projectManagerId;
+          const defaultManager = managerId && this.managerMembers.some(m => m.userId === managerId)
+            ? managerId
+            : (this.managerMembers[0]?.userId ?? '');
+          this.managerForm.patchValue({ userId: defaultManager });
         }
       },
       error: () => this.snackBar.open('Failed to load workspace members', 'Close', { duration: 3000 })
@@ -268,39 +340,17 @@ export class WorkspacesComponent implements OnInit {
     });
   }
 
-  onManagerWorkspaceChanged(): void {
-    const workspaceId = this.managerForm.value.workspaceId;
-    if (!workspaceId) {
-      this.managerMembers = [];
-      this.managerForm.patchValue({ userId: '' });
-      return;
-    }
-
-    this.managerForm.patchValue({ userId: '' });
-
-    this.workspaceService.getMembers(workspaceId).subscribe({
-      next: response => {
-        if (response.success) {
-          this.managerMembers = response.data;
-          if (this.managerMembers.length > 0) {
-            this.managerForm.patchValue({ userId: this.managerMembers[0].userId });
-          }
-        }
-      },
-      error: () => this.snackBar.open('Failed to load workspace members', 'Close', { duration: 3000 })
-    });
-  }
-
   setProjectManager(): void {
-    if (this.managerForm.invalid) return;
+    if (this.managerForm.invalid || !this.selectedWorkspaceId) return;
 
-    this.workspaceService.setProjectManager(this.managerForm.value.workspaceId!, {
+    this.workspaceService.setProjectManager(this.selectedWorkspaceId, {
       userId: this.managerForm.value.userId!
     }).subscribe({
       next: response => {
         if (response.success) {
           this.snackBar.open('Project manager updated', 'Close', { duration: 3000 });
           this.loadWorkspaces();
+          this.selectWorkspace(this.selectedWorkspaceId);
         }
       },
       error: err => this.snackBar.open(err?.error?.message || 'Failed to update project manager', 'Close', { duration: 4000 })
@@ -308,9 +358,9 @@ export class WorkspacesComponent implements OnInit {
   }
 
   inviteMember(): void {
-    if (this.inviteForm.invalid) return;
+    if (this.inviteForm.invalid || !this.selectedWorkspaceId) return;
 
-    this.workspaceService.inviteUser(this.inviteForm.value.workspaceId!, {
+    this.workspaceService.inviteUser(this.selectedWorkspaceId, {
       userId: this.inviteForm.value.userId!
     }).subscribe({
       next: response => {
@@ -318,7 +368,7 @@ export class WorkspacesComponent implements OnInit {
           this.snackBar.open('Invitation sent', 'Close', { duration: 3000 });
           this.inviteForm.patchValue({ userId: '' });
           this.loadPendingInvitations();
-          this.onWorkspaceChanged();
+          this.selectWorkspace(this.selectedWorkspaceId);
         }
       },
       error: err => this.snackBar.open(err?.error?.message || 'Failed to invite user', 'Close', { duration: 4000 })
