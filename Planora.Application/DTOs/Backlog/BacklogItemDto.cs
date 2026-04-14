@@ -18,7 +18,7 @@ public class BacklogItemDto
     public string AssignedToName { get; set; } = string.Empty;
     public int ProgressPercentage { get; set; }
     public DateTime DueDate { get; set; }
-    public Guid? AssignedToId { get; set; }
+    public string? AssignedToId { get; set; }
     public int? Complexity { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
