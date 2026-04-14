@@ -74,7 +74,7 @@ export interface CreateProjectRequest {
   description: string;
   startDate: string;
   endDate: string;
-  projectManagerId: string;
+  // projectManagerId: string;
 }
 
 export interface Task {

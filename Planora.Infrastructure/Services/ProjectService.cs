@@ -64,11 +64,16 @@ public class ProjectService : IProjectService
         return dto;
     }
 
-    public async Task<ProjectDto> CreateProjectAsync(CreateProjectDto dto)
+    public async Task<ProjectDto> CreateProjectAsync(CreateProjectDto dto, string projectManagerId)
     {
+        var projectManager = await _userManager.FindByIdAsync(projectManagerId)
+            ?? throw new KeyNotFoundException("Authenticated user not found.");
+
         var project = _mapper.Map<Project>(dto);
         project.Id = Guid.NewGuid();
         project.CreatedAt = DateTime.UtcNow;
+        project.ProjectManagerId = projectManager.Id;
+        project.ProjectManager = projectManager;
 
         await _unitOfWork.Projects.AddAsync(project);
         await _unitOfWork.SaveChangesAsync();

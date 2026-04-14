@@ -14,8 +14,8 @@ import { UserService } from '../../../core/services/user.service';
 import { Project, User } from '../../../core/models';
 
 @Component({
-    selector: 'app-project-form-dialog',
-    imports: [
+  selector: 'app-project-form-dialog',
+  imports: [
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -25,10 +25,11 @@ import { Project, User } from '../../../core/models';
     MatNativeDateModule,
     MatSelectModule,
     MatSnackBarModule
-],
-    template: `
+  ],
+  template: `
     <h2 mat-dialog-title>{{ data ? 'Edit' : 'Create' }} Project</h2>
-    <mat-dialog-content>
+    <br>
+    <mat-dialog-content style="margin-top: -2rem;">
       <form [formGroup]="form" class="form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Name</mat-label>
@@ -55,7 +56,7 @@ import { Project, User } from '../../../core/models';
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
         </div>
-        <mat-form-field appearance="outline" class="full-width">
+        <!-- <mat-form-field appearance="outline" class="full-width">
           <mat-label>Project Manager</mat-label>
           <mat-select formControlName="projectManagerId">
             @for (u of users; track u) {
@@ -65,7 +66,7 @@ import { Project, User } from '../../../core/models';
           @if (form.get('projectManagerId')?.hasError('required')) {
             <mat-error>Required</mat-error>
           }
-        </mat-form-field>
+        </mat-form-field> -->
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -75,7 +76,7 @@ import { Project, User } from '../../../core/models';
       </button>
     </mat-dialog-actions>
     `,
-    styles: [`
+  styles: [`
     .form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; }
     .full-width { width: 100%; }
     .half-width { width: calc(50% - 8px); }
@@ -97,10 +98,10 @@ export class ProjectFormDialogComponent implements OnInit {
     description: [''],
     startDate: [null as Date | null],
     endDate: [null as Date | null],
-    projectManagerId: ['', Validators.required]
+    // projectManagerId: ['', Validators.required]
   });
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: Project | null) {}
+  constructor(@Inject(MAT_DIALOG_DATA) public data: Project | null) { }
 
   ngOnInit(): void {
     this.userService.getUsers(1, 100).subscribe(r => {
@@ -112,7 +113,7 @@ export class ProjectFormDialogComponent implements OnInit {
         description: this.data.description,
         startDate: this.data.startDate ? new Date(this.data.startDate) : null,
         endDate: this.data.endDate ? new Date(this.data.endDate) : null,
-        projectManagerId: this.data.projectManagerId
+        // projectManagerId: this.data.projectManagerId
       });
     }
   }
@@ -126,7 +127,7 @@ export class ProjectFormDialogComponent implements OnInit {
       description: value.description || '',
       startDate: value.startDate ? (value.startDate as Date).toISOString() : '',
       endDate: value.endDate ? (value.endDate as Date).toISOString() : '',
-      projectManagerId: value.projectManagerId!
+      // projectManagerId: value.projectManagerId!
     };
     const obs = this.data
       ? this.projectService.updateProject(this.data.id, payload)

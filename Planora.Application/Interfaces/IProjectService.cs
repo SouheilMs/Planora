@@ -7,7 +7,7 @@ public interface IProjectService
 {
     Task<PaginatedResultDto<ProjectDto>> GetProjectsAsync(int page, int pageSize, string? search = null);
     Task<ProjectDto?> GetProjectByIdAsync(Guid id);
-    Task<ProjectDto> CreateProjectAsync(CreateProjectDto dto);
+    Task<ProjectDto> CreateProjectAsync(CreateProjectDto dto, string projectManagerId);
     Task<ProjectDto> UpdateProjectAsync(Guid id, UpdateProjectDto dto);
     Task DeleteProjectAsync(Guid id);
     Task AddMemberAsync(Guid projectId, string userId);

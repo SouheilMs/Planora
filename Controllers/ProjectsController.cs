@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Planora.Application.DTOs.Common;
@@ -40,7 +41,10 @@ public class ProjectsController : ControllerBase
     [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto dto)
     {
-        var result = await _projectService.CreateProjectAsync(dto);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _projectService.CreateProjectAsync(dto, userId);
         return CreatedAtAction(nameof(GetProject), new { id = result.Id }, ApiResponseDto<ProjectDto>.SuccessResult(result, "Project created successfully."));
     }
 
