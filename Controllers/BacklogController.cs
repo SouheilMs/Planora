@@ -44,84 +44,93 @@ public class BacklogController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateBacklogItem([FromBody] CreateBacklogItemDto dto)
     {
-        var result = await _backlogService.CreateBacklogItemAsync(dto);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.CreateBacklogItemAsync(dto, userId);
         return CreatedAtAction(nameof(GetBacklogItem), new { id = result.Id },
             ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Backlog item created successfully."));
     }
 
-    [HttpPatch("{id:guid}/fields")]
-    public async Task<IActionResult> UpdateFields(Guid id, [FromBody] UpdateBacklogFieldsDto dto)
-    {
-        var result = await _backlogService.UpdateFieldsAsync(id, dto);
-        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Updated successfully."));
-    }
+
+    // [HttpPatch("{id:guid}/fields")]
+    // public async Task<IActionResult> UpdateFields(Guid id, [FromBody] UpdateBacklogFieldsDto dto)
+    // {
+    //     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    //     if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+    //
+    //     var result = await _backlogService.UpdateFieldsAsync(id, dto, userId);
+    //     return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Updated successfully."));
+    // }
+
 
     [HttpPatch("{id:guid}/priority")]
     public async Task<IActionResult> UpdatePriority(Guid id, [FromBody] int priority)
     {
-        var result = await _backlogService.UpdatePriorityAsync(id, priority);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.UpdatePriorityAsync(id, priority, userId);
         return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Priority updated."));
     }
 
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusDto dto)
     {
-        var item = await _context.BacklogItems.FindAsync(id);
-        if (item == null) return NotFound(ApiResponseDto<object>.ErrorResult("Not found."));
-        item.Status = dto.Status;
-        item.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(_mapper.Map<BacklogItemDto>(item), "Status updated."));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.UpdateStatusAsync(id, dto.Status, userId);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Status updated."));
     }
 
     [HttpPatch("{id:guid}/assign")]
     public async Task<IActionResult> AssignToUser(Guid id, [FromBody] AssignBacklogItemDto dto)
     {
-        var item = await _context.BacklogItems.FindAsync(id);
-        if (item == null) return NotFound(ApiResponseDto<object>.ErrorResult("Not found."));
-        item.AssignedToId = dto.AssignedToId;
-        item.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(_mapper.Map<BacklogItemDto>(item), "Assigned."));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.UpdateAssignmentAsync(id, dto.AssignedToId, userId);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Assigned."));
     }
 
     [HttpPatch("{id:guid}/complexity")]
     public async Task<IActionResult> UpdateComplexity(Guid id, [FromBody] int complexity)
     {
-        var item = await _context.BacklogItems.FindAsync(id);
-        if (item == null) return NotFound(ApiResponseDto<object>.ErrorResult("Not found."));
-        item.Complexity = complexity;
-        item.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(_mapper.Map<BacklogItemDto>(item), "Complexity updated."));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.UpdateComplexityAsync(id, complexity, userId);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Complexity updated."));
     }
 
     [HttpPatch("{id:guid}/move-to-sprint/{sprintId:guid}")]
     public async Task<IActionResult> MoveToSprint(Guid id, Guid sprintId)
     {
-        var item = await _context.BacklogItems.FindAsync(id);
-        if (item == null) return NotFound(ApiResponseDto<object>.ErrorResult("Not found."));
-        var sprint = await _context.Sprints.FindAsync(sprintId);
-        if (sprint == null) return NotFound(ApiResponseDto<object>.ErrorResult("Sprint not found."));
-        item.SprintId = sprintId;
-        item.IsMovedToSprint = true;
-        item.Status = 0;
-        item.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(_mapper.Map<BacklogItemDto>(item), "Moved to sprint."));
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.MoveToSprintAsync(id, sprintId, userId);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Moved to sprint."));
     }
 
     [HttpPatch("{id:guid}/remove-from-sprint")]
     public async Task<IActionResult> RemoveFromSprint(Guid id)
     {
-        var result = await _backlogService.RemoveFromSprintAsync(id);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.RemoveFromSprintAsync(id, userId);
         return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Removed from sprint."));
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteBacklogItem(Guid id)
     {
-        await _backlogService.DeleteBacklogItemAsync(id);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _backlogService.DeleteBacklogItemAsync(id, userId);
         return Ok(ApiResponseDto<object>.SuccessResult(null!, "Deleted."));
     }
 
