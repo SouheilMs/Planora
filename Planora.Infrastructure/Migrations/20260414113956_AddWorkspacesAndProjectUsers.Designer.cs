@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Planora.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Planora.Infrastructure.Data;
 namespace Planora.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260414113956_AddWorkspacesAndProjectUsers")]
+    partial class AddWorkspacesAndProjectUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -246,9 +249,6 @@ namespace Planora.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AssignedToId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int?>("Complexity")
                         .HasColumnType("int");
 
@@ -287,8 +287,6 @@ namespace Planora.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AssignedToId");
 
                     b.HasIndex("ProjectId");
 
@@ -380,54 +378,6 @@ namespace Planora.Infrastructure.Migrations
                     b.HasIndex("WorkspaceId");
 
                     b.ToTable("Projects");
-                });
-
-            modelBuilder.Entity("Planora.Domain.Entities.ProjectInvitation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("Accepted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InvitedByUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("RespondedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvitedByUserId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("ProjectId", "UserId", "Accepted");
-
-                    b.ToTable("ProjectInvitations");
                 });
 
             modelBuilder.Entity("Planora.Domain.Entities.ProjectUser", b =>
@@ -592,10 +542,6 @@ namespace Planora.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ProjectManagerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -604,8 +550,6 @@ namespace Planora.Infrastructure.Migrations
                     b.HasIndex("Name");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("ProjectManagerId");
 
                     b.ToTable("Workspaces");
                 });
@@ -751,11 +695,6 @@ namespace Planora.Infrastructure.Migrations
 
             modelBuilder.Entity("Planora.Domain.Entities.BacklogItem", b =>
                 {
-                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "AssignedTo")
-                        .WithMany("BacklogItems")
-                        .HasForeignKey("AssignedToId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Planora.Domain.Entities.Project", "Project")
                         .WithMany("BacklogItems")
                         .HasForeignKey("ProjectId")
@@ -765,8 +704,6 @@ namespace Planora.Infrastructure.Migrations
                     b.HasOne("Planora.Domain.Entities.Sprint", "Sprint")
                         .WithMany()
                         .HasForeignKey("SprintId");
-
-                    b.Navigation("AssignedTo");
 
                     b.Navigation("Project");
 
@@ -809,33 +746,6 @@ namespace Planora.Infrastructure.Migrations
                     b.Navigation("ProjectManager");
 
                     b.Navigation("Workspace");
-                });
-
-            modelBuilder.Entity("Planora.Domain.Entities.ProjectInvitation", b =>
-                {
-                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "InvitedByUser")
-                        .WithMany("SentProjectInvitations")
-                        .HasForeignKey("InvitedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Planora.Domain.Entities.Project", "Project")
-                        .WithMany("Invitations")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "User")
-                        .WithMany("ReceivedProjectInvitations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("InvitedByUser");
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Planora.Domain.Entities.ProjectUser", b =>
@@ -901,15 +811,7 @@ namespace Planora.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "ProjectManager")
-                        .WithMany()
-                        .HasForeignKey("ProjectManagerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Owner");
-
-                    b.Navigation("ProjectManager");
                 });
 
             modelBuilder.Entity("Planora.Domain.Entities.WorkspaceInvitation", b =>
@@ -954,8 +856,6 @@ namespace Planora.Infrastructure.Migrations
                 {
                     b.Navigation("AssignedTasks");
 
-                    b.Navigation("BacklogItems");
-
                     b.Navigation("Comments");
 
                     b.Navigation("ManagedProjects");
@@ -963,10 +863,6 @@ namespace Planora.Infrastructure.Migrations
                     b.Navigation("OwnedWorkspaces");
 
                     b.Navigation("ProjectUsers");
-
-                    b.Navigation("ReceivedProjectInvitations");
-
-                    b.Navigation("SentProjectInvitations");
 
                     b.Navigation("SentWorkspaceInvitations");
 
@@ -976,8 +872,6 @@ namespace Planora.Infrastructure.Migrations
             modelBuilder.Entity("Planora.Domain.Entities.Project", b =>
                 {
                     b.Navigation("BacklogItems");
-
-                    b.Navigation("Invitations");
 
                     b.Navigation("Sprints");
 

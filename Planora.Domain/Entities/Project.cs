@@ -6,11 +6,14 @@ public class Project : BaseEntity
     public string Description { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+    public Guid WorkspaceId { get; set; }
     public string ProjectManagerId { get; set; } = string.Empty;
 
     // Navigation properties
+    public Workspace Workspace { get; set; } = null!;
     public ApplicationUser ProjectManager { get; set; } = null!;
-    public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
+    public ICollection<ProjectUser> Users { get; set; } = new List<ProjectUser>();
+    public ICollection<ProjectInvitation> Invitations { get; set; } = new List<ProjectInvitation>();
     public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
     public ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();
     public ICollection<BacklogItem> BacklogItems { get; set; } = new List<BacklogItem>();

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Planora.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Planora.Infrastructure.Data;
 namespace Planora.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260414150936_AddProjectInvitations")]
+    partial class AddProjectInvitations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -246,9 +249,6 @@ namespace Planora.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AssignedToId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int?>("Complexity")
                         .HasColumnType("int");
 
@@ -287,8 +287,6 @@ namespace Planora.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AssignedToId");
 
                     b.HasIndex("ProjectId");
 
@@ -751,11 +749,6 @@ namespace Planora.Infrastructure.Migrations
 
             modelBuilder.Entity("Planora.Domain.Entities.BacklogItem", b =>
                 {
-                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "AssignedTo")
-                        .WithMany("BacklogItems")
-                        .HasForeignKey("AssignedToId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Planora.Domain.Entities.Project", "Project")
                         .WithMany("BacklogItems")
                         .HasForeignKey("ProjectId")
@@ -765,8 +758,6 @@ namespace Planora.Infrastructure.Migrations
                     b.HasOne("Planora.Domain.Entities.Sprint", "Sprint")
                         .WithMany()
                         .HasForeignKey("SprintId");
-
-                    b.Navigation("AssignedTo");
 
                     b.Navigation("Project");
 
@@ -953,8 +944,6 @@ namespace Planora.Infrastructure.Migrations
             modelBuilder.Entity("Planora.Domain.Entities.ApplicationUser", b =>
                 {
                     b.Navigation("AssignedTasks");
-
-                    b.Navigation("BacklogItems");
 
                     b.Navigation("Comments");
 
