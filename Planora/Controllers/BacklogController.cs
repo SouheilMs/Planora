@@ -63,6 +63,17 @@ public class BacklogController : ControllerBase
             ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Backlog item created successfully."));
     }
 
+    /// <summary>Update a backlog item</summary>
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateBacklogItem(Guid id, [FromBody] UpdateBacklogItemDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _backlogService.UpdateBacklogItemAsync(id, dto, userId);
+        return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Backlog item updated successfully."));
+    }
+
     /// <summary>Assign backlog item to a user</summary>
     [HttpPatch("{id:guid}/assign")]
     public async Task<IActionResult> AssignToUser(Guid id, [FromBody] AssignBacklogItemDto dto)
@@ -123,7 +134,8 @@ public class BacklogController : ControllerBase
     public async Task<IActionResult> GetAllBacklogItemsForProject(Guid projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var items = await _context.BacklogItems
-            .Include(i => i.Sprint)  // ✅ Inclure le sprint
+            .Include(i => i.Sprint)
+            .Include(i => i.AssignedTo)
             .Where(i => i.ProjectId == projectId && !i.IsDeleted)
             .OrderByDescending(i => i.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -141,7 +153,13 @@ public class BacklogController : ControllerBase
             Status = item.Status,
             ProjectId = item.ProjectId,
             SprintId = item.SprintId,
-            SprintName = item.Sprint?.Name,  // ✅ Remplir manuellement le nom du sprint
+            SprintName = item.Sprint?.Name,
+            IsMovedToSprint = item.IsMovedToSprint,
+            AssignedToId = item.AssignedToId,
+            AssignedToName = item.AssignedTo != null
+                ? $"{item.AssignedTo.FirstName} {item.AssignedTo.LastName}".Trim()
+                : string.Empty,
+            Complexity = item.Complexity,
             CreatedAt = item.CreatedAt,
             UpdatedAt = item.UpdatedAt
         }).ToList();

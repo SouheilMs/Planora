@@ -47,6 +47,29 @@ public class BacklogService : IBacklogService
         return _mapper.Map<BacklogItemDto>(item);
     }
 
+    public async Task<BacklogItemDto> UpdateBacklogItemAsync(Guid id, UpdateBacklogItemDto dto, string currentUserId)
+    {
+        var backlogItem = await _dbContext.BacklogItems
+            .Include(b => b.Project)
+            .FirstOrDefaultAsync(b => b.Id == id)
+            ?? throw new KeyNotFoundException("Backlog item not found.");
+
+        await EnsureProjectMemberAccessAsync(backlogItem.ProjectId, currentUserId);
+
+        backlogItem.Title = string.IsNullOrWhiteSpace(dto.Title) ? backlogItem.Title : dto.Title.Trim();
+        backlogItem.Description = dto.Description ?? string.Empty;
+        backlogItem.Priority = dto.Priority;
+        backlogItem.AssignedToId = string.IsNullOrWhiteSpace(dto.AssignedToId) ? null : dto.AssignedToId;
+        if (dto.Complexity.HasValue)
+        {
+            backlogItem.Complexity = dto.Complexity.Value;
+        }
+        backlogItem.UpdatedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+        return _mapper.Map<BacklogItemDto>(backlogItem);
+    }
+
     public async Task<BacklogItemDto> UpdateAssignmentAsync(Guid id, string? assignedToId, string currentUserId)
     {
         var backlogItem = await _dbContext.BacklogItems
