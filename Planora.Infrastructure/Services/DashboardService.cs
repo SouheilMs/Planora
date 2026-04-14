@@ -1,24 +1,44 @@
 using Planora.Application.DTOs.Dashboard;
 using Planora.Application.Interfaces;
+using Planora.Infrastructure.Data;
 using Planora.Domain.Enums;
-using Planora.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Planora.Infrastructure.Services;
 
 public class DashboardService : IDashboardService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ApplicationDbContext _dbContext;
 
-    public DashboardService(IUnitOfWork unitOfWork)
+    public DashboardService(ApplicationDbContext dbContext)
     {
-        _unitOfWork = unitOfWork;
+        _dbContext = dbContext;
     }
 
     public async Task<DashboardDto> GetDashboardAsync(string? userId = null)
     {
-        var projects = (await _unitOfWork.Projects.GetAllAsync()).ToList();
-        var tasks = (await _unitOfWork.Tasks.GetAllAsync()).ToList();
-        var sprints = (await _unitOfWork.Sprints.GetAllAsync()).ToList();
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return new DashboardDto();
+        }
+
+        var visibleProjectIds = await _dbContext.Projects
+            .Where(p => p.ProjectManagerId == userId || p.Members.Any(m => m.UserId == userId))
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        var projects = await _dbContext.Projects
+            .Include(p => p.Tasks)
+            .Where(p => visibleProjectIds.Contains(p.Id))
+            .ToListAsync();
+
+        var tasks = await _dbContext.Tasks
+            .Where(t => visibleProjectIds.Contains(t.ProjectId))
+            .ToListAsync();
+
+        var sprints = await _dbContext.Sprints
+            .Where(s => visibleProjectIds.Contains(s.ProjectId))
+            .ToListAsync();
 
         var dto = new DashboardDto
         {

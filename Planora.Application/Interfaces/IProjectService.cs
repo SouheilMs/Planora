@@ -5,11 +5,11 @@ namespace Planora.Application.Interfaces;
 
 public interface IProjectService
 {
-    Task<PaginatedResultDto<ProjectDto>> GetProjectsAsync(int page, int pageSize, string? search = null);
-    Task<ProjectDto?> GetProjectByIdAsync(Guid id);
+    Task<PaginatedResultDto<ProjectDto>> GetProjectsAsync(string userId, int page, int pageSize, string? search = null);
+    Task<ProjectDto?> GetProjectByIdAsync(Guid id, string userId);
     Task<ProjectDto> CreateProjectAsync(CreateProjectDto dto, string projectManagerId);
-    Task<ProjectDto> UpdateProjectAsync(Guid id, UpdateProjectDto dto);
+    Task<ProjectDto> UpdateProjectAsync(Guid id, UpdateProjectDto dto, string userId);
     Task DeleteProjectAsync(Guid id);
-    Task AddMemberAsync(Guid projectId, string userId);
-    Task RemoveMemberAsync(Guid projectId, string userId);
+    Task AddMemberAsync(Guid projectId, string userId, string currentUserId);
+    Task RemoveMemberAsync(Guid projectId, string userId, string currentUserId);
 }

@@ -23,7 +23,10 @@ public class ProjectsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetProjects([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
     {
-        var result = await _projectService.GetProjectsAsync(page, pageSize, search);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _projectService.GetProjectsAsync(userId, page, pageSize, search);
         return Ok(ApiResponseDto<object>.SuccessResult(result));
     }
 
@@ -31,7 +34,10 @@ public class ProjectsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetProject(Guid id)
     {
-        var result = await _projectService.GetProjectByIdAsync(id);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _projectService.GetProjectByIdAsync(id, userId);
         if (result == null) return NotFound(ApiResponseDto<object>.ErrorResult("Project not found."));
         return Ok(ApiResponseDto<ProjectDto>.SuccessResult(result));
     }
@@ -53,7 +59,10 @@ public class ProjectsController : ControllerBase
     [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> UpdateProject(Guid id, [FromBody] UpdateProjectDto dto)
     {
-        var result = await _projectService.UpdateProjectAsync(id, dto);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var result = await _projectService.UpdateProjectAsync(id, dto, userId);
         return Ok(ApiResponseDto<ProjectDto>.SuccessResult(result, "Project updated successfully."));
     }
 
@@ -71,7 +80,10 @@ public class ProjectsController : ControllerBase
     [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> AddMember(Guid id, string userId)
     {
-        await _projectService.AddMemberAsync(id, userId);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _projectService.AddMemberAsync(id, userId, currentUserId);
         return Ok(ApiResponseDto<object>.SuccessResult(null!, "Member added successfully."));
     }
 
@@ -80,7 +92,10 @@ public class ProjectsController : ControllerBase
     [Authorize(Policy = "ProjectManagerOrAdmin")]
     public async Task<IActionResult> RemoveMember(Guid id, string userId)
     {
-        await _projectService.RemoveMemberAsync(id, userId);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _projectService.RemoveMemberAsync(id, userId, currentUserId);
         return Ok(ApiResponseDto<object>.SuccessResult(null!, "Member removed successfully."));
     }
 }
