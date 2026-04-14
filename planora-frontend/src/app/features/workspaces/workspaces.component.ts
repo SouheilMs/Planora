@@ -46,116 +46,128 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
 
       <div class="grid top-grid">
         <mat-card class="planora-card">
-          <h3>Step 1: Create Workspace</h3>
-          <form [formGroup]="createForm" (ngSubmit)="createWorkspace()" class="form">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Name</mat-label>
-              <input matInput formControlName="name">
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Description</mat-label>
-              <textarea matInput rows="3" formControlName="description"></textarea>
-            </mat-form-field>
-            <button mat-raised-button color="primary" [disabled]="createForm.invalid">Create Workspace</button>
-          </form>
+          <mat-card-title>Step 1: Create Workspace</mat-card-title>
+          <mat-card-content>
+            <form [formGroup]="createForm" (ngSubmit)="createWorkspace()" class="form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea matInput rows="3" formControlName="description"></textarea>
+              </mat-form-field>
+              <button mat-raised-button color="primary" [disabled]="createForm.invalid">Create Workspace</button>
+            </form>
+          </mat-card-content>
         </mat-card>
 
         <mat-card class="planora-card">
-          <h3>Step 2: Select Workspace</h3>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Workspace</mat-label>
-            <mat-select [value]="selectedWorkspaceId" (selectionChange)="selectWorkspace($event.value)">
-              @for (workspace of workspaces; track workspace.id) {
-                <mat-option [value]="workspace.id">{{ workspace.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+          <mat-card-title>Step 2: Select Workspace</mat-card-title>
+          <mat-card-content>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Workspace</mat-label>
+              <mat-select [value]="selectedWorkspaceId" (selectionChange)="selectWorkspace($event.value)">
+                @for (workspace of workspaces; track workspace.id) {
+                  <mat-option [value]="workspace.id">{{ workspace.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
 
-          @if (selectedWorkspace) {
-            <div class="workspace-meta">
-              <div><strong>{{ selectedWorkspace.name }}</strong></div>
-              <div class="text-secondary">{{ selectedWorkspace.memberCount }} members · {{ selectedWorkspace.projectCount }} projects</div>
-              <div class="text-secondary">Manager: {{ selectedWorkspace.projectManagerName || 'Not set' }}</div>
-            </div>
-            <a mat-stroked-button color="primary" routerLink="/projects">
-              <mat-icon>folder_open</mat-icon>
-              Continue to Projects
-            </a>
-          } @else {
-            <p class="text-secondary">Create and select a workspace to unlock member invites and manager selection.</p>
-          }
+            @if (selectedWorkspace) {
+              <div class="workspace-meta">
+                <div><strong>{{ selectedWorkspace.name }}</strong></div>
+                <div class="text-secondary">{{ selectedWorkspace.memberCount }} members · {{ selectedWorkspace.projectCount }} projects</div>
+                <div class="text-secondary">Manager: {{ selectedWorkspace.projectManagerName || 'Not set' }}</div>
+              </div>
+              <a mat-stroked-button color="primary" routerLink="/projects">
+                <mat-icon>folder_open</mat-icon>
+                Continue to Projects
+              </a>
+            } @else {
+              <p class="text-secondary">Create and select a workspace to unlock member invites and manager selection.</p>
+            }
+          </mat-card-content>
         </mat-card>
       </div>
 
       <div class="grid">
         <mat-card class="planora-card" [class.disabled-card]="!selectedWorkspaceId">
-          <h3>Step 3A: Invite Members</h3>
-          <form [formGroup]="inviteForm" (ngSubmit)="inviteMember()" class="form">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>User</mat-label>
-              <mat-select formControlName="userId" [disabled]="!selectedWorkspaceId">
-                @for (user of inviteableUsers; track user.userId || user.email || $index) {
-                  <mat-option [value]="user.userId">{{ user.fullName }} ({{ user.email }})</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-            <button mat-raised-button color="primary" [disabled]="!canSendInvitation">Send Invitation</button>
-          </form>
+          <mat-card-title>Step 3A: Invite Members</mat-card-title>
+          <mat-card-content>
+            <form [formGroup]="inviteForm" (ngSubmit)="inviteMember()" class="form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>User</mat-label>
+                <mat-select formControlName="userId" [disabled]="!selectedWorkspaceId">
+                  @for (user of inviteableUsers; track user.userId || user.email || $index) {
+                    <mat-option [value]="user.userId">{{ user.fullName }} ({{ user.email }})</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-raised-button color="primary" [disabled]="!canSendInvitation">Send Invitation</button>
+            </form>
+          </mat-card-content>
         </mat-card>
 
         <mat-card class="planora-card" [class.disabled-card]="!selectedWorkspaceId">
-          <h3>Step 3B: Select Workspace Manager</h3>
-          <form [formGroup]="managerForm" (ngSubmit)="setProjectManager()" class="form">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Workspace member</mat-label>
-              <mat-select formControlName="userId" [disabled]="!selectedWorkspaceId">
-                @for (member of managerMembers; track member.userId) {
-                  <mat-option [value]="member.userId">{{ member.fullName }} ({{ member.email }})</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-            <button mat-raised-button color="primary" [disabled]="!canSetProjectManager">Save Project Manager</button>
-          </form>
+          <mat-card-title>Step 3B: Select Workspace Manager</mat-card-title>
+          <mat-card-content>
+            <form [formGroup]="managerForm" (ngSubmit)="setProjectManager()" class="form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Workspace member</mat-label>
+                <mat-select formControlName="userId" [disabled]="!selectedWorkspaceId">
+                  @for (member of managerMembers; track member.userId) {
+                    <mat-option [value]="member.userId">{{ member.fullName }} ({{ member.email }})</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-raised-button color="primary" [disabled]="!canSetProjectManager">Save Project Manager</button>
+            </form>
+          </mat-card-content>
         </mat-card>
       </div>
 
       <div class="grid">
         <mat-card class="planora-card" [class.disabled-card]="!selectedWorkspaceId">
-          <h3>Workspace Members</h3>
-          @if (!selectedWorkspaceId) {
-            <p class="text-secondary">Select a workspace first.</p>
-          }
-          @if (selectedWorkspaceId && members.length === 0) {
-            <p class="text-secondary">Select a workspace to view members.</p>
-          }
-          @if (members.length > 0) {
-            <mat-list>
-              @for (member of members; track member.userId) {
-                <mat-list-item>
-                  <div>{{ member.fullName }} ({{ member.email }})</div>
-                </mat-list-item>
-              }
-            </mat-list>
-          }
+          <mat-card-title>Workspace Members</mat-card-title>
+          <mat-card-content>
+            @if (!selectedWorkspaceId) {
+              <p class="text-secondary">Select a workspace first.</p>
+            }
+            @if (selectedWorkspaceId && members.length === 0) {
+              <p class="text-secondary">Select a workspace to view members.</p>
+            }
+            @if (members.length > 0) {
+              <mat-list>
+                @for (member of members; track member.userId) {
+                  <mat-list-item>
+                    <div>{{ member.fullName }} ({{ member.email }})</div>
+                  </mat-list-item>
+                }
+              </mat-list>
+            }
+          </mat-card-content>
         </mat-card>
 
         <mat-card class="planora-card">
-          <h3>Pending Invitations</h3>
-          @if (pendingInvitations.length === 0) {
-            <p class="text-secondary">No pending invitations.</p>
-          }
-          @for (invitation of pendingInvitations; track invitation.id) {
-            <div class="invitation-row">
-              <div>
-                <strong>{{ invitation.workspaceName }}</strong>
-                <div class="text-secondary">Expires {{ invitation.expiresAt | date:'medium' }}</div>
+          <mat-card-title>Pending Invitations</mat-card-title>
+          <mat-card-content>
+            @if (pendingInvitations.length === 0) {
+              <p class="text-secondary">No pending invitations.</p>
+            }
+            @for (invitation of pendingInvitations; track invitation.id) {
+              <div class="invitation-row">
+                <div>
+                  <strong>{{ invitation.workspaceName }}</strong>
+                  <div class="text-secondary">Expires {{ invitation.expiresAt | date:'medium' }}</div>
+                </div>
+                <div class="actions">
+                  <button mat-button color="primary" (click)="acceptInvitation(invitation)">Accept</button>
+                  <button mat-button color="warn" (click)="rejectInvitation(invitation)">Reject</button>
+                </div>
               </div>
-              <div class="actions">
-                <button mat-button color="primary" (click)="acceptInvitation(invitation)">Accept</button>
-                <button mat-button color="warn" (click)="rejectInvitation(invitation)">Reject</button>
-              </div>
-            </div>
-          }
+            }
+          </mat-card-content>
         </mat-card>
       </div>
     </div>
