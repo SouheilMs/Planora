@@ -76,16 +76,22 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
 
             @if (selectedWorkspace) {
               <div class="workspace-meta">
-                <div><strong>{{ selectedWorkspace.name }}</strong></div>
-                <div class="text-secondary">{{ selectedWorkspace.memberCount }} members · {{ selectedWorkspace.projectCount }} projects</div>
-                <div class="text-secondary">Manager: {{ selectedWorkspace.projectManagerName || 'Not set' }}</div>
+                <div class="workspace-name">{{ selectedWorkspace.name }}</div>
+                <div class="workspace-stats">
+                  <span class="stat"><mat-icon>group</mat-icon> {{ selectedWorkspace.memberCount }} members</span>
+                  <span class="stat"><mat-icon>folder_open</mat-icon> {{ selectedWorkspace.projectCount }} projects</span>
+                </div>
+                <div class="workspace-manager">
+                  <span class="label">Manager:</span>
+                  <span class="manager-name">{{ selectedWorkspace.projectManagerName || 'Not assigned' }}</span>
+                </div>
               </div>
-              <a mat-stroked-button color="primary" routerLink="/projects">
-                <mat-icon>folder_open</mat-icon>
+              <a mat-raised-button color="primary" routerLink="/projects" class="cta-button">
+                <mat-icon>arrow_forward</mat-icon>
                 Continue to Projects
               </a>
             } @else {
-              <p class="text-secondary">Create and select a workspace to unlock member invites and manager selection.</p>
+              <p class="text-secondary empty-message">Create and select a workspace to unlock member invites and manager selection.</p>
             }
           </mat-card-content>
         </mat-card>
@@ -206,7 +212,75 @@ import { Workspace, WorkspaceInvitation, WorkspaceInviteableUser, WorkspaceMembe
     .top-grid { align-items: start; }
     .form { display: flex; flex-direction: column; gap: 10px; }
     .full-width { width: 100%; }
-    .workspace-meta { margin-bottom: 12px; }
+    
+    .workspace-meta {
+      background: linear-gradient(135deg, #f5f3ff 0%, #f9f5ff 100%);
+      border: 1px solid #e9e5ff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .workspace-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+    }
+    .workspace-stats {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      color: #374151;
+      font-weight: 500;
+    }
+    .stat mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #4f46e5;
+    }
+    .workspace-manager {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e9e5ff;
+    }
+    .workspace-manager .label {
+      color: #6b7280;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .workspace-manager .manager-name {
+      color: #111827;
+      font-weight: 500;
+    }
+    
+    .cta-button {
+      width: 100%;
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+    
+    .empty-message {
+      padding: 16px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      border-left: 4px solid #4f46e5;
+      margin: 12px 0;
+    }
+    
     .disabled-card { opacity: 0.7; }
     .invitation-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
     .actions { display: flex; gap: 8px; }
