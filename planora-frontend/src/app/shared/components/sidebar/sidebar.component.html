@@ -1,125 +1,131 @@
+<!-- sidebar.component.html -->
 <div class="sidebar" [class.collapsed]="collapsed">
-  <!-- Logo -->
+
+  <!-- ── LOGO ── -->
   <div class="sidebar-header">
     <a routerLink="/dashboard" class="logo" [class.collapsed]="collapsed">
-      <mat-icon>linear_scale</mat-icon>
+      <div class="logo-icon">
+        <mat-icon>rocket_launch</mat-icon>
+      </div>
       @if (!collapsed) {
-      <span>Planora</span>
+      <span class="logo-text">Planora</span>
       }
     </a>
   </div>
 
-  <!-- Navigation principale -->
+  <!-- ── NAVIGATION PRINCIPALE ── -->
+  @if (!collapsed) {
+  <div class="sidebar-section-label">Navigation</div>
+  }
+
   <nav class="sidebar-nav">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [matTooltip]="collapsed ? 'Dashboard' : ''"
-      [matTooltipPosition]="'right'">
+
+    <a routerLink="/dashboard" routerLinkActive="active"
+       class="nav-item"
+       [matTooltip]="collapsed ? 'Dashboard' : ''"
+       matTooltipPosition="right">
       <mat-icon>dashboard</mat-icon>
-      @if (!collapsed) {
-      <span>Dashboard</span>
-      }
+      @if (!collapsed) { <span>Dashboard</span> }
     </a>
 
-    <a routerLink="/workspaces" routerLinkActive="active" class="nav-item" [matTooltip]="collapsed ? 'Workspaces' : ''"
-      [matTooltipPosition]="'right'">
+    <a routerLink="/workspaces" routerLinkActive="active"
+       class="nav-item"
+       [matTooltip]="collapsed ? 'Workspaces' : ''"
+       matTooltipPosition="right">
       <mat-icon>groups</mat-icon>
-      @if (!collapsed) {
-      <span>Workspaces</span>
-      }
+      @if (!collapsed) { <span>Workspaces</span> }
     </a>
 
-    <a routerLink="/projects" routerLinkActive="active" class="nav-item" [matTooltip]="collapsed ? 'Projects' : ''"
-      [matTooltipPosition]="'right'">
+    <a routerLink="/projects" routerLinkActive="active"
+       class="nav-item"
+       [matTooltip]="collapsed ? 'Projects' : ''"
+       matTooltipPosition="right">
       <mat-icon>folder_open</mat-icon>
-      @if (!collapsed) {
-      <span>Projects</span>
-      }
+      @if (!collapsed) { <span>Projects</span> }
     </a>
 
     @if (authService.hasRole(['Admin'])) {
-    <a routerLink="/users" routerLinkActive="active" class="nav-item" [matTooltip]="collapsed ? 'Users' : ''"
-      [matTooltipPosition]="'right'">
+    <a routerLink="/users" routerLinkActive="active"
+       class="nav-item"
+       [matTooltip]="collapsed ? 'Users' : ''"
+       matTooltipPosition="right">
       <mat-icon>people</mat-icon>
-      @if (!collapsed) {
-      <span>Users</span>
-      }
+      @if (!collapsed) { <span>Users</span> }
     </a>
     }
+
   </nav>
 
-  <!-- Navigation du projet -->
+  <!-- ── PROJECT NAV ── -->
   @if (showProjectNav && currentProject) {
-  @if (!collapsed) {
   <div class="sidebar-divider"></div>
+
+  @if (!collapsed) {
+  <div class="sidebar-section-label">Projet actif</div>
   }
 
   <div class="project-section">
+
     <div class="project-header" [class.collapsed]="collapsed">
-      <div class="project-avatar" [style.background]="getProjectColor()"
-        [matTooltip]="collapsed ? currentProject.name : ''" [matTooltipPosition]="'right'">
+      <div class="project-avatar"
+           style="background: linear-gradient(135deg, #4f46e5, #06b6d4);"
+           [matTooltip]="collapsed ? currentProject.name : ''"
+           matTooltipPosition="right">
         {{ currentProject.name.charAt(0) || 'P' }}
       </div>
       @if (!collapsed) {
       <span class="project-name">{{ currentProject.name }}</span>
+      <span class="project-tag">Actif</span>
       }
     </div>
 
     <div class="project-nav">
-      <a [routerLink]="['/projects', currentProject.id, 'backlog']" routerLinkActive="active" class="project-nav-item"
-        [matTooltip]="collapsed ? 'Backlog' : ''" [matTooltipPosition]="'right'">
+
+      <a [routerLink]="['/projects', currentProject.id, 'backlog']"
+         routerLinkActive="active"
+         class="project-nav-item"
+         [matTooltip]="collapsed ? 'Backlog' : ''"
+         matTooltipPosition="right">
         <mat-icon>inbox</mat-icon>
         @if (!collapsed) {
         <span>Backlog</span>
-        }
-        @if (!collapsed && backlogCount > 0) {
+        @if (backlogCount > 0) {
         <span class="badge">{{ backlogCount }}</span>
         }
+        }
       </a>
 
-      <a [routerLink]="['/projects', currentProject.id, 'board']" routerLinkActive="active" class="project-nav-item"
-        [matTooltip]="collapsed ? 'Tableau' : ''" [matTooltipPosition]="'right'">
+      <a [routerLink]="['/projects', currentProject.id, 'board']"
+         routerLinkActive="active"
+         class="project-nav-item"
+         [matTooltip]="collapsed ? 'Kanban' : ''"
+         matTooltipPosition="right">
         <mat-icon>view_kanban</mat-icon>
-        @if (!collapsed) {
-        <span>Tableau</span>
-        }
+        @if (!collapsed) { <span>Tableau Kanban</span> }
       </a>
 
-      <a [routerLink]="['/projects', currentProject.id, 'tasks']" routerLinkActive="active" class="project-nav-item"
-        [matTooltip]="collapsed ? 'Tâches' : ''" [matTooltipPosition]="'right'">
+      <a [routerLink]="['/projects', currentProject.id, 'tasks']"
+         routerLinkActive="active"
+         class="project-nav-item"
+         [matTooltip]="collapsed ? 'Tâches' : ''"
+         matTooltipPosition="right">
         <mat-icon>task_alt</mat-icon>
-        @if (!collapsed) {
-        <span>Tâches</span>
-        }
+        @if (!collapsed) { <span>Tâches</span> }
       </a>
 
-      <!-- ✅ Historique des sprints du projet -->
-      <a [routerLink]="['/projects', currentProject.id, 'history']" routerLinkActive="active" class="project-nav-item"
-        [matTooltip]="collapsed ? 'Historique' : ''" [matTooltipPosition]="'right'">
+      <a [routerLink]="['/projects', currentProject.id, 'history']"
+         routerLinkActive="active"
+         class="project-nav-item"
+         [matTooltip]="collapsed ? 'Historique' : ''"
+         matTooltipPosition="right">
         <mat-icon>history</mat-icon>
-        @if (!collapsed) {
-        <span>Historique</span>
-        }
+        @if (!collapsed) { <span>Historique</span> }
       </a>
+
     </div>
   </div>
   }
 
   <div class="sidebar-spacer"></div>
 
-  <!-- Footer utilisateur -->
-  <div class="sidebar-footer" [class.collapsed]="collapsed">
-    <div class="user-info" [matTooltip]="collapsed ? userName : ''" [matTooltipPosition]="'right'">
-      <div class="user-avatar">
-        {{ userInitials }}
-      </div>
-      @if (!collapsed) {
-      <div class="user-details">
-        <div class="user-name">{{ userName }}</div>
-        <div class="user-email">{{ userEmail }}</div>
-      </div>
-      }
-      <button mat-icon-button class="logout-btn" (click)="logout()" [matTooltip]="collapsed ? 'Déconnexion' : ''">
-        <mat-icon>logout</mat-icon>
-      </button>
-    </div>
-  </div>
 </div>

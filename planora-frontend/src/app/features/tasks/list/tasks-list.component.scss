@@ -1,8 +1,19 @@
-// src/app/features/tasks/list/tasks-list.component.scss
+// src/app/features/tasks/list/tasks-list.component.scss - BLUE THEME (harmonisé avec workspace-detail)
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:host {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 36px 40px;
+  min-height: calc(100vh - 64px);
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
 }
 
 .page-header {
@@ -12,32 +23,60 @@
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
+  animation: scaleIn 0.3s ease-out;
 }
 
 h1 {
   font-size: 28px;
-  font-weight: 700;
-  color: #111827;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e293b, #334155);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
   margin: 0 0 4px 0;
 }
 
 .subtitle {
-  color: #6b7280;
+  color: #64748b;
   margin: 0;
+  font-size: 15px;
 }
 
 .primary-btn {
-  background: #4f46e5 !important;
+  background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
   color: #fff !important;
-  border-radius: 8px !important;
+  border-radius: 40px !important;
   padding: 0 20px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3) !important;
+  transition: all 0.2s ease !important;
+
+  mat-icon {
+    color: white !important;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #4338ca, #3730a3) !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4) !important;
+    transform: translateY(-2px);
+  }
 }
 
+// ==================== TABLE CARD ====================
 .tasks-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid #c7d2fe;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+  animation: scaleIn 0.3s ease-out;
+
+  &:hover {
+    box-shadow: 0 8px 30px rgba(79, 70, 229, 0.08);
+  }
 }
 
 .table-container {
@@ -51,48 +90,55 @@ h1 {
   th, td {
     padding: 14px 16px;
     text-align: left;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #f5f3ff;
   }
 
   th {
-    background: #f9fafb;
-    font-weight: 600;
-    font-size: 13px;
-    color: #6b7280;
+    background: #f5f3ff;
+    font-weight: 700;
+    font-size: 12px;
+    color: #4f46e5;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
+    opacity: 0.8;
   }
 
   tr:hover td {
-    background: #f9fafb;
+    background: #f5f3ff;
   }
 }
 
 .task-id {
   font-family: monospace;
   font-size: 12px;
-  color: #6b7280;
-  font-weight: 600;
+  color: #4f46e5;
+  font-weight: 700;
+  background: #f5f3ff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
 .task-title {
-  font-weight: 500;
-  color: #111827;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
 }
 
 .task-description {
   font-size: 13px;
-  color: #6b7280;
+  color: #64748b;
   max-width: 300px;
 }
 
-// Badges
+// ==================== PRIORITY BADGES ====================
 .priority-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 4px 12px;
+  border-radius: 40px;
   font-size: 11px;
   font-weight: 600;
   display: inline-block;
+  transition: all 0.2s ease;
 }
 
 .priority-low {
@@ -101,31 +147,32 @@ h1 {
 }
 
 .priority-medium {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.priority-high {
   background: #fef3c7;
   color: #92400e;
 }
 
-.priority-high {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
 .priority-critical {
-  background: #fecaca;
-  color: #7f1d1d;
+  background: #ede9fe;
+  color: #3730a3;
 }
 
+// ==================== STATUS BADGES ====================
 .status-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 4px 12px;
+  border-radius: 40px;
   font-size: 11px;
   font-weight: 600;
   display: inline-block;
 }
 
 .status-todo {
-  background: #e5e7eb;
-  color: #374151;
+  background: #f5f3ff;
+  color: #4338ca;
 }
 
 .status-progress {
@@ -148,36 +195,278 @@ h1 {
   color: #ef4444 !important;
 }
 
+// ==================== EMPTY STATE ====================
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 40px;
+  background: linear-gradient(135deg, #f5f3ff, #ffffff);
+  border-radius: 20px;
+  border: 2px dashed #a5b4fc;
+  margin: 16px;
+  animation: fadeInUp 0.4s ease-out forwards;
 
   mat-icon {
-    font-size: 64px;
-    width: 64px;
-    height: 64px;
-    color: #9ca3af;
-    margin-bottom: 16px;
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    color: #a5b4fc;
+    margin-bottom: 20px;
+    opacity: 0.7;
   }
 
   h3 {
-    margin: 0 0 8px 0;
-    color: #374151;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    color: #1e293b;
   }
 
   p {
-    color: #6b7280;
-    margin-bottom: 24px;
+    color: #64748b;
+    margin-bottom: 28px;
+    font-size: 15px;
   }
 }
 
+// ==================== PAGINATOR ====================
 mat-paginator {
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid #c7d2fe;
+  background: #fefefe;
+
+  ::ng-deep .mat-mdc-icon-button {
+    color: #4f46e5;
+  }
+
+  ::ng-deep .mat-mdc-paginator-range-label {
+    color: #64748b;
+  }
 }
 
+// ==================== GRID VIEW ====================
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+// ==================== TASK CARD (GRID) ====================
+.task-card {
+  background: white;
+  border: 1px solid #c7d2fe;
+  border-radius: 20px;
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.4s ease-out forwards;
+  animation-fill-mode: both;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4f46e5, #4338ca, #312e81);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    border-color: #a5b4fc;
+    box-shadow: 0 20px 40px -12px rgba(79, 70, 229, 0.15);
+    transform: translateY(-4px);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  &.draggable {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+}
+
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .task-card:hover & {
+    opacity: 1;
+  }
+
+  button {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border-radius: 8px !important;
+    transition: all 0.15s ease;
+
+    mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      line-height: 15px;
+      margin: 0;
+      color: #94a3b8;
+    }
+
+    &.edit-btn:hover {
+      background: #ede9fe !important;
+
+      mat-icon {
+        color: #4f46e5;
+      }
+    }
+
+    &.delete-btn:hover {
+      background: #fee2e2 !important;
+
+      mat-icon {
+        color: #ef4444;
+      }
+    }
+  }
+}
+
+.task-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.task-description {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f5f3ff;
+}
+
+.task-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sprint-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748b;
+  background: #f5f3ff;
+  padding: 3px 8px;
+  border-radius: 40px;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+    color: #4f46e5;
+    opacity: 0.7;
+  }
+}
+
+.assignee {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.assignee-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+}
+
+.assignee-name {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+// ==================== ANIMATIONS ====================
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@for $i from 1 through 20 {
+  .task-card:nth-child(#{$i}) {
+    animation-delay: #{$i * 0.03}s;
+  }
+}
+
+// ==================== RESPONSIVE ====================
 @media (max-width: 768px) {
   .page-container {
     padding: 16px;
+  }
+
+  .tasks-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
   }
 
   .tasks-table th,
@@ -185,23 +474,28 @@ mat-paginator {
     padding: 10px 12px;
     font-size: 12px;
   }
-  // src/app/features/tasks/list/tasks-list.component.scss
-  // Ajoutez ces styles
 
-  .tasks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 16px;
-    padding: 16px;
-  }
-
-  @media (max-width: 768px) {
-    .tasks-grid {
-      grid-template-columns: 1fr;
-      padding: 12px;
-    }
-  }
   .task-description {
     max-width: 150px;
+  }
+}
+
+// ==================== SCROLLBAR ====================
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f3ff;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a5b4fc;
+  border-radius: 10px;
+
+  &:hover {
+    background: #818cf8;
   }
 }

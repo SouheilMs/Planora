@@ -1,3 +1,4 @@
+// src/app/features/tasks/card/task-card.component.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +29,7 @@ export class TaskCardComponent {
   @Input() showSprint = false;
   @Input() draggable = true;
 
+  @Output() onClick = new EventEmitter<TaskCardData>();
   @Output() onEdit = new EventEmitter<TaskCardData>();
   @Output() onDelete = new EventEmitter<TaskCardData>();
 
@@ -47,11 +49,17 @@ export class TaskCardComponent {
     return ['status-todo', 'status-inprogress', 'status-done'][status] ?? '';
   }
 
-  edit(): void {
+  onCardClick(): void {
+    this.onClick.emit(this.task);
+  }
+
+  edit(event: Event): void {
+    event.stopPropagation();
     this.onEdit.emit(this.task);
   }
 
-  delete(): void {
+  delete(event: Event): void {
+    event.stopPropagation();
     this.onDelete.emit(this.task);
   }
 }

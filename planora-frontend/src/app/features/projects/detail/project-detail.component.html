@@ -1,149 +1,215 @@
+<!-- project-detail.component.html - RED THEME -->
 <div class="page-container">
+
   @if (loading) {
   <app-loading></app-loading>
   }
 
   @if (!loading && project) {
+
+  <!-- ── PAGE HEADER ── -->
   <div class="page-header">
-    <div>
-      <button mat-button [routerLink]="['/projects']" class="back-btn">
-        <mat-icon>arrow_back</mat-icon> Projects
-      </button>
-      <h1>{{ project.name }}</h1>
-      <p class="text-secondary">{{ project.description }}</p>
+    <div class="header-left">
+     
+      <div class="project-hero">
+        <div class="project-hero-avatar" style="background: linear-gradient(135deg, #4f46e5, #06b6d4);">
+          {{ project.name.charAt(0) }}
+        </div>
+        <div class="project-hero-info">
+          <h1>{{ project.name }}</h1>
+          <p>{{ project.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Badge -->
+    <div class="progress-badge">
+      <div class="progress-ring-wrap">
+        <svg viewBox="0 0 44 44" class="progress-ring">
+          <circle cx="22" cy="22" r="18" class="ring-track" />
+          <circle cx="22" cy="22" r="18"
+                  class="ring-fill"
+                  [style.stroke-dasharray]="113"
+                  [style.stroke-dashoffset]="113 - (113 * (project.progressPercentage || 0) / 100)">
+          </circle>
+        </svg>
+        <span class="ring-label">{{ project.progressPercentage || 0 }}%</span>
+      </div>
+      <div class="progress-badge-text">
+        <span class="pct-value">{{ project.progressPercentage || 0 }}%</span>
+        <span class="pct-label">Complete</span>
+      </div>
     </div>
   </div>
 
-  <div class="detail-grid">
-    <!-- Info Card -->
-    <div class="planora-card info-card">
-      <h3 class="section-title">Project Info</h3>
-      <div class="info-list">
-        <div class="info-item">
-          <mat-icon>person</mat-icon>
-          <div>
-            <div class="info-label">Manager</div>
-            <div class="info-value">{{ project.projectManagerName }}</div>
-          </div>
-        </div>
-        <div class="info-item">
-          <mat-icon>calendar_today</mat-icon>
-          <div>
-            <div class="info-label">Start Date</div>
-            <div class="info-value">{{ project.startDate | date:'mediumDate' }}</div>
-          </div>
-        </div>
-        <div class="info-item">
-          <mat-icon>event</mat-icon>
-          <div>
-            <div class="info-label">End Date</div>
-            <div class="info-value">{{ project.endDate | date:'mediumDate' }}</div>
-          </div>
-        </div>
-        <div class="info-item">
-          <mat-icon>task_alt</mat-icon>
-          <div>
-            <div class="info-label">Tasks</div>
-            <div class="info-value">{{ project.completedTasks }} / {{ project.totalTasks }} completed</div>
-          </div>
-        </div>
-      </div>
-      <div class="progress-section">
-        <div class="progress-header">
-          <span class="info-label">Progress</span>
-          <span class="progress-pct">{{ project.progressPercentage | number:'1.0-0' }}%</span>
-        </div>
-        <mat-progress-bar mode="determinate" [value]="project.progressPercentage"
-          class="project-bar"></mat-progress-bar>
+  <!-- ── STATS STRIP ── -->
+  <div class="stats-strip">
+    <div class="stat-block">
+      <mat-icon>manage_accounts</mat-icon>
+      <div>
+        <span class="stat-v">{{ project.projectManagerName }}</span>
+        <span class="stat-l">Manager</span>
       </div>
     </div>
+    <div class="strip-divider"></div>
+    <div class="stat-block">
+      <mat-icon>calendar_today</mat-icon>
+      <div>
+        <span class="stat-v">{{ project.startDate | date:'MMM d, y' }}</span>
+        <span class="stat-l">Start Date</span>
+      </div>
+    </div>
+    <div class="strip-divider"></div>
+    <div class="stat-block">
+      <mat-icon>event</mat-icon>
+      <div>
+        <span class="stat-v">{{ project.endDate | date:'MMM d, y' }}</span>
+        <span class="stat-l">End Date</span>
+      </div>
+    </div>
+    <div class="strip-divider"></div>
+    <div class="stat-block">
+      <mat-icon>task_alt</mat-icon>
+      <div>
+        <span class="stat-v">{{ project.completedTasks || 0 }}/{{ project.totalTasks || 0 }}</span>
+        <span class="stat-l">Tasks</span>
+      </div>
+    </div>
+  </div>
 
-    <!-- Team Card -->
-    <div class="planora-card">
-      <h3 class="section-title">Team Members</h3>
-      @if ((project.members?.length || 0) > 0) {
+  <!-- ── MAIN GRID ── -->
+  <div class="main-grid">
+
+    <!-- ── LEFT: TEAM CARD ── -->
+    <div class="card team-card">
+      <div class="card-head">
+        <h3>
+          <mat-icon>groups</mat-icon>
+          Team Members
+        </h3>
+        <span class="count-badge">{{ project.members?.length || 0 }}</span>
+      </div>
+
+      @if (project.members && project.members.length > 0) {
       <div class="members-list">
-        @for (m of (project.members || []); track m.userId) {
-        <div class="member-item">
-          <div class="member-avatar">{{ m.fullName[0] || '?' }}</div>
-          <div>
-            <div class="member-name">{{ m.fullName }}</div>
-            <div class="member-email">{{ m.email }}</div>
+        @for (member of project.members; track member.userId) {
+        <div class="member-row">
+          <div class="member-av" [class.is-manager]="member.userId === project.projectManagerId">
+            {{ (member.fullName || '?')[0].toUpperCase() }}
           </div>
+          <div class="member-info">
+            <div class="member-name">
+              {{ member.fullName || member.userId }}
+              @if (member.userId === project.projectManagerId) {
+              <span class="manager-tag">Manager</span>
+              }
+            </div>
+            <div class="member-email">{{ member.email || 'No email' }}</div>
+          </div>
+          @if (canRemoveMember(member)) {
+          <button class="remove-btn" (click)="removeMember(member)" matTooltip="Remove member">
+            <mat-icon>person_remove</mat-icon>
+          </button>
+          }
         </div>
         }
       </div>
-      }
-      @if ((project.members?.length || 0) === 0) {
-      <div class="empty-state" style="padding: 32px 0">
+      } @else {
+      <div class="card-empty">
         <mat-icon>people_outline</mat-icon>
-        <h3>No members</h3>
         <p>No team members assigned yet</p>
       </div>
       }
 
+      <!-- Add Member -->
       @if (canManageMembers) {
-      <div class="invite-panel">
-        <h4 class="section-title">Invite Member to Project</h4>
-        <form class="invite-form" [formGroup]="memberForm" (ngSubmit)="addMember()">
+      <div class="add-member-panel">
+        <div class="add-member-head">
+          <mat-icon>person_add</mat-icon>
+          <span>Add Member</span>
+        </div>
+        <form [formGroup]="memberForm" (ngSubmit)="addMember()" class="add-member-form">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Workspace member</mat-label>
+            <mat-label>Select workspace member</mat-label>
             <mat-select formControlName="userId">
               @for (member of availableWorkspaceMembers; track member.userId) {
               <mat-option [value]="member.userId">
                 {{ member.fullName }} ({{ member.email }})
               </mat-option>
               }
+              @if (availableWorkspaceMembers.length === 0) {
+              <mat-option disabled value="">All workspace members already added</mat-option>
+              }
             </mat-select>
           </mat-form-field>
-          <button mat-raised-button color="primary" [disabled]="memberForm.invalid || addingMember">
-            {{ addingMember ? 'Adding...' : 'Add Member' }}
+          <button class="btn-add-member"
+                  type="submit"
+                  [disabled]="memberForm.invalid || addingMember || availableWorkspaceMembers.length === 0">
+            <mat-icon>{{ addingMember ? 'hourglass_empty' : 'add' }}</mat-icon>
+            {{ addingMember ? 'Adding…' : 'Add to Project' }}
           </button>
         </form>
       </div>
       }
     </div>
-  </div>
 
-  <!-- Navigation Cards -->
-  <div class="nav-grid">
-    <a class="nav-card" [routerLink]="['/projects', project.id, 'tasks']">
-      <div class="nav-card-icon tasks">
-        <mat-icon>task_alt</mat-icon>
-      </div>
-      <div class="nav-card-body">
-        <div class="nav-card-title">Tasks</div>
-        <div class="nav-card-subtitle">Manage project tasks</div>
-      </div>
-      <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
-    </a>
-    <a class="nav-card" [routerLink]="['/projects', project.id, 'sprints']">
-      <div class="nav-card-icon sprints">
-        <mat-icon>sprint</mat-icon>
-      </div>
-      <div class="nav-card-body">
-        <div class="nav-card-title">Sprints</div>
-        <div class="nav-card-subtitle">Plan and track sprints</div>
-      </div>
-      <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
-    </a>
-    <a class="nav-card" [routerLink]="['/projects', project.id, 'backlog']">
-      <div class="nav-card-icon backlog">
-        <mat-icon>list_alt</mat-icon>
-      </div>
-      <div class="nav-card-body">
-        <div class="nav-card-title">Backlog</div>
-        <div class="nav-card-subtitle">View and organize backlog</div>
-      </div>
-      <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
-    </a>
+    <!-- ── RIGHT: NAV CARDS ── -->
+    <div class="right-col">
+
+      <a class="nav-card" [routerLink]="['/projects', project.id, 'tasks']">
+        <div class="nav-card-icon tasks-icon">
+          <mat-icon>task_alt</mat-icon>
+        </div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Tasks</div>
+          <div class="nav-card-sub">Manage and track project tasks</div>
+        </div>
+        <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
+      </a>
+
+      <a class="nav-card" [routerLink]="['/projects', project.id, 'backlog']">
+        <div class="nav-card-icon backlog-icon">
+          <mat-icon>list_alt</mat-icon>
+        </div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Backlog</div>
+          <div class="nav-card-sub">View and organize the backlog</div>
+        </div>
+        <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
+      </a>
+
+      <a class="nav-card" [routerLink]="['/projects', project.id, 'board']">
+        <div class="nav-card-icon board-icon">
+          <mat-icon>view_kanban</mat-icon>
+        </div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Kanban Board</div>
+          <div class="nav-card-sub">Visualize work in progress</div>
+        </div>
+        <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
+      </a>
+
+      <a class="nav-card" [routerLink]="['/projects', project.id, 'history']">
+        <div class="nav-card-icon history-icon">
+          <mat-icon>history</mat-icon>
+        </div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">History</div>
+          <div class="nav-card-sub">Activity log and changes</div>
+        </div>
+        <mat-icon class="nav-card-arrow">arrow_forward</mat-icon>
+      </a>
+
+    </div>
   </div>
   }
 
   @if (!loading && !project) {
-  <div class="empty-state" style="padding: 64px">
+  <div class="not-found">
     <mat-icon>folder_off</mat-icon>
     <h3>Project not found</h3>
+    <a [routerLink]="['/projects']" class="btn-back-link">Back to Projects</a>
   </div>
   }
+
 </div>

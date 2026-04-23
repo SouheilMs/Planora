@@ -6,6 +6,8 @@ using Planora.Infrastructure.Data;
 using Planora.Infrastructure.Identity;
 using Planora.Middleware;
 using Serilog;
+using System;
+using System.Threading.Tasks;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -57,7 +59,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // CORS – allowed origins are configurable via Cors:AllowedOrigins in appsettings
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:4200", "http://localhost:5000", "http://localhost:5070"];
+    ?? ["http://localhost:4200", "http://localhost:5000"];
 
 builder.Services.AddCors(options =>
 {
@@ -83,7 +85,7 @@ static async Task SeedAdminUser(IServiceProvider services)
         IsActive = true
     };
 
-    await userManager.CreateAsync(admin, "Admin@1234");
+    await userManager.CreateAsync(admin, "Admin@123");
     await userManager.AddToRoleAsync(admin, "Admin");
 }
 
@@ -93,7 +95,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.MigrateAsync();
+   await db.Database.MigrateAsync();
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await RoleSeeder.SeedRolesAsync(roleManager);

@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Security.Claims;
-
-
+using Planora.Application.DTOs.Comments;
+using Planora.Domain.Entities;
 namespace Planora.Controllers;
 
 [ApiController]
@@ -209,4 +209,205 @@ public class BacklogController : ControllerBase
         var result = await _backlogService.UpdateComplexityAsync(id, complexity, userId);
         return Ok(ApiResponseDto<BacklogItemDto>.SuccessResult(result, "Complexity updated successfully."));
     }
+    [HttpGet("{backlogItemId:guid}/comments")]
+    public async Task<IActionResult> GetComments(Guid backlogItemId)
+    {
+        var comments = await _context.Comments
+            .Include(c => c.Author)
+            .Where(c => c.BacklogItemId == backlogItemId)
+            .OrderBy(c => c.CreatedAt)
+            .Select(c => new
+            {
+                id = c.Id,
+                content = c.Content,
+                authorId = c.AuthorId,
+                authorName = c.Author != null
+                    ? $"{c.Author.FirstName} {c.Author.LastName}".Trim()
+                    : "Inconnu",
+                createdAt = c.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(ApiResponseDto<object>.SuccessResult(comments));
+    }
+
+    /// <summary>Add a comment to a backlog item</summary>
+    [HttpPost("{backlogItemId:guid}/comments")]
+    public async Task<IActionResult> AddComment(Guid backlogItemId, [FromBody] CreateCommentDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var backlogItem = await _context.BacklogItems.FindAsync(backlogItemId);
+        if (backlogItem == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Backlog item not found."));
+
+        var comment = new Comment
+        {
+            Id = Guid.NewGuid(),
+            Content = dto.Content,
+            AuthorId = userId,
+            BacklogItemId = backlogItemId,
+            TaskId = null,          // pas une TaskItem — on laisse null
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Comments.Add(comment);
+        await _context.SaveChangesAsync();
+
+        // Recharger avec l'auteur pour retourner le nom
+        var author = await _context.Users.FindAsync(userId);
+        var result = new
+        {
+            id = comment.Id,
+            content = comment.Content,
+            authorId = comment.AuthorId,
+            authorName = author != null
+                ? $"{author.FirstName} {author.LastName}".Trim()
+                : "Inconnu",
+            createdAt = comment.CreatedAt
+        };
+
+        return Ok(ApiResponseDto<object>.SuccessResult(result, "Commentaire ajouté."));
+    }
+
+    /// <summary>Delete a comment on a backlog item</summary>
+    [HttpDelete("{backlogItemId:guid}/comments/{commentId:guid}")]
+    public async Task<IActionResult> DeleteComment(Guid backlogItemId, Guid commentId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var comment = await _context.Comments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.BacklogItemId == backlogItemId);
+
+        if (comment == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Commentaire introuvable."));
+
+        // Seul l'auteur ou un admin peut supprimer
+        var isAdmin = User.IsInRole("Admin");
+        if (comment.AuthorId != userId && !isAdmin)
+            return Forbid();
+
+        _context.Comments.Remove(comment);
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponseDto<object>.SuccessResult(null!, "Commentaire supprimé."));
+    }
+    // ===== SOUS-TÂCHES =====
+
+    /// <summary>Get subtasks for a backlog item</summary>
+    [HttpGet("{backlogItemId:guid}/subtasks")]
+    public async Task<IActionResult> GetSubTasks(Guid backlogItemId)
+    {
+        var subTasks = await _context.SubTasks
+            .Where(s => s.BacklogItemId == backlogItemId && !s.IsDeleted)
+            .OrderBy(s => s.CreatedAt)
+            .Select(s => new SubTaskDto
+            {
+                Id = s.Id,
+                Title = s.Title,
+                IsCompleted = s.IsCompleted,
+                BacklogItemId = s.BacklogItemId,
+                CreatedAt = s.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(ApiResponseDto<object>.SuccessResult(subTasks));
+    }
+
+    /// <summary>Create a subtask</summary>
+    [HttpPost("{backlogItemId:guid}/subtasks")]
+    public async Task<IActionResult> CreateSubTask(Guid backlogItemId, [FromBody] CreateSubTaskDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var backlogItem = await _context.BacklogItems.FindAsync(backlogItemId);
+        if (backlogItem == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Backlog item not found."));
+
+        var subTask = new SubTask
+        {
+            Id = Guid.NewGuid(),
+            Title = dto.Title.Trim(),
+            IsCompleted = false,
+            BacklogItemId = backlogItemId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.SubTasks.Add(subTask);
+        await _context.SaveChangesAsync();
+
+        var result = new SubTaskDto
+        {
+            Id = subTask.Id,
+            Title = subTask.Title,
+            IsCompleted = subTask.IsCompleted,
+            BacklogItemId = subTask.BacklogItemId,
+            CreatedAt = subTask.CreatedAt
+        };
+
+        return Ok(ApiResponseDto<object>.SuccessResult(result, "Sous-tâche créée."));
+    }
+
+    /// <summary>Update a subtask (title or completion)</summary>
+    [HttpPatch("{backlogItemId:guid}/subtasks/{subTaskId:guid}")]
+    public async Task<IActionResult> UpdateSubTask(Guid backlogItemId, Guid subTaskId, [FromBody] UpdateSubTaskDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var subTask = await _context.SubTasks
+            .FirstOrDefaultAsync(s => s.Id == subTaskId && s.BacklogItemId == backlogItemId && !s.IsDeleted);
+
+        if (subTask == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Sous-tâche introuvable."));
+
+        if (!string.IsNullOrWhiteSpace(dto.Title))
+            subTask.Title = dto.Title.Trim();
+
+        if (dto.IsCompleted.HasValue)
+            subTask.IsCompleted = dto.IsCompleted.Value;
+
+        subTask.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        var result = new SubTaskDto
+        {
+            Id = subTask.Id,
+            Title = subTask.Title,
+            IsCompleted = subTask.IsCompleted,
+            BacklogItemId = subTask.BacklogItemId,
+            CreatedAt = subTask.CreatedAt
+        };
+
+        return Ok(ApiResponseDto<object>.SuccessResult(result, "Sous-tâche mise à jour."));
+    }
+
+    /// <summary>Delete a subtask</summary>
+    [HttpDelete("{backlogItemId:guid}/subtasks/{subTaskId:guid}")]
+    public async Task<IActionResult> DeleteSubTask(Guid backlogItemId, Guid subTaskId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        var subTask = await _context.SubTasks
+            .FirstOrDefaultAsync(s => s.Id == subTaskId && s.BacklogItemId == backlogItemId && !s.IsDeleted);
+
+        if (subTask == null)
+            return NotFound(ApiResponseDto<object>.ErrorResult("Sous-tâche introuvable."));
+
+        subTask.IsDeleted = true;
+        subTask.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponseDto<object>.SuccessResult(null!, "Sous-tâche supprimée."));
+    }
+
 }

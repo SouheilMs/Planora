@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ApiResponse,
@@ -9,14 +9,15 @@ import {
   WorkspaceInviteableUser,
   Workspace,
   WorkspaceInvitation,
-  WorkspaceMember,
-  SetWorkspaceProjectManagerRequest
+  WorkspaceMember
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/api/workspaces`;
+
+  workspaceListChanged$ = new Subject<void>();
 
   getWorkspaces(): Observable<ApiResponse<Workspace[]>> {
     return this.http.get<ApiResponse<Workspace[]>>(this.apiUrl);
@@ -28,10 +29,6 @@ export class WorkspaceService {
 
   createWorkspace(request: CreateWorkspaceRequest): Observable<ApiResponse<Workspace>> {
     return this.http.post<ApiResponse<Workspace>>(this.apiUrl, request);
-  }
-
-  setProjectManager(workspaceId: string, request: SetWorkspaceProjectManagerRequest): Observable<ApiResponse<Workspace>> {
-    return this.http.put<ApiResponse<Workspace>>(`${this.apiUrl}/${workspaceId}/project-manager`, request);
   }
 
   getMembers(workspaceId: string): Observable<ApiResponse<WorkspaceMember[]>> {
@@ -60,5 +57,13 @@ export class WorkspaceService {
 
   removeMember(workspaceId: string, userId: string): Observable<ApiResponse<boolean>> {
     return this.http.delete<ApiResponse<boolean>>(`${this.apiUrl}/${workspaceId}/members/${userId}`);
+  }
+
+  setProjectManager(workspaceId: string, userId: string): Observable<ApiResponse<Workspace>> {
+    return this.http.put<ApiResponse<Workspace>>(`${this.apiUrl}/${workspaceId}/project-manager`, { userId });
+  }
+
+  deleteWorkspace(id: string): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(`${this.apiUrl}/${id}`);
   }
 }

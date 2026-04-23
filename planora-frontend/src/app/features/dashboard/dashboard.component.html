@@ -1,9 +1,18 @@
-<!-- src/app/features/dashboard/dashboard.component.html -->
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1>Dashboard</h1>
-      <p class="text-secondary">Welcome back! Here's what's happening with your projects.</p>
+<div class="dash-root">
+
+  <!-- ── HEADER ── -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-greeting">
+        <span class="dash-greeting-icon">📊</span>
+        <div>
+          <h1 class="dash-title">Dashboard</h1>
+          <p class="dash-subtitle">Welcome back — here's your project overview</p>
+        </div>
+      </div>
+    </div>
+    <div class="dash-header-right">
+      <div class="dash-date">{{ today | date:'EEEE, d MMMM yyyy' }}</div>
     </div>
   </div>
 
@@ -12,139 +21,207 @@
   }
 
   @if (!loading && data) {
-  <!-- Stats Row -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon-wrap indigo">
-        <mat-icon>folder_open</mat-icon>
+
+  <!-- ── KPI CARDS ── -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card kpi-indigo">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Projects</span>
+        <div class="kpi-icon"><mat-icon>folder_open</mat-icon></div>
       </div>
-      <div class="stat-body">
-        <div class="stat-value">{{ data.totalProjects }}</div>
-        <div class="stat-label">Total Projects</div>
+      <div class="kpi-value">{{ data.totalProjects }}</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%"></div></div>
+    </div>
+
+    <div class="kpi-card kpi-cyan">
+      <div class="kpi-top">
+        <span class="kpi-label">Active Sprints</span>
+        <div class="kpi-icon"><mat-icon>sprint</mat-icon></div>
+      </div>
+      <div class="kpi-value">{{ data.activeSprints }}</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%"></div></div>
+    </div>
+
+    <div class="kpi-card kpi-amber">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Tasks</span>
+        <div class="kpi-icon"><mat-icon>task_alt</mat-icon></div>
+      </div>
+      <div class="kpi-value">{{ data.totalTasks }}</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%"></div></div>
+    </div>
+
+    <div class="kpi-card kpi-green">
+      <div class="kpi-top">
+        <span class="kpi-label">Completed</span>
+        <div class="kpi-icon"><mat-icon>check_circle</mat-icon></div>
+      </div>
+      <div class="kpi-value">{{ data.completedTasks }}</div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill" [style.width.%]="data.totalTasks ? (data.completedTasks / data.totalTasks * 100) : 0"></div>
       </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon-wrap cyan">
-        <mat-icon>sprint</mat-icon>
-      </div>
-      <div class="stat-body">
-        <div class="stat-value">{{ data.activeSprints }}</div>
-        <div class="stat-label">Active Sprints</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon-wrap amber">
-        <mat-icon>task_alt</mat-icon>
-      </div>
-      <div class="stat-body">
-        <div class="stat-value">{{ data.totalTasks }}</div>
-        <div class="stat-label">Total Tasks</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon-wrap green">
-        <mat-icon>check_circle</mat-icon>
-      </div>
-      <div class="stat-body">
-        <div class="stat-value">{{ data.completedTasks }}</div>
-        <div class="stat-label">Completed</div>
-      </div>
-    </div>
+
   </div>
 
-  <!-- Progress + Task Breakdown Row -->
-  <div class="two-col">
-    <div class="planora-card">
-      <h3 class="card-title">Overall Progress</h3>
-      <div class="big-progress">
-        <div class="big-pct">{{ data.overallProgressPercentage | number:'1.0-0' }}%</div>
-        <mat-progress-bar mode="determinate" [value]="data.overallProgressPercentage"
-          class="big-bar"></mat-progress-bar>
-        <div class="pct-label">of all tasks completed</div>
+  <!-- ── MID ROW ── -->
+  <div class="mid-row">
+
+    <!-- Overall Progress -->
+    <div class="card card--progress">
+      <div class="card-head">
+        <h3 class="card-title">Overall Progress</h3>
+        <span class="card-badge">{{ data.overallProgressPercentage | number:'1.0-0' }}%</span>
       </div>
+      <div class="progress-circle-wrap">
+        <svg class="progress-ring" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="50" />
+          <circle class="ring-fill" cx="60" cy="60" r="50"
+                  [style.stroke-dashoffset]="314 - (314 * data.overallProgressPercentage / 100)" />
+        </svg>
+        <div class="ring-center">
+          <span class="ring-pct">{{ data.overallProgressPercentage | number:'1.0-0' }}%</span>
+          <span class="ring-sub">done</span>
+        </div>
+      </div>
+      <p class="progress-desc">{{ data.completedTasks }} of {{ data.totalTasks }} tasks completed</p>
     </div>
 
-    <div class="planora-card">
-      <h3 class="card-title">Task Breakdown</h3>
+    <!-- Task Breakdown -->
+    <div class="card card--breakdown">
+      <div class="card-head">
+        <h3 class="card-title">Task Breakdown</h3>
+      </div>
       <div class="breakdown-list">
-        <div class="breakdown-item">
-          <span class="chip status-todo">To Do</span>
-          <div class="breakdown-bar-wrap">
-            <div class="breakdown-bar todo-bar" [style.width.%]="getPercent(data.toDoTasks)"></div>
+
+        <div class="bd-item">
+          <div class="bd-header">
+            <span class="bd-dot dot-todo"></span>
+            <span class="bd-name">To Do</span>
+            <span class="bd-count">{{ data.toDoTasks }}</span>
+            <span class="bd-pct">{{ getPercent(data.toDoTasks) }}%</span>
           </div>
-          <span class="breakdown-count">{{ data.toDoTasks }}</span>
-        </div>
-        <div class="breakdown-item">
-          <span class="chip status-inprogress">In Progress</span>
-          <div class="breakdown-bar-wrap">
-            <div class="breakdown-bar inprogress-bar" [style.width.%]="getPercent(data.inProgressTasks)"></div>
+          <div class="bd-track">
+            <div class="bd-fill bd-fill--todo" [style.width.%]="getPercent(data.toDoTasks)"></div>
           </div>
-          <span class="breakdown-count">{{ data.inProgressTasks }}</span>
         </div>
-        <div class="breakdown-item">
-          <span class="chip status-done">Done</span>
-          <div class="breakdown-bar-wrap">
-            <div class="breakdown-bar done-bar" [style.width.%]="getPercent(data.completedTasks)"></div>
+
+        <div class="bd-item">
+          <div class="bd-header">
+            <span class="bd-dot dot-inprogress"></span>
+            <span class="bd-name">In Progress</span>
+            <span class="bd-count">{{ data.inProgressTasks }}</span>
+            <span class="bd-pct">{{ getPercent(data.inProgressTasks) }}%</span>
           </div>
-          <span class="breakdown-count">{{ data.completedTasks }}</span>
+          <div class="bd-track">
+            <div class="bd-fill bd-fill--inprogress" [style.width.%]="getPercent(data.inProgressTasks)"></div>
+          </div>
         </div>
+
+        <div class="bd-item">
+          <div class="bd-header">
+            <span class="bd-dot dot-done"></span>
+            <span class="bd-name">Done</span>
+            <span class="bd-count">{{ data.completedTasks }}</span>
+            <span class="bd-pct">{{ getPercent(data.completedTasks) }}%</span>
+          </div>
+          <div class="bd-track">
+            <div class="bd-fill bd-fill--done" [style.width.%]="getPercent(data.completedTasks)"></div>
+          </div>
+        </div>
+
       </div>
     </div>
+
   </div>
 
-  <!-- Projects Progress Table -->
-  <div class="planora-card">
-    <div class="card-header-row">
-      <h3 class="card-title">Projects Progress</h3>
-      <a routerLink="/projects" class="planora-link" style="font-size:.875rem">View all</a>
+  <!-- ── WORKSPACES TABLE ── -->
+  <!-- ── WORKSPACES TABLE ── -->
+  <div class="card card--table">
+    <div class="card-head">
+      <h3 class="card-title">Workspaces Overview</h3>
+      <a routerLink="/workspaces" class="view-all-btn">
+        View all <mat-icon>arrow_forward</mat-icon>
+      </a>
     </div>
 
-    @if (data.projectsProgress.length === 0) {
-    <div class="empty-state">
-      <mat-icon>folder_open</mat-icon>
-      <h3>No projects yet</h3>
-      <p>Create your first project to get started</p>
+    @if (!data.workspacesProgress || data.workspacesProgress.length === 0) {
+    <div class="table-empty">
+      <mat-icon>groups</mat-icon>
+      <p>No workspaces yet — create one to get started</p>
     </div>
     }
 
-    @if (data.projectsProgress.length > 0) {
-    <table mat-table [dataSource]="data.projectsProgress" class="planora-table">
-      <ng-container matColumnDef="projectName">
-        <th mat-header-cell *matHeaderCellDef>Project</th>
-        <td mat-cell *matCellDef="let p">
-          <a [routerLink]="['/projects', p.projectId]" class="planora-link">{{ p.projectName }}</a>
+    @if (data.workspacesProgress && data.workspacesProgress.length > 0) {
+    <table mat-table [dataSource]="pagedWorkspaces" class="proj-table">
+
+      <ng-container matColumnDef="workspaceName">
+        <th mat-header-cell *matHeaderCellDef>Workspace</th>
+        <td mat-cell *matCellDef="let w">
+          <a [routerLink]="['/workspaces', w.workspaceId]" class="proj-link">
+            <span class="proj-avatar">{{ w.workspaceName?.charAt(0)?.toUpperCase() }}</span>
+            {{ w.workspaceName }}
+          </a>
         </td>
       </ng-container>
+
+      <ng-container matColumnDef="totalProjects">
+        <th mat-header-cell *matHeaderCellDef>Projects</th>
+        <td mat-cell *matCellDef="let w">
+          <span class="num-badge">{{ w.totalProjects }}</span>
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="totalTasks">
         <th mat-header-cell *matHeaderCellDef>Tasks</th>
-        <td mat-cell *matCellDef="let p">{{ p.totalTasks }}</td>
+        <td mat-cell *matCellDef="let w">
+          <span class="num-badge">{{ w.completedTasks }}/{{ w.totalTasks }}</span>
+        </td>
       </ng-container>
-      <ng-container matColumnDef="completedTasks">
-        <th mat-header-cell *matHeaderCellDef>Completed</th>
-        <td mat-cell *matCellDef="let p">{{ p.completedTasks }}</td>
-      </ng-container>
+
       <ng-container matColumnDef="progress">
         <th mat-header-cell *matHeaderCellDef>Progress</th>
-        <td mat-cell *matCellDef="let p">
-          <div class="progress-cell">
-            <mat-progress-bar mode="determinate" [value]="p.progressPercentage"></mat-progress-bar>
-            <span class="pct">{{ p.progressPercentage | number:'1.0-0' }}%</span>
+        <td mat-cell *matCellDef="let w">
+          <div class="prog-cell">
+            <div class="prog-track">
+              <div class="prog-fill" [style.width.%]="w.progressPercentage"
+                   [class.prog-fill--low]="w.progressPercentage < 30"
+                   [class.prog-fill--mid]="w.progressPercentage >= 30 && w.progressPercentage < 70"
+                   [class.prog-fill--high]="w.progressPercentage >= 70">
+              </div>
+            </div>
+            <span class="prog-pct">{{ w.progressPercentage | number:'1.0-0' }}%</span>
           </div>
         </td>
       </ng-container>
+
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
+
+    <!-- Pagination steps -->
+    <div class="ws-pagination">
+      <button class="ws-page-btn" (click)="wsPage = wsPage - 1" [disabled]="wsPage === 0">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="ws-page-info">
+        {{ wsPage + 1 }} / {{ wsTotalPages }}
+      </span>
+      <button class="ws-page-btn" (click)="wsPage = wsPage + 1" [disabled]="wsPage >= wsTotalPages - 1">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
     }
   </div>
   }
 
-  <!-- Empty state when no data -->
   @if (!loading && !data) {
-  <div class="empty-state">
+  <div class="page-empty">
     <mat-icon>dashboard</mat-icon>
-    <h3>No dashboard data</h3>
+    <h3>No data yet</h3>
     <p>Create projects to see your stats here</p>
   </div>
   }
+
 </div>

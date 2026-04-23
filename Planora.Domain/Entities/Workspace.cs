@@ -1,15 +1,23 @@
+// Domain/Entities/Workspace.cs
+using System;
+using System.Collections.Generic;
+
 namespace Planora.Domain.Entities;
 
-public class Workspace : BaseEntity
+public class Workspace
 {
-  public string Name { get; set; } = string.Empty;
-  public string Description { get; set; } = string.Empty;
-  public string OwnerId { get; set; } = string.Empty;
-  public string ProjectManagerId { get; set; } = string.Empty;
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string OwnerId { get; set; } = string.Empty;
+    public string? ProjectManagerId { get; set; } // ← AJOUTEZ CETTE PROPRIÉTÉ
+    public DateTime CreatedAt { get; set; }
+    public bool IsDeleted { get; set; }
 
-  public ApplicationUser Owner { get; set; } = null!;
-  public ApplicationUser ProjectManager { get; set; } = null!;
-  public ICollection<WorkspaceUser> Members { get; set; } = new List<WorkspaceUser>();
-  public ICollection<Project> Projects { get; set; } = new List<Project>();
-  public ICollection<WorkspaceInvitation> Invitations { get; set; } = new List<WorkspaceInvitation>();
+    // Navigation properties
+    public ApplicationUser? Owner { get; set; }
+    public ApplicationUser? ProjectManager { get; set; } // ← AJOUTEZ CETTE PROPRIÉTÉ
+    public ICollection<WorkspaceUser> Members { get; set; } = new List<WorkspaceUser>();
+    public ICollection<Project> Projects { get; set; } = new List<Project>();
+    public ICollection<WorkspaceInvitation> Invitations { get; set; } = new List<WorkspaceInvitation>();
 }

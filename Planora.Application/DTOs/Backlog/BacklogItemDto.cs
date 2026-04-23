@@ -17,9 +17,10 @@ public class BacklogItemDto
     public bool IsMovedToSprint { get; set; }
     public string AssignedToName { get; set; } = string.Empty;
     public int ProgressPercentage { get; set; }
-    public DateTime DueDate { get; set; }
+    public DateTime? DueDate { get; set; }
     public string? AssignedToId { get; set; }
     public int? Complexity { get; set; }
+    public int? StoryPoints { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

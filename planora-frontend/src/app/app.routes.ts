@@ -33,10 +33,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/projects/list/projects-list.component').then(m => m.ProjectsListComponent)
       },
 
-      // Workspaces
+      // Workspaces list
       {
         path: 'workspaces',
         loadComponent: () => import('./features/workspaces/workspaces.component').then(m => m.WorkspacesComponent)
+      },
+
+      // ✅ AJOUTER CETTE ROUTE - Workspace detail (DOIT être AVANT projects/:projectId)
+      {
+        path: 'workspaces/:id',
+        loadComponent: () => import('./features/workspaces/workspace-detail.component').then(m => m.WorkspaceDetailComponent)
       },
 
       // Project detail (page d'accueil du projet)

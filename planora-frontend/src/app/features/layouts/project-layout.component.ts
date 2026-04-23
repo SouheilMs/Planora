@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-// CORRECTION: 2 niveaux vers le haut (features/layouts -> src/app)
 import { SidebarComponent } from '../../shared/components/sidebar/sidebar.component';
 
 @Component({
@@ -21,12 +20,14 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar.compon
       display: flex;
       min-height: 100vh;
     }
-    
     .main-content {
       flex: 1;
       margin-left: 260px;
-      background: #f8fafc;
+      background: linear-gradient(160deg, #fafbff 0%, #f5f3ff 60%, #ede9fe 100%);
       min-height: 100vh;
+    }
+    @media (max-width: 768px) {
+      .main-content { margin-left: 0; }
     }
   `]
 })

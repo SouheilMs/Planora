@@ -5,6 +5,9 @@ using Planora.Application.Interfaces;
 using Planora.Domain.Entities;
 using Planora.Domain.Interfaces;
 using Planora.Infrastructure.Data;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Planora.Infrastructure.Services;
 
@@ -23,13 +26,26 @@ public class BacklogService : IBacklogService
 
     public async Task<IEnumerable<BacklogItemDto>> GetBacklogAsync(Guid projectId)
     {
-        var items = await _unitOfWork.BacklogItems.FindAsync(b => b.ProjectId == projectId);
-        return _mapper.Map<IEnumerable<BacklogItemDto>>(items.OrderBy(b => b.Priority));
+        var items = await _dbContext.BacklogItems
+            .Include(b => b.AssignedTo)
+            .Include(b => b.Sprint)
+            .Where(b => b.ProjectId == projectId && !b.IsDeleted)
+            .OrderBy(b => b.Priority)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<BacklogItemDto>>(items);
     }
 
+    // FIX: Include AssignedTo and Sprint so AutoMapper can resolve
+    // AssignedToName and SprintName correctly
     public async Task<BacklogItemDto?> GetBacklogItemByIdAsync(Guid id)
     {
-        var item = await _unitOfWork.BacklogItems.GetByIdAsync(id);
+        var item = await _dbContext.BacklogItems
+            .Include(b => b.AssignedTo)
+            .Include(b => b.Sprint)
+            .Include(b => b.Project)
+            .FirstOrDefaultAsync(b => b.Id == id && !b.IsDeleted);
+
         return item == null ? null : _mapper.Map<BacklogItemDto>(item);
     }
 
@@ -51,6 +67,8 @@ public class BacklogService : IBacklogService
     {
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
+            .Include(b => b.AssignedTo)
+            .Include(b => b.Sprint)
             .FirstOrDefaultAsync(b => b.Id == id)
             ?? throw new KeyNotFoundException("Backlog item not found.");
 
@@ -59,14 +77,26 @@ public class BacklogService : IBacklogService
         backlogItem.Title = string.IsNullOrWhiteSpace(dto.Title) ? backlogItem.Title : dto.Title.Trim();
         backlogItem.Description = dto.Description ?? string.Empty;
         backlogItem.Priority = dto.Priority;
-        backlogItem.AssignedToId = string.IsNullOrWhiteSpace(dto.AssignedToId) ? null : dto.AssignedToId;
+
+        if (dto.AssignedToId != null)
+        {
+            backlogItem.AssignedToId = string.IsNullOrWhiteSpace(dto.AssignedToId)
+                ? null
+                : dto.AssignedToId;
+        }
+
         if (dto.Complexity.HasValue)
         {
             backlogItem.Complexity = dto.Complexity.Value;
+            backlogItem.StoryPoints = dto.Complexity.Value;
         }
-        backlogItem.UpdatedAt = DateTime.UtcNow;
 
+        backlogItem.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+
+        // Reload AssignedTo in case it changed
+        await _dbContext.Entry(backlogItem).Reference(b => b.AssignedTo).LoadAsync();
+
         return _mapper.Map<BacklogItemDto>(backlogItem);
     }
 
@@ -74,6 +104,7 @@ public class BacklogService : IBacklogService
     {
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
+            .Include(b => b.Sprint)
             .FirstOrDefaultAsync(b => b.Id == id)
             ?? throw new KeyNotFoundException("Backlog item not found.");
 
@@ -83,70 +114,72 @@ public class BacklogService : IBacklogService
         backlogItem.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
+        // FIX: reload AssignedTo navigation after saving so mapper gets the name
+        await _dbContext.Entry(backlogItem).Reference(b => b.AssignedTo).LoadAsync();
+
         return _mapper.Map<BacklogItemDto>(backlogItem);
     }
 
     public async Task<BacklogItemDto> UpdatePriorityAsync(Guid id, int priority, string currentUserId)
     {
-        var item = await _unitOfWork.BacklogItems.GetByIdAsync(id) ?? throw new KeyNotFoundException("Backlog item not found.");
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
+            .Include(b => b.AssignedTo)
+            .Include(b => b.Sprint)
             .FirstOrDefaultAsync(b => b.Id == id)
             ?? throw new KeyNotFoundException("Backlog item not found.");
 
         await EnsureProjectMemberAccessAsync(backlogItem.ProjectId, currentUserId);
 
-        item.Priority = priority;
-        item.UpdatedAt = DateTime.UtcNow;
-        _unitOfWork.BacklogItems.Update(item);
-        await _unitOfWork.SaveChangesAsync();
+        backlogItem.Priority = priority;
+        backlogItem.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
 
-        return _mapper.Map<BacklogItemDto>(item);
+        return _mapper.Map<BacklogItemDto>(backlogItem);
     }
 
     public async Task<BacklogItemDto> MoveToSprintAsync(Guid id, Guid sprintId, string currentUserId)
     {
-        var item = await _unitOfWork.BacklogItems.GetByIdAsync(id) ?? throw new KeyNotFoundException("Backlog item not found.");
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
+            .Include(b => b.AssignedTo)
+            .Include(b => b.Sprint)
             .FirstOrDefaultAsync(b => b.Id == id)
             ?? throw new KeyNotFoundException("Backlog item not found.");
 
         await EnsureProjectMemberAccessAsync(backlogItem.ProjectId, currentUserId);
 
-        item.SprintId = sprintId;
-        item.IsMovedToSprint = true;
-        item.UpdatedAt = DateTime.UtcNow;
-        _unitOfWork.BacklogItems.Update(item);
-        await _unitOfWork.SaveChangesAsync();
+        backlogItem.SprintId = sprintId;
+        backlogItem.IsMovedToSprint = true;
+        backlogItem.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
 
-        return _mapper.Map<BacklogItemDto>(item);
+        // Reload Sprint navigation after saving
+        await _dbContext.Entry(backlogItem).Reference(b => b.Sprint).LoadAsync();
+
+        return _mapper.Map<BacklogItemDto>(backlogItem);
     }
 
     public async Task<BacklogItemDto> RemoveFromSprintAsync(Guid id, string currentUserId)
     {
-        var item = await _unitOfWork.BacklogItems.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Backlog item not found.");
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
+            .Include(b => b.AssignedTo)
             .FirstOrDefaultAsync(b => b.Id == id)
             ?? throw new KeyNotFoundException("Backlog item not found.");
 
         await EnsureProjectMemberAccessAsync(backlogItem.ProjectId, currentUserId);
 
-        item.SprintId = null;
-        item.IsMovedToSprint = false;
-        item.UpdatedAt = DateTime.UtcNow;
+        backlogItem.SprintId = null;
+        backlogItem.IsMovedToSprint = false;
+        backlogItem.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
 
-        _unitOfWork.BacklogItems.Update(item);
-        await _unitOfWork.SaveChangesAsync();
-
-        return _mapper.Map<BacklogItemDto>(item);
+        return _mapper.Map<BacklogItemDto>(backlogItem);
     }
 
     public async Task DeleteBacklogItemAsync(Guid id, string currentUserId)
     {
-        var item = await _unitOfWork.BacklogItems.GetByIdAsync(id) ?? throw new KeyNotFoundException("Backlog item not found.");
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
             .FirstOrDefaultAsync(b => b.Id == id)
@@ -154,16 +187,17 @@ public class BacklogService : IBacklogService
 
         await EnsureProjectMemberAccessAsync(backlogItem.ProjectId, currentUserId);
 
-        item.IsDeleted = true;
-        item.UpdatedAt = DateTime.UtcNow;
-        _unitOfWork.BacklogItems.Update(item);
-        await _unitOfWork.SaveChangesAsync();
+        backlogItem.IsDeleted = true;
+        backlogItem.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<BacklogItemDto> UpdateStatusAsync(Guid id, int status, string currentUserId)
     {
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
+            .Include(b => b.AssignedTo)
+            .Include(b => b.Sprint)
             .FirstOrDefaultAsync(b => b.Id == id)
             ?? throw new KeyNotFoundException("Backlog item not found.");
 
@@ -180,12 +214,17 @@ public class BacklogService : IBacklogService
     {
         var backlogItem = await _dbContext.BacklogItems
             .Include(b => b.Project)
+            .Include(b => b.AssignedTo)
+            .Include(b => b.Sprint)
             .FirstOrDefaultAsync(b => b.Id == id)
             ?? throw new KeyNotFoundException("Backlog item not found.");
 
         await EnsureProjectMemberAccessAsync(backlogItem.ProjectId, currentUserId);
 
+        // FIX: write to both fields — Complexity (XS/S/M/L/XL) and StoryPoints
+        // (Fibonacci). The panel reads StoryPoints; the list displays both.
         backlogItem.Complexity = complexity;
+        backlogItem.StoryPoints = complexity;
         backlogItem.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
@@ -205,7 +244,11 @@ public class BacklogService : IBacklogService
         var isWorkspaceMember = await _dbContext.WorkspaceUsers
             .AnyAsync(wu => wu.WorkspaceId == project.WorkspaceId && wu.UserId == userId);
 
-        var canAccess = project.Workspace.OwnerId == userId || project.ProjectManagerId == userId || isProjectMember || isWorkspaceMember;
+        var canAccess = project.Workspace.OwnerId == userId
+            || project.ProjectManagerId == userId
+            || isProjectMember
+            || isWorkspaceMember;
+
         if (!canAccess)
             throw new UnauthorizedAccessException("Only project members can manage backlog items in this project.");
     }

@@ -27,8 +27,18 @@ public class ProjectService : IProjectService
 
     public async Task<PaginatedResultDto<ProjectDto>> GetProjectsAsync(string userId, int page, int pageSize, string? search = null)
     {
+        var pmWorkspaceIds = await _dbContext.Workspaces
+            .Where(w => w.ProjectManagerId == userId)
+            .Select(w => w.Id)
+            .ToListAsync();
+
         var visibleProjects = ProjectQuery()
-            .Where(p => p.Workspace.OwnerId == userId || p.ProjectManagerId == userId || p.Users.Any(u => u.UserId == userId));
+            .Where(p =>
+                p.Workspace.OwnerId == userId ||
+                p.ProjectManagerId == userId ||
+                p.Users.Any(u => u.UserId == userId) ||
+                pmWorkspaceIds.Contains(p.WorkspaceId)
+            );
 
         if (!string.IsNullOrWhiteSpace(search))
             visibleProjects = visibleProjects.Where(p => p.Name.Contains(search));
@@ -40,10 +50,7 @@ public class ProjectService : IProjectService
             .Take(pageSize)
             .ToListAsync();
 
-        var dtos = projects.Select(p =>
-        {
-            return MapProjectDto(p);
-        });
+        var dtos = projects.Select(p => MapProjectDto(p));
 
         return new PaginatedResultDto<ProjectDto>
         {
@@ -56,27 +63,56 @@ public class ProjectService : IProjectService
 
     public async Task<ProjectDto?> GetProjectByIdAsync(Guid id, string userId)
     {
-        var project = await ProjectQuery()
-            .FirstOrDefaultAsync(p => p.Id == id && (p.Workspace.OwnerId == userId || p.ProjectManagerId == userId || p.Users.Any(u => u.UserId == userId)));
-        if (project == null) return null;
+        var pmWorkspaceIds = await _dbContext.Workspaces
+            .Where(w => w.ProjectManagerId == userId)
+            .Select(w => w.Id)
+            .ToListAsync();
 
+        var project = await ProjectQuery()
+            .FirstOrDefaultAsync(p => p.Id == id && (
+                p.Workspace.OwnerId == userId ||
+                p.ProjectManagerId == userId ||
+                p.Users.Any(u => u.UserId == userId) ||
+                pmWorkspaceIds.Contains(p.WorkspaceId)
+            ));
+
+        if (project == null) return null;
         return MapProjectDto(project);
     }
 
     public async Task<ProjectDto> CreateProjectAsync(CreateProjectDto dto, string currentUserId)
     {
         var workspace = await _dbContext.Workspaces
-            .Include(w => w.ProjectManager)
-            .FirstOrDefaultAsync(w => w.Id == dto.WorkspaceId && (w.OwnerId == currentUserId || w.ProjectManagerId == currentUserId))
-            ?? throw new KeyNotFoundException("Workspace not found.");
+            .Include(w => w.Members)
+            .FirstOrDefaultAsync(w => w.Id == dto.WorkspaceId)
+            ?? throw new KeyNotFoundException($"Workspace with ID {dto.WorkspaceId} not found.");
+
+        var currentUser = await _userManager.FindByIdAsync(currentUserId);
+        var userRoles = await _userManager.GetRolesAsync(currentUser);
+
+        var isOwner = workspace.OwnerId == currentUserId;
+        var isAdmin = userRoles.Contains("Admin");
+        var isProjectManager = userRoles.Contains("ProjectManager");
+
+        var isPMemberOfWorkspace = false;
+        if (isProjectManager)
+        {
+            isPMemberOfWorkspace = await _dbContext.WorkspaceUsers
+                .AnyAsync(wu => wu.WorkspaceId == workspace.Id && wu.UserId == currentUserId);
+        }
+
+        var hasAccess = isOwner || isAdmin || (isProjectManager && isPMemberOfWorkspace);
+        if (!hasAccess)
+            throw new UnauthorizedAccessException("You don't have permission to create projects in this workspace.");
 
         var projectManager = await _userManager.FindByIdAsync(dto.ProjectManagerId)
-            ?? throw new KeyNotFoundException("Project manager user not found.");
+            ?? throw new KeyNotFoundException($"User with ID {dto.ProjectManagerId} not found.");
 
-        var isWorkspaceMember = await _dbContext.WorkspaceUsers
+        var isPmWorkspaceMember = await _dbContext.WorkspaceUsers
             .AnyAsync(wu => wu.WorkspaceId == workspace.Id && wu.UserId == projectManager.Id);
-        if (!isWorkspaceMember && workspace.OwnerId != projectManager.Id)
-            throw new InvalidOperationException("Project manager must be a workspace member.");
+
+        if (!isPmWorkspaceMember && workspace.OwnerId != projectManager.Id)
+            throw new InvalidOperationException("The designated project manager must be a workspace member.");
 
         var project = _mapper.Map<Project>(dto);
         project.Id = Guid.NewGuid();
@@ -103,7 +139,7 @@ public class ProjectService : IProjectService
             .Include(p => p.Workspace)
             .Include(p => p.ProjectManager)
             .Include(p => p.Users)
-            .Include(p => p.Tasks)
+            .Include(p => p.BacklogItems)
             .FirstOrDefaultAsync(p => p.Id == id)
             ?? throw new KeyNotFoundException("Project not found.");
 
@@ -132,12 +168,14 @@ public class ProjectService : IProjectService
 
             var newManagerExists = await _dbContext.WorkspaceUsers
                 .AnyAsync(wu => wu.WorkspaceId == project.WorkspaceId && wu.UserId == dto.ProjectManagerId);
+
             if (!newManagerExists && project.Workspace.OwnerId != dto.ProjectManagerId)
                 throw new InvalidOperationException("New project manager must be a workspace member.");
 
             projectManagerId = dto.ProjectManagerId;
 
-            var newManagerMemberExists = await _unitOfWork.ProjectUsers.ExistsAsync(pm => pm.ProjectId == project.Id && pm.UserId == projectManagerId);
+            var newManagerMemberExists = await _unitOfWork.ProjectUsers
+                .ExistsAsync(pm => pm.ProjectId == project.Id && pm.UserId == projectManagerId);
             if (!newManagerMemberExists)
             {
                 project.Users.Add(new ProjectUser
@@ -233,28 +271,23 @@ public class ProjectService : IProjectService
         if (!canManage)
             throw new UnauthorizedAccessException("Only the workspace owner or project manager can invite members.");
 
-        // Get workspace members
         var workspaceMemberIds = await _dbContext.WorkspaceUsers
             .Where(wu => wu.WorkspaceId == project.WorkspaceId)
             .Select(wu => wu.UserId)
             .ToListAsync();
 
-        // Add workspace owner
         workspaceMemberIds.Add(project.Workspace.OwnerId);
 
-        // Get current project members
         var projectMemberIds = await _dbContext.ProjectUsers
             .Where(pu => pu.ProjectId == projectId)
             .Select(pu => pu.UserId)
             .ToListAsync();
 
-        // Get pending invitations
         var pendingInvitationUserIds = await _dbContext.ProjectInvitations
             .Where(i => i.ProjectId == projectId && !i.Accepted && i.ExpiresAt > DateTime.UtcNow)
             .Select(i => i.UserId)
             .ToListAsync();
 
-        // Get inviteable users: workspace members who are not project members and don't have pending invitations
         var inviteableUsers = await _userManager.Users
             .Where(u => u.IsActive && workspaceMemberIds.Contains(u.Id))
             .Where(u => !projectMemberIds.Contains(u.Id))
@@ -285,19 +318,16 @@ public class ProjectService : IProjectService
         var targetUser = await _userManager.FindByIdAsync(dto.UserId)
             ?? throw new KeyNotFoundException("User not found.");
 
-        // Check if user is a workspace member
         var isWorkspaceMember = await _dbContext.WorkspaceUsers
             .AnyAsync(wu => wu.WorkspaceId == project.WorkspaceId && wu.UserId == dto.UserId);
         if (!isWorkspaceMember && project.Workspace.OwnerId != dto.UserId)
             throw new InvalidOperationException("User must be a workspace member to be invited to a project.");
 
-        // Check if already a project member
         var isProjectMember = await _dbContext.ProjectUsers
             .AnyAsync(pu => pu.ProjectId == projectId && pu.UserId == dto.UserId);
         if (isProjectMember)
             throw new InvalidOperationException("User is already a project member.");
 
-        // Check for pending invitation
         var hasPendingInvitation = await _dbContext.ProjectInvitations
             .AnyAsync(i => i.ProjectId == projectId && i.UserId == dto.UserId && !i.Accepted && i.ExpiresAt > DateTime.UtcNow);
         if (hasPendingInvitation)
@@ -373,7 +403,6 @@ public class ProjectService : IProjectService
         if (invitation.ExpiresAt <= DateTime.UtcNow)
             throw new InvalidOperationException("Invitation has expired.");
 
-        // Check if user is already a project member
         var isProjectMember = await _dbContext.ProjectUsers
             .AnyAsync(pu => pu.ProjectId == invitation.ProjectId && pu.UserId == userId);
 
@@ -421,27 +450,15 @@ public class ProjectService : IProjectService
             .Include(p => p.Workspace)
             .Include(p => p.ProjectManager)
             .Include(p => p.Users).ThenInclude(pu => pu.User)
-            .Include(p => p.BacklogItems)
-            .Include(p => p.Tasks);
+            .Include(p => p.BacklogItems);
 
     private ProjectDto MapProjectDto(Project project)
     {
         var dto = _mapper.Map<ProjectDto>(project);
         var backlogItems = project.BacklogItems.Where(b => !b.IsDeleted).ToList();
-        if (backlogItems.Count > 0)
-        {
-            dto.ProgressPercentage = Math.Round(
-                (double)backlogItems.Count(t => t.Status == (int)Domain.Enums.TaskStatus.Done) / backlogItems.Count * 100,
-                2);
-        }
-        else
-        {
-            // Fallback for older data where progress may still be stored in TaskItem entities.
-            var tasks = project.Tasks.Where(t => !t.IsDeleted).ToList();
-            dto.ProgressPercentage = tasks.Count > 0
-                ? Math.Round((double)tasks.Count(t => t.Status == Domain.Enums.TaskStatus.Done) / tasks.Count * 100, 2)
-                : 0;
-        }
+        dto.ProgressPercentage = backlogItems.Count > 0
+            ? Math.Round((double)backlogItems.Count(t => t.Status == (int)Domain.Enums.TaskStatus.Done) / backlogItems.Count * 100, 2)
+            : 0;
 
         if (project.ProjectManager != null && dto.Members.All(member => member.UserId != project.ProjectManagerId))
         {

@@ -5,6 +5,23 @@ import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, BacklogItem, CreateBacklogItemRequest, UpdateBacklogItemRequest, TaskPriority, TaskStatus, PagedResult } from '../models';
 
+export interface SubTaskDto {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  backlogItemId: string;
+  createdAt: string;
+}
+
+export interface CreateSubTaskDto {
+  title: string;
+}
+
+export interface UpdateSubTaskDto {
+  title?: string;
+  isCompleted?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BacklogService {
   private http = inject(HttpClient);
@@ -52,7 +69,6 @@ export class BacklogService {
     const url = `${this.apiUrl}/${id}/move-to-sprint/${sprintId}`;
     return this.http.patch<ApiResponse<BacklogItem>>(url, {}).pipe(
       catchError((err: HttpErrorResponse) => {
-        // Some environments expose this route as POST; fallback for compatibility.
         if (err.status === 405 || err.status === 404) {
           return this.http.post<ApiResponse<BacklogItem>>(url, {});
         }
@@ -95,5 +111,21 @@ export class BacklogService {
 
   updateComplexity(id: string, complexity: number): Observable<ApiResponse<BacklogItem>> {
     return this.http.patch<ApiResponse<BacklogItem>>(`${this.apiUrl}/${id}/complexity`, complexity);
+  }
+
+  getSubTasks(backlogItemId: string): Observable<ApiResponse<SubTaskDto[]>> {
+    return this.http.get<ApiResponse<SubTaskDto[]>>(`${this.apiUrl}/${backlogItemId}/subtasks`);
+  }
+
+  createSubTask(backlogItemId: string, dto: CreateSubTaskDto): Observable<ApiResponse<SubTaskDto>> {
+    return this.http.post<ApiResponse<SubTaskDto>>(`${this.apiUrl}/${backlogItemId}/subtasks`, dto);
+  }
+
+  updateSubTask(backlogItemId: string, subTaskId: string, dto: UpdateSubTaskDto): Observable<ApiResponse<SubTaskDto>> {
+    return this.http.patch<ApiResponse<SubTaskDto>>(`${this.apiUrl}/${backlogItemId}/subtasks/${subTaskId}`, dto);
+  }
+
+  deleteSubTask(backlogItemId: string, subTaskId: string): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(`${this.apiUrl}/${backlogItemId}/subtasks/${subTaskId}`);
   }
 }

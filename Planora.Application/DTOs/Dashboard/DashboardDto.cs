@@ -10,4 +10,6 @@ public class DashboardDto
     public int ToDoTasks { get; set; }
     public double OverallProgressPercentage { get; set; }
     public IList<ProjectProgressDto> ProjectsProgress { get; set; } = new List<ProjectProgressDto>();
+    public int TotalWorkspaces { get; set; }
+    public IList<WorkspaceProgressDto> WorkspacesProgress { get; set; } = new List<WorkspaceProgressDto>();
 }

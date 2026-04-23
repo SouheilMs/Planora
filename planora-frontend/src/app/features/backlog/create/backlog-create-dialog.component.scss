@@ -1,3 +1,5 @@
+/* backlog-create-dialog.component.scss - BLUE THEME */
+
 .dialog-header {
   display: flex;
   align-items: center;
@@ -9,20 +11,25 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
   display: flex;
   align-items: center;
   justify-content: center;
-}
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 
-  .dialog-icon mat-icon {
+  mat-icon {
     color: #fff;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
+}
 
 h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
+  color: #1e293b;
 }
 
 .form {
@@ -46,82 +53,39 @@ h2 {
   width: calc(50% - 8px);
 }
 
-@media (max-width: 600px) {
-  .row {
-    flex-direction: column;
-  }
-
-  .half-width {
-    width: 100%;
-  }
-
-  .form {
-    min-width: auto;
-  }
-}
-
 .save-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 20px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
-  color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+  color: #fff !important;
   border: none;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-}
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+  transition: all 0.2s ease;
 
-  .save-btn mat-icon {
+  mat-icon {
     font-size: 18px;
-  }
-/* src/app/features/backlog/create/backlog-create-dialog.component.css */
-.dialog-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.dialog-icon {
-  background: #4f46e5;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-  .dialog-icon mat-icon {
-    color: white;
+    width: 18px;
+    height: 18px;
   }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 450px;
-}
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4338ca, #3730a3) !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    transform: translateY(-1px);
+  }
 
-.full-width {
-  width: 100%;
-}
-
-.half-width {
-  width: calc(50% - 8px);
-}
-
-.row {
-  display: flex;
-  gap: 16px;
-}
-
-.save-btn {
-  background: #4f46e5 !important;
-  color: white !important;
+  &:disabled {
+    background: #a5b4fc !important;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
 }
 
 @media (max-width: 600px) {
@@ -137,7 +101,3 @@ h2 {
     min-width: auto;
   }
 }
-  .save-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }

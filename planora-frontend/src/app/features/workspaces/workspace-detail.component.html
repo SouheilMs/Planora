@@ -1,0 +1,192 @@
+<!-- workspace-detail.component.html -->
+<div class="page-container">
+  @if (loading) {
+  <app-loading></app-loading>
+  }
+
+  @if (!loading && workspace) {
+  <div class="workspace-header">
+    <div class="header-content">
+      <div class="header-left">
+
+        <div class="workspace-avatar-large">
+          {{ workspace.name.charAt(0) }}
+        </div>
+        <div class="workspace-info">
+          <h1>{{ workspace.name }}</h1>
+          <p class="description">{{ workspace.description || 'No description provided' }}</p>
+          <div class="workspace-meta">
+            <span class="meta-item">
+              <mat-icon>person</mat-icon>
+              Owner: {{ workspace.ownerName }}
+            </span>
+            @if (workspace.projectManagerName) {
+            <span class="meta-item">
+              <mat-icon>manage_accounts</mat-icon>
+              Project Manager: {{ workspace.projectManagerName }}
+            </span>
+            }
+            <span class="meta-item">
+              <mat-icon>group</mat-icon>
+              {{ workspace.memberCount }} members
+            </span>
+            <span class="meta-item">
+              <mat-icon>folder_open</mat-icon>
+              {{ workspace.projectCount }} projects
+            </span>
+            <span class="meta-item">
+              <mat-icon>calendar_today</mat-icon>
+              Created: {{ workspace.createdAt | date:'mediumDate' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        @if (canCreateProject) {
+        <button mat-raised-button class="btn-red-filled" (click)="createProject()">
+          <mat-icon>add</mat-icon>
+          New Project
+        </button>
+        }
+        @if (canInvite) {
+        <button mat-stroked-button class="btn-red-outline" (click)="openInviteDialog()">
+          <mat-icon>person_add</mat-icon>
+          Invite to Workspace
+        </button>
+        }
+      </div>
+
+    </div>
+  </div>
+
+  <mat-tab-group class="workspace-tabs" animationDuration="0ms">
+    <mat-tab label="Projects">
+      <div class="tab-content">
+        @if (projectsLoading) {
+        <app-loading></app-loading>
+        }
+        @if (!projectsLoading && projects.length === 0) {
+        <div class="empty-state">
+          <mat-icon>folder_open</mat-icon>
+          <h3>No projects yet</h3>
+          <p>Create your first project in this workspace</p>
+          @if (canCreateProject) {
+          <button mat-raised-button class="btn-red-filled" (click)="createProject()">
+            <mat-icon>add</mat-icon>
+            Create Project
+          </button>
+          }
+        </div>
+        }
+        @if (!projectsLoading && projects.length > 0) {
+        <div class="projects-grid">
+          @for (project of projects; track project.id) {
+          <mat-card class="project-card" [routerLink]="['/projects', project.id]">
+            <mat-card-header>
+              <div mat-card-avatar class="project-avatar" style="background: linear-gradient(135deg, #4f46e5, #06b6d4);">
+                {{ project.name.charAt(0) }}
+              </div>
+              <mat-card-title>{{ project.name }}</mat-card-title>
+              <mat-card-subtitle>
+                Manager: {{ project.projectManagerName }}
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="project-description">{{ (project.description?.length ?? 0) > 100 ? (project.description | slice:0:100) + '...' : project.description }}</p>
+              <div class="project-stats">
+                <div class="stat">
+                  <mat-icon>people</mat-icon>
+                  <span>{{ project.memberCount || 0 }} members</span>
+                </div>
+                <div class="stat">
+                  <mat-icon>task_alt</mat-icon>
+                  <span>{{ project.totalTasks || 0 }} tasks</span>
+                </div>
+              </div>
+              <div class="progress-section">
+                <div class="progress-label">
+                  <span>Progress</span>
+                  <span class="progress-value">{{ project.progressPercentage || 0 }}%</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="project.progressPercentage || 0"></mat-progress-bar>
+              </div>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button class="btn-red-text" (click)="$event.stopPropagation(); viewProject(project.id)">
+                <mat-icon>visibility</mat-icon>
+                View Details
+              </button>
+              @if (canManageProject(project)) {
+              <button mat-button class="btn-grey-text" (click)="$event.stopPropagation(); editProject(project)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              }
+            </mat-card-actions>
+          </mat-card>
+          }
+        </div>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Members">
+      <div class="tab-content">
+        @if (membersLoading) {
+        <app-loading></app-loading>
+        }
+        @if (!membersLoading && members.length === 0) {
+        <div class="empty-state">
+          <mat-icon>group</mat-icon>
+          <h3>No members yet</h3>
+          <p>Invite members to join this workspace</p>
+          @if (canInvite) {
+          <button mat-raised-button class="btn-red-filled" (click)="openInviteDialog()">
+            <mat-icon>person_add</mat-icon>
+            Invite to Workspace
+          </button>
+          }
+        </div>
+        }
+        @if (!membersLoading && members.length > 0) {
+        <div class="members-grid">
+          @for (member of members; track member.userId) {
+          <mat-card class="member-card">
+            <div class="member-avatar">{{ member.fullName.charAt(0) }}</div>
+            <div class="member-info">
+              <h4>
+                {{ member.fullName }}
+                @if (member.role === 'ProjectManager') {
+                <span class="role-badge manager">Project Manager</span>
+                } @else if (member.role === 'Admin' || member.role === 'Owner') {
+                <span class="role-badge owner">Owner</span>
+                } @else {
+                <span class="role-badge member">Member</span>
+                }
+              </h4>
+              <p>{{ member.email }}</p>
+              <small>Joined: {{ member.joinedAt | date:'mediumDate' }}</small>
+            </div>
+            @if (canRemoveMember(member)) {
+            <button mat-icon-button color="warn" (click)="removeMember(member)" matTooltip="Remove member">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+            }
+          </mat-card>
+          }
+        </div>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+  }
+
+  @if (!loading && !workspace) {
+  <div class="empty-state">
+    <mat-icon>error_outline</mat-icon>
+    <h3>Workspace not found</h3>
+    <button mat-raised-button class="btn-red-filled" routerLink="/">Back to Projects</button>
+  </div>
+  }
+</div>

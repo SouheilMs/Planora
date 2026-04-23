@@ -15,7 +15,7 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.HasIndex(t => t.AssignedToId);
 
         builder.HasOne(t => t.Project)
-            .WithMany(p => p.Tasks)
+            .WithMany()
             .HasForeignKey(t => t.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
