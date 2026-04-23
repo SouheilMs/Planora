@@ -42,14 +42,14 @@ export class TaskService {
   }
 
   getComments(taskId: string): Observable<ApiResponse<TaskComment[]>> {
-    return this.http.get<ApiResponse<TaskComment[]>>(`${this.apiUrl}/${taskId}/comments`);
+    return this.http.get<ApiResponse<TaskComment[]>>(`${environment.apiUrl}/api/backlog/${taskId}/comments`);
   }
 
   addComment(taskId: string, content: string): Observable<ApiResponse<TaskComment>> {
-    return this.http.post<ApiResponse<TaskComment>>(`${this.apiUrl}/${taskId}/comments`, { content, taskId });
+    return this.http.post<ApiResponse<TaskComment>>(`${environment.apiUrl}/api/backlog/${taskId}/comments`, { content });
   }
 
   deleteComment(taskId: string, commentId: string): Observable<ApiResponse<boolean>> {
-    return this.http.delete<ApiResponse<boolean>>(`${this.apiUrl}/${taskId}/comments/${commentId}`);
+    return this.http.delete<ApiResponse<boolean>>(`${environment.apiUrl}/api/backlog/${taskId}/comments/${commentId}`);
   }
 }

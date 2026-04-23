@@ -1,10 +1,18 @@
-<div class="sidebar">
+<!-- project-sidebar.component.html - RED THEME -->
+<div class="sidebar" [class.collapsed]="false">
+
+  <!-- ── LOGO ── -->
   <div class="sidebar-header">
     <a routerLink="/dashboard" class="logo">
-      <mat-icon>linear_scale</mat-icon>
-      <span>Planora</span>
+      <div class="logo-icon">
+        <mat-icon>rocket_launch</mat-icon>
+      </div>
+      <span class="logo-text">Planora</span>
     </a>
   </div>
+
+  <!-- ── MAIN NAV ── -->
+  <div class="sidebar-section-label">Navigation</div>
 
   <nav class="sidebar-nav">
     <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
@@ -21,34 +29,54 @@
     </a>
   </nav>
 
-  <div class="sidebar-divider"></div>
-
+  <!-- ── PROJECT NAV ── -->
   @if (currentProject) {
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section-label">Projet actif</div>
+
   <div class="project-section">
     <div class="project-header">
-      <div class="project-avatar" [style.background]="currentProject.color || '#4f46e5'">
+      <div class="project-avatar" [style.background]="'#dc2626'">
         {{ currentProject.name?.charAt(0) || 'P' }}
       </div>
-      <div class="project-name">{{ currentProject.name }}</div>
+      <div class="project-meta">
+        <span class="project-name">{{ currentProject.name }}</span>
+        <span class="project-tag">Actif</span>
+      </div>
     </div>
 
     <div class="project-nav">
-      <a [routerLink]="['/projects', currentProject.id, 'backlog']" routerLinkActive="active" class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'backlog']"
+         routerLinkActive="active"
+         class="project-nav-item">
         <mat-icon>inbox</mat-icon>
         <span>Backlog</span>
       </a>
-      <a [routerLink]="['/projects', currentProject.id, 'tasks']" routerLinkActive="active" class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'board']"
+         routerLinkActive="active"
+         class="project-nav-item">
+        <mat-icon>view_kanban</mat-icon>
+        <span>Tableau Kanban</span>
+      </a>
+      <a [routerLink]="['/projects', currentProject.id, 'tasks']"
+         routerLinkActive="active"
+         class="project-nav-item">
         <mat-icon>task_alt</mat-icon>
         <span>Tâches</span>
       </a>
-      <a [routerLink]="['/projects', currentProject.id, 'sprints']" routerLinkActive="active" class="project-nav-item">
-        <mat-icon>sprint</mat-icon>
-        <span>Sprints</span>
+      <a [routerLink]="['/projects', currentProject.id, 'history']"
+         routerLinkActive="active"
+         class="project-nav-item">
+        <mat-icon>history</mat-icon>
+        <span>Historique</span>
       </a>
     </div>
   </div>
   }
 
+  <div class="sidebar-spacer"></div>
+
+  <!-- ── FOOTER ── -->
   <div class="sidebar-footer">
     <div class="user-info">
       <div class="user-avatar">{{ userInitials }}</div>
@@ -56,9 +84,11 @@
         <div class="user-name">{{ userName }}</div>
         <div class="user-email">{{ userEmail }}</div>
       </div>
-      <button mat-icon-button (click)="logout()" matTooltip="Déconnexion">
+      <button mat-icon-button class="logout-btn" (click)="logout()" matTooltip="Déconnexion">
         <mat-icon>logout</mat-icon>
       </button>
+      <span class="online-dot"></span>
     </div>
   </div>
+
 </div>

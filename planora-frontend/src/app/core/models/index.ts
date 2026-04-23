@@ -1,4 +1,5 @@
 // src/app/core/models.ts
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -110,6 +111,7 @@ export interface Workspace {
   ownerName: string;
   projectManagerId: string;
   projectManagerName: string;
+  hasPendingPMInvitation: boolean;
   memberCount: number;
   projectCount: number;
   createdAt: string;
@@ -120,6 +122,7 @@ export interface WorkspaceMember {
   fullName: string;
   email: string;
   joinedAt: string;
+  role: string;
 }
 
 export interface WorkspaceInvitation {
@@ -137,6 +140,7 @@ export interface WorkspaceInviteableUser {
   userId: string;
   fullName: string;
   email: string;
+  roles: string[];
 }
 
 export interface CreateWorkspaceRequest {
@@ -150,6 +154,7 @@ export interface SetWorkspaceProjectManagerRequest {
 
 export interface InviteWorkspaceUserRequest {
   userId: string;
+  role: 'ProjectManager' | 'Member';
 }
 
 export interface Task {
@@ -294,6 +299,15 @@ export interface DashboardData {
   toDoTasks: number;
   overallProgressPercentage: number;
   projectsProgress: ProjectProgress[];
+  totalWorkspaces: number;
+  workspacesProgress: {
+    workspaceId: string;
+    workspaceName: string;
+    totalProjects: number;
+    totalTasks: number;
+    completedTasks: number;
+    progressPercentage: number;
+  }[];
 }
 
 export interface ProjectProgress {
@@ -304,3 +318,85 @@ export interface ProjectProgress {
   totalTasks: number;
   completedTasks: number;
 }
+
+// ── Backlog Extras ────────────────────────────────────────────
+
+export interface BacklogLink {
+  id: string;
+  sourceItemId: string;
+  targetItemId: string;
+  targetItemTitle: string;
+  targetItemStatus: string;
+  linkType: number;
+  linkTypeLabel: string;
+  createdAt: string;
+}
+
+export interface CreateBacklogLinkRequest {
+  targetItemId: string;
+  linkType: number;
+}
+
+export interface BacklogAttachment {
+  id: string;
+  backlogItemId: string;
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+  uploadedById: string;
+  uploadedByName: string;
+  createdAt: string;
+}
+
+export interface BacklogWebLink {
+  id: string;
+  backlogItemId: string;
+  url: string;
+  label: string;
+  linkType: number;
+  linkTypeLabel: string;
+  addedById: string;
+  addedByName: string;
+  createdAt: string;
+}
+
+export interface CreateBacklogWebLinkRequest {
+  url: string;
+  label: string;
+  linkType: number;
+}
+
+export interface BacklogBranch {
+  id: string;
+  backlogItemId: string;
+  branchName: string;
+  createdById: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+export interface BacklogCommit {
+  id: string;
+  backlogItemId: string;
+  hash: string;
+  branchId?: string; 
+  message: string;
+  createdById: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+export const WEB_LINK_TYPES = [
+  { value: 0, label: 'Lien web', icon: 'language' },
+  { value: 1, label: 'Vidéo', icon: 'play_circle' },
+  { value: 2, label: 'Document', icon: 'description' },
+  { value: 3, label: 'Livre', icon: 'menu_book' },
+];
+
+export const TICKET_LINK_TYPES = [
+  { value: 0, label: 'est lié à' },
+  { value: 1, label: 'bloque' },
+  { value: 2, label: 'est bloqué par' },
+  { value: 3, label: 'duplique' },
+  { value: 4, label: 'est dupliqué par' },
+];

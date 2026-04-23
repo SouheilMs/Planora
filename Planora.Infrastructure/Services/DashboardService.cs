@@ -1,8 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Planora.Application.DTOs.Dashboard;
 using Planora.Application.Interfaces;
-using Planora.Infrastructure.Data;
 using Planora.Domain.Enums;
-using Microsoft.EntityFrameworkCore;
+using Planora.Infrastructure.Data;
+using System;
+using System.Threading.Tasks;
 
 namespace Planora.Infrastructure.Services;
 
@@ -34,7 +36,6 @@ public class DashboardService : IDashboardService
             .Where(p => visibleProjectIds.Contains(p.Id))
             .ToListAsync();
 
-        // Dashboard should reflect the kanban/backlog workflow, which is stored in BacklogItems.
         var backlogItems = await _dbContext.BacklogItems
             .Where(b => !b.IsDeleted)
             .Where(b => visibleProjectIds.Contains(b.ProjectId))
@@ -43,6 +44,12 @@ public class DashboardService : IDashboardService
         var sprints = await _dbContext.Sprints
             .Where(s => !s.IsDeleted)
             .Where(s => visibleProjectIds.Contains(s.ProjectId))
+            .ToListAsync();
+
+        // ── Workspaces ──
+        var workspaces = await _dbContext.Workspaces
+            .Where(w => !w.IsDeleted && w.OwnerId == userId)
+            .Include(w => w.Projects)
             .ToListAsync();
 
         var dto = new DashboardDto
@@ -68,6 +75,23 @@ public class DashboardService : IDashboardService
                     CompletedTasks = projectTasks.Count(t => t.Status == (int)Domain.Enums.TaskStatus.Done),
                     ProgressPercentage = projectTasks.Count > 0
                         ? Math.Round((double)projectTasks.Count(t => t.Status == (int)Domain.Enums.TaskStatus.Done) / projectTasks.Count * 100, 2)
+                        : 0
+                };
+            }).ToList(),
+            TotalWorkspaces = workspaces.Count,
+            WorkspacesProgress = workspaces.Select(w =>
+            {
+                var workspaceProjectIds = w.Projects.Where(p => !p.IsDeleted).Select(p => p.Id).ToList();
+                var workspaceTasks = backlogItems.Where(b => workspaceProjectIds.Contains(b.ProjectId)).ToList();
+                return new WorkspaceProgressDto
+                {
+                    WorkspaceId = w.Id,
+                    WorkspaceName = w.Name,
+                    TotalProjects = workspaceProjectIds.Count,
+                    TotalTasks = workspaceTasks.Count,
+                    CompletedTasks = workspaceTasks.Count(t => t.Status == (int)Domain.Enums.TaskStatus.Done),
+                    ProgressPercentage = workspaceTasks.Count > 0
+                        ? Math.Round((double)workspaceTasks.Count(t => t.Status == (int)Domain.Enums.TaskStatus.Done) / workspaceTasks.Count * 100, 2)
                         : 0
                 };
             }).ToList()

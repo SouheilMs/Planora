@@ -59,23 +59,25 @@ import { SprintService } from '../../../core/services/sprint.service';
 
     <mat-dialog-actions align="end">
       <button mat-button [mat-dialog-close]="undefined">Annuler</button>
-      <button mat-raised-button color="primary" (click)="save()" [disabled]="sprintForm.invalid || saving">
+<button mat-raised-button class="btn-blue" (click)="save()" [disabled]="sprintForm.invalid || saving">
         {{ saving ? 'Création...' : 'Créer' }}
       </button>
     </mat-dialog-actions>
   `,
   styles: [`
-    .sprint-form { display: flex; flex-direction: column; gap: 16px; min-width: 450px; padding-top: 8px; }
-    .full-width { width: 100%; }
-    .date-row { display: flex; gap: 16px; }
-    .half-width { width: calc(50% - 8px); }
-    @media (max-width: 600px) {
-      .date-row { flex-direction: column; }
-      .half-width { width: 100%; }
-      .sprint-form { min-width: auto; }
-    }
-  `]
-})
+  .sprint-form { display: flex; flex-direction: column; gap: 16px; min-width: 450px; padding-top: 8px; }
+  .full-width { width: 100%; }
+  .date-row { display: flex; gap: 16px; }
+  .half-width { width: calc(50% - 8px); }
+  .btn-blue { background: linear-gradient(135deg, #4f46e5, #4338ca) !important; color: white !important; box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
+.btn-blue:hover { background: linear-gradient(135deg, #4338ca, #3730a3) !important; }
+.btn-blue:disabled { background: #a5b4fc !important; color: white !important; box-shadow: none; }
+  @media (max-width: 600px) {
+    .date-row { flex-direction: column; }
+    .half-width { width: 100%; }
+    .sprint-form { min-width: auto; }
+  }
+`]})
 export class CreateSprintDialogComponent {
   private fb = inject(FormBuilder);
   private sprintService = inject(SprintService);

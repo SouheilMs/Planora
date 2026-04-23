@@ -1,0 +1,157 @@
+<!-- projects-list.component.html - RED THEME -->
+<div class="page-container">
+
+  @if (loading) {
+  <app-loading></app-loading>
+  }
+
+  @if (!loading) {
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-eyebrow">
+        <mat-icon>folder_open</mat-icon>
+        <span>Workspace</span>
+      </div>
+      <h1>Projects</h1>
+      <p class="header-subtitle">Manage and track your team's projects</p>
+    </div>
+    
+  </div>
+
+  <!-- ── SEARCH BAR ── -->
+  <div class="search-bar-wrapper">
+    <div class="search-bar">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input [formControl]="searchCtrl"
+             placeholder="Search projects by name..."
+             class="search-input" />
+      @if (searchCtrl.value) {
+      <button class="search-clear" (click)="searchCtrl.setValue('')">
+        <mat-icon>close</mat-icon>
+      </button>
+      }
+    </div>
+    <div class="results-count">
+      {{ totalCount }} project{{ totalCount !== 1 ? 's' : '' }}
+    </div>
+  </div>
+
+  <!-- ── EMPTY STATE ── -->
+  @if (projects.length === 0) {
+  <div class="empty-state">
+    <div class="empty-icon">
+      <mat-icon>folder_open</mat-icon>
+    </div>
+    <h3>No projects found</h3>
+    <p>{{ searchCtrl.value ? 'Try a different search term' : 'Create your first project to get started' }}</p>
+    @if (canManage && !searchCtrl.value) {
+    <button class="btn-primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Create Project
+    </button>
+    }
+  </div>
+  }
+
+  <!-- ── PROJECTS GRID ── -->
+  @if (projects.length > 0) {
+  <div class="projects-grid">
+    @for (project of projects; track project.id) {
+    <div class="project-card">
+
+      <!-- Card Top Bar -->
+      <div class="card-top-bar" style="background: linear-gradient(90deg, #4f46e5, #06b6d4);"></div>
+
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="project-avatar" [style.background]="'linear-gradient(135deg, #4f46e5, #06b6d4)'">
+          {{ project.name.charAt(0) }}
+        </div>
+        <div class="card-header-info">
+          <a [routerLink]="['/projects', project.id]" class="project-name">
+            {{ project.name }}
+          </a>
+          <span class="workspace-badge">
+            <mat-icon>workspaces</mat-icon>
+            {{ project.workspaceName }}
+          </span>
+        </div>
+        <div class="card-menu">
+          @if (canManage) {
+          <button class="icon-btn" (click)="openEdit(project)" matTooltip="Edit project">
+            <mat-icon>edit</mat-icon>
+          </button>
+          }
+          @if (isAdmin) {
+          <button class="icon-btn danger" (click)="deleteProject(project)" matTooltip="Delete project">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Description -->
+      <p class="project-description">
+        {{
+ (project.description?.length ?? 0) > 110
+                  ? (project.description | slice:0:110) + '…'
+                  : project.description || 'No description provided.'
+        }}
+      </p>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-chip">
+          <mat-icon>people</mat-icon>
+          <span>{{ project.memberCount || 0 }} members</span>
+        </div>
+        <div class="stat-chip">
+          <mat-icon>task_alt</mat-icon>
+          <span>{{ project.completedTasks || 0 }}/{{ project.totalTasks || 0 }} tasks</span>
+        </div>
+        <div class="stat-chip">
+          <mat-icon>manage_accounts</mat-icon>
+          <span>{{ project.projectManagerName }}</span>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-block">
+        <div class="progress-meta">
+          <span class="progress-label">Progress</span>
+          <span class="progress-pct">{{ project.progressPercentage || 0 }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill"
+               [style.width.%]="project.progressPercentage || 0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Footer -->
+      <div class="card-footer">
+        <a [routerLink]="['/projects', project.id]" class="btn-view">
+          <mat-icon>arrow_forward</mat-icon>
+          View Details
+        </a>
+      </div>
+
+    </div>
+    }
+  </div>
+
+  <!-- ── PAGINATOR ── -->
+  <div class="paginator-wrapper">
+    <mat-paginator [length]="totalCount"
+                   [pageSize]="pageSize"
+                   [pageSizeOptions]="[6, 12, 24]"
+                   (page)="onPageChange($event)"
+                   class="paginator">
+    </mat-paginator>
+  </div>
+  }
+
+  }
+</div>

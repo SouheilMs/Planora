@@ -1,4 +1,5 @@
-<div class="task-card" [class.draggable]="draggable">
+<!-- src/app/features/tasks/card/task-card.component.html -->
+<div class="task-card" [class.draggable]="draggable" (click)="onCardClick()">
   <div class="task-card-header">
     @if (task.code) {
     <div class="task-id">
@@ -6,10 +7,10 @@
     </div>
     }
     <div class="task-actions">
-      <button mat-icon-button (click)="edit()" matTooltip="Modifier" class="edit-btn">
+      <button mat-icon-button (click)="edit($event)" matTooltip="Modifier" class="edit-btn">
         <mat-icon>edit</mat-icon>
       </button>
-      <button mat-icon-button (click)="delete()" matTooltip="Supprimer" class="delete-btn">
+      <button mat-icon-button (click)="delete($event)" matTooltip="Supprimer" class="delete-btn">
         <mat-icon>delete_outline</mat-icon>
       </button>
     </div>

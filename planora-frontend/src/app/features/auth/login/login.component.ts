@@ -1,5 +1,4 @@
 import { Component, inject, signal } from '@angular/core';
-
 import { RouterLink, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,8 +11,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
-    selector: 'app-login',
-    imports: [
+  selector: 'app-login',
+  imports: [
     RouterLink,
     ReactiveFormsModule,
     MatCardModule,
@@ -23,14 +22,14 @@ import { AuthService } from '../../../core/services/auth.service';
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule
-],
-    template: `
+  ],
+  template: `
     <div class="auth-card">
       <div class="auth-card-header">
         <h2>Welcome back</h2>
         <p>Sign in to your Planora account</p>
       </div>
-    
+
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email address</mat-label>
@@ -43,7 +42,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <mat-error>Enter a valid email address</mat-error>
           }
         </mat-form-field>
-    
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
           <input matInput [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password">
@@ -55,7 +54,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <mat-error>Password is required</mat-error>
           }
         </mat-form-field>
-    
+
         <button mat-raised-button class="submit-btn" type="submit"
           [disabled]="loginForm.invalid || loading">
           @if (loading) {
@@ -66,11 +65,11 @@ import { AuthService } from '../../../core/services/auth.service';
           }
         </button>
       </form>
-    
+
       <p class="auth-footer">Don't have an account? <a routerLink="/auth/register">Create one</a></p>
     </div>
     `,
-    styles: [`
+  styles: [`
     .auth-card {
       background: #fff;
       border-radius: 16px;
@@ -101,7 +100,7 @@ import { AuthService } from '../../../core/services/auth.service';
       width: 100%;
       height: 44px;
       margin-top: 8px;
-      background: #4f46e5 !important;
+      background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
       color: #fff !important;
       font-size: 0.9375rem;
       font-weight: 600;

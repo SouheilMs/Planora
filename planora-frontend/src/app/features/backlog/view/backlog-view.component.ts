@@ -13,6 +13,7 @@ import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { BacklogService } from '../../../core/services/backlog.service';
 import { SprintService } from '../../../core/services/sprint.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ProjectService } from '../../../core/services/project.service';
 import { ApiResponse, BacklogItem, TaskPriority, TaskStatus, Sprint, SprintStatus } from '../../../core/models';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -21,6 +22,7 @@ import { StoryPointsDialogComponent } from './story-points-dialog.component';
 import { BacklogCreateDialogComponent } from '../create/backlog-create-dialog.component';
 import { CreateSprintDialogComponent } from './create-sprint-dialog.component';
 import { ComplexityDialogComponent } from './complexity-dialog.component';
+import { TaskDetailPanelComponent } from './task-detail-panel/task-detail-panel.component';
 
 @Component({
   selector: 'app-backlog-view',
@@ -34,7 +36,8 @@ import { ComplexityDialogComponent } from './complexity-dialog.component';
     MatMenuModule,
     MatDividerModule,
     DragDropModule,
-    LoadingComponent
+    LoadingComponent,
+    TaskDetailPanelComponent
   ],
   templateUrl: './backlog-view.component.html',
   styleUrls: ['./backlog-view.component.scss']
@@ -45,6 +48,7 @@ export class BacklogViewComponent implements OnInit {
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintService);
   private authService = inject(AuthService);
+  private projectService = inject(ProjectService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
@@ -53,6 +57,9 @@ export class BacklogViewComponent implements OnInit {
   sprints: Sprint[] = [];
   sprintItemsMap: Map<string, BacklogItem[]> = new Map();
   loading = true;
+
+  selectedTaskId: string | null = null;
+  isPanelOpen = false;
 
   private openSections = new Set<string>(['backlog']);
 
@@ -87,12 +94,42 @@ export class BacklogViewComponent implements OnInit {
       next: (response: ApiResponse<BacklogItem[]>) => {
         this.loading = false;
         if (response.success) {
-          this.backlogItems = response.data.filter((item: BacklogItem) => !item.sprintId);
-          this.sprints.forEach(sprint => {
-            this.sprintItemsMap.set(
-              sprint.id,
-              response.data.filter((item: BacklogItem) => item.sprintId === sprint.id)
-            );
+          this.projectService.getProject(this.projectId).subscribe({
+            next: (r: ApiResponse<any>) => {
+              const members = r.success ? (r.data.members ?? []) : [];
+
+              const enriched = response.data.map((item: BacklogItem) => ({
+                ...item,
+                assignedToName: members.find((m: any) => m.userId === item.assignedToId)?.fullName ?? undefined
+              }));
+
+              this.backlogItems = enriched
+                .filter((item: BacklogItem) => !item.sprintId)
+                .sort((a: BacklogItem, b: BacklogItem) =>
+                  new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+                );
+
+              this.sprints.forEach(sprint => {
+                this.sprintItemsMap.set(
+                  sprint.id,
+                  enriched.filter((item: BacklogItem) => item.sprintId === sprint.id)
+                );
+              });
+            },
+            error: () => {
+              // fallback sans enrichissement
+              this.backlogItems = response.data
+                .filter((item: BacklogItem) => !item.sprintId)
+                .sort((a: BacklogItem, b: BacklogItem) =>
+                  new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+                );
+              this.sprints.forEach(sprint => {
+                this.sprintItemsMap.set(
+                  sprint.id,
+                  response.data.filter((item: BacklogItem) => item.sprintId === sprint.id)
+                );
+              });
+            }
           });
         }
       },
@@ -101,6 +138,26 @@ export class BacklogViewComponent implements OnInit {
         this.snackBar.open('Erreur de chargement', 'Fermer', { duration: 3000 });
       }
     });
+  }
+
+  // ===== PANEL =====
+  openTaskPanel(item: BacklogItem): void {
+    this.selectedTaskId = item.id;
+    this.isPanelOpen = true;
+  }
+
+  closeTaskPanel(): void {
+    this.isPanelOpen = false;
+    this.selectedTaskId = null;
+  }
+
+  onTaskDeleted(taskId: string): void {
+    this.backlogItems = this.backlogItems.filter(i => i.id !== taskId);
+    this.sprints.forEach(s => {
+      const list = this.sprintItemsMap.get(s.id);
+      if (list) this.sprintItemsMap.set(s.id, list.filter(i => i.id !== taskId));
+    });
+    this.sprintItemsMap = new Map(this.sprintItemsMap);
   }
 
   // ===== SECTION TOGGLE =====
@@ -158,7 +215,8 @@ export class BacklogViewComponent implements OnInit {
 
     if (isMovingToBacklog) {
       item.sprintId = null;
-      this.backlogItems = [item, ...this.backlogItems];
+      this.backlogItems = [...this.backlogItems, item]
+        .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
     } else {
       item.sprintId = destinationSprintId;
       item.status = TaskStatus.Todo;
@@ -214,8 +272,7 @@ export class BacklogViewComponent implements OnInit {
 
   // ===== COMPLEXITY =====
   getPriorityClass(priority: TaskPriority): string {
-    const classes = ['priority-low', 'priority-medium', 'priority-high', 'priority-critical'];
-    return classes[priority] ?? '';
+    return ['priority-low', 'priority-medium', 'priority-high', 'priority-critical'][priority] ?? '';
   }
 
   getComplexityLabel(complexity: number): string {
@@ -227,13 +284,11 @@ export class BacklogViewComponent implements OnInit {
   }
 
   getComplexityTextLabel(complexity: number): string {
-    const labels = ['Très facile', 'Facile', 'Moyenne', 'Difficile', 'Très difficile'];
-    return labels[complexity] ?? 'Moyenne';
+    return ['Très facile', 'Facile', 'Moyenne', 'Difficile', 'Très difficile'][complexity] ?? 'Moyenne';
   }
 
   getComplexityTextClass(complexity: number): string {
-    const classes = ['complexity-xs', 'complexity-s', 'complexity-m', 'complexity-l', 'complexity-xl'];
-    return classes[complexity] ?? 'complexity-m';
+    return ['complexity-xs', 'complexity-s', 'complexity-m', 'complexity-l', 'complexity-xl'][complexity] ?? 'complexity-m';
   }
 
   // ===== STORY POINTS =====
@@ -295,8 +350,14 @@ export class BacklogViewComponent implements OnInit {
   }
 
   // ===== AVATAR =====
-  getInitials(userId: string): string {
-    return userId.slice(0, 2).toUpperCase();
+  getInitials(item: BacklogItem): string {
+    if (item.assignedToName) {
+      const parts = item.assignedToName.trim().split(' ');
+      const first = parts[0]?.[0] ?? '';
+      const last = parts[1]?.[0] ?? '';
+      return (first + last).toUpperCase();
+    }
+    return item.assignedToId?.slice(0, 2).toUpperCase() ?? '';
   }
 
   // ===== ACTIONS =====
@@ -317,9 +378,7 @@ export class BacklogViewComponent implements OnInit {
     this.sprintService.startSprint(sprintId).subscribe({
       next: (response: ApiResponse<Sprint>) => {
         if (response.success) {
-          this.router.navigate(['/projects', this.projectId, 'board'], {
-            queryParams: { sprintId }
-          });
+          this.router.navigate(['/projects', this.projectId, 'board'], { queryParams: { sprintId } });
           this.snackBar.open('Sprint démarré !', 'Fermer', { duration: 3000 });
         } else {
           this.snackBar.open('Erreur lors du démarrage', 'Fermer', { duration: 3000 });
@@ -352,12 +411,7 @@ export class BacklogViewComponent implements OnInit {
   deleteItem(item: BacklogItem): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
-      data: {
-        title: 'Supprimer',
-        message: `Supprimer "${item.title}" ?`,
-        confirmLabel: 'Supprimer',
-        danger: true
-      }
+      data: { title: 'Supprimer', message: `Supprimer "${item.title}" ?`, confirmLabel: 'Supprimer', danger: true }
     });
     ref.afterClosed().subscribe((confirmed: boolean) => {
       if (!confirmed) return;
@@ -384,6 +438,14 @@ export class BacklogViewComponent implements OnInit {
           next: (response: ApiResponse<BacklogItem>) => {
             if (response.success) {
               item.assignedToId = userId || undefined;
+              this.projectService.getProject(this.projectId).subscribe({
+                next: (r: ApiResponse<any>) => {
+                  if (r.success) {
+                    const member = r.data.members?.find((m: any) => m.userId === userId);
+                    item.assignedToName = member?.fullName ?? undefined;
+                  }
+                }
+              });
               this.snackBar.open('✅ Tâche assignée !', 'Fermer', { duration: 2000 });
             }
           },
@@ -414,6 +476,7 @@ export class BacklogViewComponent implements OnInit {
     return this.backlogItems
       .reduce((sum, item) => sum + (item.storyPoints ?? item.complexity ?? 0), 0);
   }
+
   goToHistory(): void {
     this.router.navigate(['/projects', this.projectId, 'history']);
   }

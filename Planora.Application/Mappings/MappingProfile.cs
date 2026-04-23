@@ -39,11 +39,13 @@ public class MappingProfile : Profile
         CreateMap<CreateProjectDto, Project>();
         CreateMap<UpdateProjectDto, Project>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
         CreateMap<ProjectInvitation, ProjectInvitationDto>()
             .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project.Name))
             .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"))
             .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User.Email ?? string.Empty))
             .ForMember(dest => dest.InvitedByFullName, opt => opt.MapFrom(src => $"{src.InvitedByUser.FirstName} {src.InvitedByUser.LastName}"));
+
         // TaskItem mappings
         CreateMap<TaskItem, TaskDto>()
             .ForMember(dest => dest.AssignedToName, opt => opt.MapFrom(src =>
@@ -73,14 +75,19 @@ public class MappingProfile : Profile
         CreateMap<CreateSprintDto, Sprint>();
         CreateMap<UpdateSprintDto, Sprint>();
 
-        // ✅ BacklogItem mappings CORRIGÉ - Ajoute le mapping pour SprintName
+        // BacklogItem mappings
         CreateMap<BacklogItem, BacklogItemDto>()
             .ForMember(dest => dest.SprintName, opt => opt.MapFrom(src =>
                 src.Sprint != null ? src.Sprint.Name : null))
             .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src =>
                 src.Project != null ? src.Project.Name : null))
             .ForMember(dest => dest.AssignedToName, opt => opt.MapFrom(src =>
-                src.AssignedTo != null ? $"{src.AssignedTo.FirstName} {src.AssignedTo.LastName}" : string.Empty));
+                src.AssignedTo != null
+                    ? $"{src.AssignedTo.FirstName} {src.AssignedTo.LastName}".Trim()
+                    : string.Empty))
+            // FIX: if StoryPoints was never set (legacy data), fall back to Complexity
+            .ForMember(dest => dest.StoryPoints, opt => opt.MapFrom(src =>
+                src.StoryPoints ?? src.Complexity));
 
         CreateMap<CreateBacklogItemDto, BacklogItem>();
 
@@ -89,11 +96,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.OwnerName, opt => opt.MapFrom(src =>
                 src.Owner != null
                     ? $"{src.Owner.FirstName} {src.Owner.LastName}"
-                    : string.Empty))
-            .ForMember(dest => dest.ProjectManagerId, opt => opt.MapFrom(src => src.ProjectManagerId))
-            .ForMember(dest => dest.ProjectManagerName, opt => opt.MapFrom(src =>
-                src.ProjectManager != null
-                    ? $"{src.ProjectManager.FirstName} {src.ProjectManager.LastName}"
                     : string.Empty))
             .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.Members.Count))
             .ForMember(dest => dest.ProjectCount, opt => opt.MapFrom(src => src.Projects.Count));

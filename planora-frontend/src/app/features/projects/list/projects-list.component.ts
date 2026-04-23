@@ -1,9 +1,9 @@
+// projects-list.component.ts - RED THEME
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,132 +26,13 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
   standalone: true,
   imports: [
     CommonModule, RouterLink, ReactiveFormsModule,
-    MatCardModule, MatTableModule, MatButtonModule, MatIconModule,
+    MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatPaginatorModule,
     MatProgressBarModule, MatSnackBarModule, MatDialogModule,
     MatTooltipModule, LoadingComponent
   ],
-  template: `
-    <div class="page-container">
-      <div class="page-header">
-        <div>
-          <h1>Projects</h1>
-          <p class="text-secondary">Manage and track your team's projects</p>
-        </div>
-        @if (canManage) {
-          <button mat-raised-button class="primary-btn" (click)="openCreate()">
-            <mat-icon>add</mat-icon> New Project
-          </button>
-        }
-      </div>
-    
-      <div class="planora-card">
-        <div class="toolbar">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Search projects</mat-label>
-            <input matInput [formControl]="searchCtrl" placeholder="Project name...">
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-        </div>
-    
-        @if (loading) {
-          <app-loading></app-loading>
-        }
-    
-        @if (!loading) {
-          @if (projects.length === 0) {
-            <div class="empty-state">
-              <mat-icon>folder_open</mat-icon>
-              <h3>No projects found</h3>
-              <p>{{ searchCtrl.value ? 'Try a different search term' : 'Create your first project to get started' }}</p>
-            </div>
-          }
-          @if (projects.length > 0) {
-            <table mat-table [dataSource]="projects" class="planora-table">
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Name</th>
-                <td mat-cell *matCellDef="let p">
-                  <a [routerLink]="['/projects', p.id]" class="planora-link">{{ p.name }}</a>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="description">
-                <th mat-header-cell *matHeaderCellDef>Description</th>
-                <td mat-cell *matCellDef="let p" class="text-secondary">
-                  {{ p.description | slice:0:60 }}{{ (p.description?.length ?? 0) > 60 ? '…' : '' }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="workspace">
-                <th mat-header-cell *matHeaderCellDef>Workspace</th>
-                <td mat-cell *matCellDef="let p">{{ p.workspaceName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="manager">
-                <th mat-header-cell *matHeaderCellDef>Manager</th>
-                <td mat-cell *matCellDef="let p">{{ p.projectManagerName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="members">
-                <th mat-header-cell *matHeaderCellDef>Members</th>
-                <td mat-cell *matCellDef="let p">
-                  <span class="member-count">
-                    <mat-icon style="font-size:14px;width:14px;height:14px;vertical-align:middle">people</mat-icon>
-                    {{ p.memberCount || 0 }}
-                  </span>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="progress">
-                <th mat-header-cell *matHeaderCellDef>Progress</th>
-                <td mat-cell *matCellDef="let p">
-                  <div class="progress-cell">
-                    <mat-progress-bar mode="determinate" [value]="p.progressPercentage"></mat-progress-bar>
-                    <span class="pct">{{ p.progressPercentage | number:'1.0-0' }}%</span>
-                  </div>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let p" class="actions-cell">
-                  <button mat-icon-button [routerLink]="['/projects', p.id]" matTooltip="View details">
-                    <mat-icon>arrow_forward</mat-icon>
-                  </button>
-                  @if (canManage) {
-                    <button mat-icon-button (click)="openEdit(p)" matTooltip="Edit">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                  }
-                  @if (isAdmin) {
-                    <button mat-icon-button class="delete-btn" (click)="deleteProject(p)" matTooltip="Delete">
-                      <mat-icon>delete_outline</mat-icon>
-                    </button>
-                  }
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            </table>
-          }
-          <mat-paginator
-            [length]="totalCount"
-            [pageSize]="pageSize"
-            [pageSizeOptions]="[5, 10, 20]"
-            (page)="onPageChange($event)">
-          </mat-paginator>
-        }
-      </div>
-    </div>
-    `,
-  styles: [`
-    .primary-btn {
-      background: #4f46e5 !important;
-      color: #fff !important;
-      border-radius: 8px !important;
-    }
-    .toolbar { margin-bottom: 16px; }
-    .search-field { width: 320px; }
-    @media (max-width: 600px) { .search-field { width: 100%; } }
-    .member-count { display: flex; align-items: center; gap: 4px; color: #6b7280; }
-    .actions-cell { text-align: right; white-space: nowrap; }
-    .delete-btn mat-icon { color: #ef4444 !important; }
-    :host ::ng-deep .mat-mdc-icon-button:hover { background: rgba(79,70,229,.08); }
-  `]
+  templateUrl: './projects-list.component.html',
+  styleUrls: ['./projects-list.component.scss']
 })
 export class ProjectsListComponent implements OnInit {
   private projectService = inject(ProjectService);
@@ -165,7 +46,6 @@ export class ProjectsListComponent implements OnInit {
   currentPage = 1;
   loading = true;
   searchCtrl = new FormControl('');
-  displayedColumns = ['name', 'description', 'workspace', 'manager', 'members', 'progress', 'actions'];
 
   get canManage(): boolean {
     return this.authService.isAuthenticated;
@@ -177,10 +57,12 @@ export class ProjectsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProjects();
-    this.searchCtrl.valueChanges.pipe(debounceTime(400), distinctUntilChanged()).subscribe(() => {
-      this.currentPage = 1;
-      this.loadProjects();
-    });
+    this.searchCtrl.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(() => {
+        this.currentPage = 1;
+        this.loadProjects();
+      });
   }
 
   loadProjects(): void {
@@ -207,12 +89,12 @@ export class ProjectsListComponent implements OnInit {
   }
 
   openCreate(): void {
-    const ref = this.dialog.open(ProjectFormDialogComponent, { width: '500px', data: null });
+    const ref = this.dialog.open(ProjectFormDialogComponent, { width: '520px', data: null });
     ref.afterClosed().subscribe(result => { if (result) this.loadProjects(); });
   }
 
   openEdit(project: Project): void {
-    const ref = this.dialog.open(ProjectFormDialogComponent, { width: '500px', data: project });
+    const ref = this.dialog.open(ProjectFormDialogComponent, { width: '520px', data: project });
     ref.afterClosed().subscribe(result => { if (result) this.loadProjects(); });
   }
 

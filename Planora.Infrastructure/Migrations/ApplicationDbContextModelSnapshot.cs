@@ -240,6 +240,125 @@ namespace Planora.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BacklogItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacklogItemId");
+
+                    b.HasIndex("UploadedById");
+
+                    b.ToTable("BacklogAttachments");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogBranch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BacklogItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacklogItemId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.ToTable("BacklogBranches");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogCommit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BacklogItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacklogItemId");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.ToTable("BacklogCommits");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.BacklogItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -260,6 +379,9 @@ namespace Planora.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -276,6 +398,9 @@ namespace Planora.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StoryPoints")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -297,6 +422,81 @@ namespace Planora.Infrastructure.Migrations
                     b.ToTable("BacklogItems");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LinkType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SourceItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TargetItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceItemId");
+
+                    b.HasIndex("TargetItemId");
+
+                    b.ToTable("BacklogLinks");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogWebLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AddedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("BacklogItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LinkType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedById");
+
+                    b.HasIndex("BacklogItemId");
+
+                    b.ToTable("BacklogWebLinks");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -307,10 +507,13 @@ namespace Planora.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Guid?>("BacklogItemId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -318,7 +521,7 @@ namespace Planora.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("TaskId")
+                    b.Property<Guid?>("TaskId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -327,6 +530,8 @@ namespace Planora.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
+
+                    b.HasIndex("BacklogItemId");
 
                     b.HasIndex("TaskId");
 
@@ -509,6 +714,38 @@ namespace Planora.Infrastructure.Migrations
                     b.ToTable("Sprints");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.SubTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BacklogItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacklogItemId");
+
+                    b.ToTable("SubTasks");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.TaskItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -593,11 +830,7 @@ namespace Planora.Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProjectManagerId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -634,19 +867,17 @@ namespace Planora.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime?>("RespondedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uniqueidentifier");
@@ -749,6 +980,71 @@ namespace Planora.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogAttachment", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "BacklogItem")
+                        .WithMany()
+                        .HasForeignKey("BacklogItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BacklogItem");
+
+                    b.Navigation("UploadedBy");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogBranch", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "BacklogItem")
+                        .WithMany()
+                        .HasForeignKey("BacklogItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BacklogItem");
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogCommit", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "BacklogItem")
+                        .WithMany()
+                        .HasForeignKey("BacklogItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.BacklogBranch", "Branch")
+                        .WithMany("Commits")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BacklogItem");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("CreatedBy");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.BacklogItem", b =>
                 {
                     b.HasOne("Planora.Domain.Entities.ApplicationUser", "AssignedTo")
@@ -773,6 +1069,44 @@ namespace Planora.Infrastructure.Migrations
                     b.Navigation("Sprint");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogLink", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "SourceItem")
+                        .WithMany()
+                        .HasForeignKey("SourceItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "TargetItem")
+                        .WithMany()
+                        .HasForeignKey("TargetItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SourceItem");
+
+                    b.Navigation("TargetItem");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogWebLink", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "AddedBy")
+                        .WithMany()
+                        .HasForeignKey("AddedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "BacklogItem")
+                        .WithMany()
+                        .HasForeignKey("BacklogItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AddedBy");
+
+                    b.Navigation("BacklogItem");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.Comment", b =>
                 {
                     b.HasOne("Planora.Domain.Entities.ApplicationUser", "Author")
@@ -781,13 +1115,18 @@ namespace Planora.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "BacklogItem")
+                        .WithMany("Comments")
+                        .HasForeignKey("BacklogItemId");
+
                     b.HasOne("Planora.Domain.Entities.TaskItem", "Task")
                         .WithMany("Comments")
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Author");
+
+                    b.Navigation("BacklogItem");
 
                     b.Navigation("Task");
                 });
@@ -820,7 +1159,7 @@ namespace Planora.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Planora.Domain.Entities.Project", "Project")
-                        .WithMany("Invitations")
+                        .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -868,6 +1207,17 @@ namespace Planora.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.SubTask", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.BacklogItem", "BacklogItem")
+                        .WithMany("SubTasks")
+                        .HasForeignKey("BacklogItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BacklogItem");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.TaskItem", b =>
                 {
                     b.HasOne("Planora.Domain.Entities.ApplicationUser", "AssignedTo")
@@ -876,7 +1226,7 @@ namespace Planora.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Planora.Domain.Entities.Project", "Project")
-                        .WithMany("Tasks")
+                        .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -903,9 +1253,7 @@ namespace Planora.Infrastructure.Migrations
 
                     b.HasOne("Planora.Domain.Entities.ApplicationUser", "ProjectManager")
                         .WithMany()
-                        .HasForeignKey("ProjectManagerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("ProjectManagerId");
 
                     b.Navigation("Owner");
 
@@ -973,15 +1321,23 @@ namespace Planora.Infrastructure.Migrations
                     b.Navigation("WorkspaceUsers");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogBranch", b =>
+                {
+                    b.Navigation("Commits");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.BacklogItem", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("SubTasks");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.Project", b =>
                 {
                     b.Navigation("BacklogItems");
 
-                    b.Navigation("Invitations");
-
                     b.Navigation("Sprints");
-
-                    b.Navigation("Tasks");
 
                     b.Navigation("Users");
                 });

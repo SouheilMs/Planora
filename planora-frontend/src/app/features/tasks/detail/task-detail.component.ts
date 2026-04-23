@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+// src/app/features/tasks/detail/task-detail.component.ts
+import { Component, OnInit, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, Validators, FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,139 +11,294 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
 import { TaskService } from '../../../core/services/task.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Task, TaskComment, TaskStatus, TaskPriority } from '../../../core/models';
+import { BacklogService } from '../../../core/services/backlog.service';
+import { Task, TaskComment, TaskStatus, TaskPriority, BacklogItem } from '../../../core/models';
 import { LoadingComponent } from '../../../shared/components/loading/loading.component';
 
 @Component({
-    selector: 'app-task-detail',
-    imports: [
-        CommonModule, RouterLink, ReactiveFormsModule,
-        MatCardModule, MatButtonModule, MatIconModule, MatChipsModule,
-        MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDividerModule,
-        LoadingComponent
-    ],
-    template: `
-    <div class="page-container">
-      @if (loading) {
-        <app-loading></app-loading>
-      }
-      @if (!loading && task) {
-        <div>
-          <div class="page-header">
-            <h1>{{ task.title }}</h1>
-            <button mat-button [routerLink]="['/projects', task.projectId, 'tasks']">
-              <mat-icon>arrow_back</mat-icon> Back to Tasks
-            </button>
+  selector: 'app-task-detail',
+  imports: [
+    CommonModule, RouterLink, ReactiveFormsModule, FormsModule,
+    MatCardModule, MatButtonModule, MatIconModule, MatChipsModule,
+    MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDividerModule,
+    MatSelectModule, LoadingComponent
+  ],
+  template: `
+    @if (!isDialogMode) {
+      <!-- MODE PAGE NORMALE -->
+      <div class="page-container">
+        @if (loading) {
+          <app-loading></app-loading>
+        }
+        @if (!loading && task) {
+          <div>
+            <div class="page-header">
+              <h1>{{ task.title }}</h1>
+              <button mat-button [routerLink]="['/projects', task.projectId, 'tasks']">
+                <mat-icon>arrow_back</mat-icon> Retour aux tâches
+              </button>
+            </div>
+            <div class="detail-grid">
+              <mat-card>
+                <mat-card-header><mat-card-title>Détails de la tâche</mat-card-title></mat-card-header>
+                <mat-card-content>
+                  <p>{{ task.description || 'Aucune description' }}</p>
+                  <div class="info-row">
+                    <span class="label">Statut:</span>
+                    <mat-select [value]="task.status" (selectionChange)="updateStatus($event.value)" style="width: auto;">
+                      <mat-option [value]="0">À faire</mat-option>
+                      <mat-option [value]="1">En cours</mat-option>
+                      <mat-option [value]="2">Terminé</mat-option>
+                    </mat-select>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Priorité:</span>
+                    <mat-select [value]="task.priority" (selectionChange)="updatePriority($event.value)" style="width: auto;">
+                      <mat-option [value]="0">Faible</mat-option>
+                      <mat-option [value]="1">Moyenne</mat-option>
+                      <mat-option [value]="2">Haute</mat-option>
+                      <mat-option [value]="3">Critique</mat-option>
+                    </mat-select>
+                  </div>
+                  <div class="info-row"><span class="label">Assigné à:</span><span>{{ task.assignedToName || 'Non assigné' }}</span></div>
+                  <div class="info-row"><span class="label">Sprint:</span><span>{{ task.sprintName || 'Aucun sprint' }}</span></div>
+                  <div class="info-row"><span class="label">Date échéance:</span><span>{{ task.dueDate ? (task.dueDate | date:'mediumDate') : '—' }}</span></div>
+                  <div class="info-row"><span class="label">Progression:</span><span>{{ task.progressPercentage }}%</span></div>
+                </mat-card-content>
+              </mat-card>
+              <mat-card>
+                <mat-card-header><mat-card-title>Commentaires</mat-card-title></mat-card-header>
+                <mat-card-content>
+                  @if (commentsLoading) {
+                    <app-loading></app-loading>
+                  }
+                  @for (c of comments; track c.id) {
+                    <div class="comment">
+                      <div class="comment-header">
+                        <strong>{{ c.authorName }}</strong>
+                        <span class="comment-date">{{ c.createdAt | date:'short' }}</span>
+                        @if (canDelete(c)) {
+                          <button mat-icon-button color="warn" (click)="deleteComment(c)" style="margin-left:auto">
+                            <mat-icon style="font-size:16px">close</mat-icon>
+                          </button>
+                        }
+                      </div>
+                      <p>{{ c.content }}</p>
+                      <mat-divider></mat-divider>
+                    </div>
+                  }
+                  @if (!commentsLoading && !comments.length) {
+                    <p class="no-data">Aucun commentaire</p>
+                  }
+                  <div class="add-comment">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Ajouter un commentaire</mat-label>
+                      <textarea matInput [formControl]="commentCtrl" rows="2"></textarea>
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" (click)="addComment()" [disabled]="commentCtrl.invalid || addingComment">
+                      {{ addingComment ? 'Envoi...' : 'Envoyer' }}
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
           </div>
-          <div class="detail-grid">
-            <mat-card>
-              <mat-card-header><mat-card-title>Task Details</mat-card-title></mat-card-header>
-              <mat-card-content>
-                <p>{{ task.description }}</p>
-                <div class="info-row">
-                  <span class="label">Status:</span>
-                  <span class="chip" [ngClass]="getStatusClass(task.status)">{{ getStatusLabel(task.status) }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="label">Priority:</span>
-                  <span class="chip" [ngClass]="getPriorityClass(task.priority)">{{ getPriorityLabel(task.priority) }}</span>
-                </div>
-                <div class="info-row"><span class="label">Assigned To:</span><span>{{ task.assignedToName || 'Unassigned' }}</span></div>
-                <div class="info-row"><span class="label">Sprint:</span><span>{{ task.sprintName || 'No sprint' }}</span></div>
-                <div class="info-row"><span class="label">Due Date:</span><span>{{ task.dueDate ? (task.dueDate | date:'mediumDate') : '—' }}</span></div>
-                <div class="info-row"><span class="label">Progress:</span><span>{{ task.progressPercentage }}%</span></div>
-              </mat-card-content>
-            </mat-card>
-            <mat-card>
-              <mat-card-header><mat-card-title>Comments</mat-card-title></mat-card-header>
-              <mat-card-content>
-                @if (commentsLoading) {
-                  <app-loading></app-loading>
+        }
+      </div>
+    }
+
+    @if (isDialogMode) {
+      <!-- MODE DIALOG (PANEL LATÉRAL) — layout original restauré -->
+      <div class="dialog-container">
+        @if (loading) {
+          <app-loading></app-loading>
+        }
+        @if (!loading && task) {
+          <div>
+            <div class="dialog-task-header">
+              <h2>{{ task.title }}</h2>
+              <div class="task-id">#{{ task.id.slice(-6) }}</div>
+            </div>
+
+            <!-- Description -->
+            <div class="dialog-section">
+              <div class="section-title">
+                <mat-icon>description</mat-icon>
+                <span>Description</span>
+              </div>
+              <div class="description" (click)="startEditDescription()">
+                @if (!isEditingDescription) {
+                  <p>{{ task.description || 'Cliquez pour ajouter une description...' }}</p>
                 }
-                @for (c of comments; track c) {
+                @if (isEditingDescription) {
+                  <textarea [(ngModel)]="editDescriptionText" rows="4" (click)="$event.stopPropagation()"></textarea>
+                  <div class="edit-actions">
+                    <button mat-button (click)="cancelEditDescription(); $event.stopPropagation()">Annuler</button>
+                    <button mat-raised-button color="primary" (click)="saveDescription(); $event.stopPropagation()">Sauvegarder</button>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Détails -->
+            <div class="dialog-section">
+              <div class="section-title">
+                <mat-icon>info</mat-icon>
+                <span>Détails</span>
+              </div>
+              <div class="details-grid">
+                <div class="detail-row">
+                  <span class="label">Statut</span>
+                  <mat-select [value]="task.status" (selectionChange)="updateStatus($event.value)">
+                    <mat-option [value]="0">À faire</mat-option>
+                    <mat-option [value]="1">En cours</mat-option>
+                    <mat-option [value]="2">Terminé</mat-option>
+                  </mat-select>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Priorité</span>
+                  <mat-select [value]="task.priority" (selectionChange)="updatePriority($event.value)">
+                    <mat-option [value]="0">Faible</mat-option>
+                    <mat-option [value]="1">Moyenne</mat-option>
+                    <mat-option [value]="2">Haute</mat-option>
+                    <mat-option [value]="3">Critique</mat-option>
+                  </mat-select>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Assigné à</span>
+                  <span>{{ task.assignedToName || 'Non assigné' }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Sprint</span>
+                  <span>{{ task.sprintName || 'Non sprinté' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Commentaires -->
+            <div class="dialog-section">
+              <div class="section-title">
+                <mat-icon>comment</mat-icon>
+                <span>Commentaires ({{ comments.length }})</span>
+              </div>
+              <div class="comments-list">
+                @for (c of comments; track c.id) {
                   <div class="comment">
                     <div class="comment-header">
                       <strong>{{ c.authorName }}</strong>
-                      <span class="comment-date">{{ c.createdAt | date:'short' }}</span>
+                      <span class="comment-date">{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                       @if (canDelete(c)) {
-                        <button mat-icon-button color="warn" (click)="deleteComment(c)" style="margin-left:auto">
-                          <mat-icon style="font-size:16px">close</mat-icon>
+                        <button mat-icon-button (click)="deleteComment(c)">
+                          <mat-icon>delete</mat-icon>
                         </button>
                       }
                     </div>
                     <p>{{ c.content }}</p>
-                    <mat-divider></mat-divider>
                   </div>
                 }
-                @if (!commentsLoading && !comments.length) {
-                  <p class="no-data">No comments yet.</p>
+                @if (comments.length === 0) {
+                  <p class="no-comments">Aucun commentaire</p>
                 }
-                <div class="add-comment">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Add comment</mat-label>
-                    <textarea matInput [formControl]="commentCtrl" rows="2"></textarea>
-                  </mat-form-field>
-                  <button mat-raised-button color="primary" (click)="addComment()" [disabled]="commentCtrl.invalid || addingComment">
-                    {{ addingComment ? 'Posting...' : 'Post' }}
-                  </button>
-                </div>
-              </mat-card-content>
-            </mat-card>
+              </div>
+              <div class="add-comment">
+                <textarea [(ngModel)]="newComment" placeholder="Ajouter un commentaire..." rows="2"></textarea>
+                <button mat-raised-button color="primary" (click)="addCommentDialog()" [disabled]="!newComment.trim()">
+                  Envoyer
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      }
-    </div>
-    `,
-    styles: [`
+        }
+      </div>
+    }
+  `,
+  styles: [`
+    /* Mode page normale */
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     h1 { margin: 0; }
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .info-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .label { font-weight: 500; min-width: 90px; }
-    .chip { padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; }
-    .status-todo { background: #e3f2fd; color: #1976d2; }
-    .status-inprogress { background: #fff3e0; color: #f57c00; }
-    .status-done { background: #e8f5e9; color: #388e3c; }
-    .priority-low { background: #f3e5f5; color: #7b1fa2; }
-    .priority-medium { background: #e3f2fd; color: #1565c0; }
-    .priority-high { background: #fff3e0; color: #e65100; }
-    .priority-critical { background: #ffebee; color: #c62828; }
     .comment { margin-bottom: 12px; }
     .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
     .comment-date { color: #999; font-size: 0.8rem; }
     .no-data { color: #999; font-style: italic; }
     .add-comment { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
     .full-width { width: 100%; }
+
+    /* Mode dialog */
+    .dialog-container { padding: 0; }
+    .dialog-task-header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+    .dialog-task-header h2 { margin: 0 0 8px 0; font-size: 18px; font-weight: 600; }
+    .task-id { font-size: 12px; color: #6b7280; font-family: monospace; }
+    .dialog-section { margin-bottom: 24px; }
+    .section-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb; }
+    .section-title mat-icon { font-size: 18px; width: 18px; height: 18px; color: #6b7280; }
+    .section-title span { font-weight: 600; font-size: 14px; }
+    .description { padding: 12px; background: #f9fafb; border-radius: 8px; cursor: pointer; }
+    .description p { margin: 0; color: #4b5563; }
+    .description textarea { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical; font-family: inherit; box-sizing: border-box; }
+    .edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .details-grid { display: flex; flex-direction: column; gap: 12px; }
+    .detail-row { display: flex; align-items: center; gap: 16px; }
+    .detail-row .label { width: 80px; font-size: 13px; font-weight: 500; color: #6b7280; }
+    .detail-row mat-select { width: 150px; }
+    .comments-list { max-height: 250px; overflow-y: auto; margin-bottom: 16px; }
+    .comment { padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 12px; }
+    .comment-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .comment-date { font-size: 11px; color: #9ca3af; }
+    .no-comments { color: #9ca3af; text-align: center; padding: 20px; }
+    .add-comment textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; resize: vertical; margin-bottom: 8px; font-family: inherit; box-sizing: border-box; }
+    .add-comment textarea:focus { outline: none; border-color: #4f46e5; }
   `]
 })
 export class TaskDetailComponent implements OnInit {
+  @Input() taskId?: string;
+  @Output() closed = new EventEmitter<void>();
+
   private route = inject(ActivatedRoute);
   private taskService = inject(TaskService);
+  private backlogService = inject(BacklogService);
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
 
   loading = true;
   commentsLoading = true;
   addingComment = false;
-  task: Task | null = null;
+  task: BacklogItem | null = null;
   comments: TaskComment[] = [];
   commentCtrl = new FormControl('', Validators.required);
+  newComment = '';
+  isEditingDescription = false;
+  editDescriptionText = '';
+
+  get isDialogMode(): boolean {
+    return !!this.taskId;
+  }
 
   ngOnInit(): void {
-    const taskId = this.route.snapshot.paramMap.get('id')!;
-    this.taskService.getTask(taskId).subscribe({
+    const id = this.taskId || this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadTask(id);
+    }
+  }
+
+  loadTask(id: string): void {
+    this.loading = true;
+    this.backlogService.getBacklogItem(id).subscribe({
       next: r => {
         this.loading = false;
         if (r.success) {
           this.task = r.data;
-          this.loadComments(taskId);
+          this.loadComments(id);
         }
       },
       error: () => {
         this.loading = false;
-        this.snackBar.open('Failed to load task', 'Close', { duration: 3000 });
+        this.snackBar.open('Erreur de chargement', 'Fermer', { duration: 3000 });
       }
     });
   }
@@ -158,6 +314,63 @@ export class TaskDetailComponent implements OnInit {
     });
   }
 
+  startEditDescription(): void {
+    this.editDescriptionText = this.task?.description || '';
+    this.isEditingDescription = true;
+  }
+
+  cancelEditDescription(): void {
+    this.isEditingDescription = false;
+  }
+
+  // FIX: subscribe manquant dans la version précédente
+  saveDescription(): void {
+    if (!this.task) return;
+    this.backlogService.updateBacklogItem(this.task.id, {
+      title: this.task.title,
+      priority: this.task.priority,
+      description: this.editDescriptionText
+      // AssignedToId volontairement omis → le backend ne touche pas la FK
+    }).subscribe({
+      next: (response) => {
+        if (response.success && this.task) {
+          this.task.description = this.editDescriptionText;
+          this.isEditingDescription = false;
+          this.snackBar.open('Description mise à jour', 'Fermer', { duration: 2000 });
+        }
+      },
+      error: () => this.snackBar.open('Erreur', 'Fermer', { duration: 3000 })
+    });
+  }
+
+  updateStatus(status: number): void {
+    if (this.task) {
+      this.backlogService.updateBacklogItemStatus(this.task.id, status).subscribe({
+        next: (response) => {
+          if (response.success && this.task) {
+            this.task.status = status;
+            this.snackBar.open('Statut mis à jour', 'Fermer', { duration: 2000 });
+          }
+        },
+        error: () => this.snackBar.open('Erreur', 'Fermer', { duration: 3000 })
+      });
+    }
+  }
+
+  updatePriority(priority: number): void {
+    if (this.task) {
+      this.backlogService.updatePriority(this.task.id, priority).subscribe({
+        next: (response) => {
+          if (response.success && this.task) {
+            this.task.priority = priority;
+            this.snackBar.open('Priorité mise à jour', 'Fermer', { duration: 2000 });
+          }
+        },
+        error: () => this.snackBar.open('Erreur', 'Fermer', { duration: 3000 })
+      });
+    }
+  }
+
   addComment(): void {
     if (!this.task || this.commentCtrl.invalid) return;
     this.addingComment = true;
@@ -171,7 +384,26 @@ export class TaskDetailComponent implements OnInit {
       },
       error: () => {
         this.addingComment = false;
-        this.snackBar.open('Failed to add comment', 'Close', { duration: 3000 });
+        this.snackBar.open('Erreur', 'Fermer', { duration: 3000 });
+      }
+    });
+  }
+
+  addCommentDialog(): void {
+    if (!this.task || !this.newComment.trim()) return;
+    this.addingComment = true;
+    this.taskService.addComment(this.task.id, this.newComment).subscribe({
+      next: r => {
+        this.addingComment = false;
+        if (r.success) {
+          this.newComment = '';
+          this.loadComments(this.task!.id);
+          this.snackBar.open('Commentaire ajouté', 'Fermer', { duration: 2000 });
+        }
+      },
+      error: () => {
+        this.addingComment = false;
+        this.snackBar.open('Erreur', 'Fermer', { duration: 3000 });
       }
     });
   }
@@ -180,9 +412,12 @@ export class TaskDetailComponent implements OnInit {
     if (!this.task) return;
     this.taskService.deleteComment(this.task.id, comment.id).subscribe({
       next: r => {
-        if (r.success) this.loadComments(this.task!.id);
+        if (r.success) {
+          this.loadComments(this.task!.id);
+          this.snackBar.open('Commentaire supprimé', 'Fermer', { duration: 2000 });
+        }
       },
-      error: () => this.snackBar.open('Failed to delete comment', 'Close', { duration: 3000 })
+      error: () => this.snackBar.open('Erreur', 'Fermer', { duration: 3000 })
     });
   }
 
@@ -191,19 +426,7 @@ export class TaskDetailComponent implements OnInit {
     return !!(user && (user.userId === comment.authorId || this.authService.hasRole(['Admin'])));
   }
 
-  getStatusLabel(status: TaskStatus): string {
-    return ['To Do', 'In Progress', 'Done'][status] ?? status.toString();
-  }
-
-  getStatusClass(status: TaskStatus): string {
-    return ['status-todo', 'status-inprogress', 'status-done'][status] ?? '';
-  }
-
-  getPriorityLabel(priority: TaskPriority): string {
-    return ['Low', 'Medium', 'High', 'Critical'][priority] ?? priority.toString();
-  }
-
-  getPriorityClass(priority: TaskPriority): string {
-    return ['priority-low', 'priority-medium', 'priority-high', 'priority-critical'][priority] ?? '';
+  close(): void {
+    this.closed.emit();
   }
 }

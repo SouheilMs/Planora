@@ -88,12 +88,27 @@ public class UserService : IUserService
 
     public async Task<UserDto> AssignRoleAsync(AssignRoleDto dto)
     {
-        var user = await _userManager.FindByIdAsync(dto.UserId) ?? throw new KeyNotFoundException("User not found.");
+        var user = await _userManager.FindByIdAsync(dto.UserId)
+            ?? throw new KeyNotFoundException("User not found.");
 
         if (!await _roleManager.RoleExistsAsync(dto.Role))
             throw new InvalidOperationException($"Role '{dto.Role}' does not exist.");
 
-        await _userManager.AddToRoleAsync(user, dto.Role);
+        // Récupérer tous les rôles actuels
+        var currentRoles = await _userManager.GetRolesAsync(user);
+
+        // Supprimer tous les rôles actuels
+        if (currentRoles.Any())
+        {
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!removeResult.Succeeded)
+                throw new InvalidOperationException($"Failed to remove current roles: {string.Join(", ", removeResult.Errors.Select(e => e.Description))}");
+        }
+
+        // Ajouter le nouveau rôle
+        var addResult = await _userManager.AddToRoleAsync(user, dto.Role);
+        if (!addResult.Succeeded)
+            throw new InvalidOperationException($"Failed to add role: {string.Join(", ", addResult.Errors.Select(e => e.Description))}");
 
         var userDto = _mapper.Map<UserDto>(user);
         userDto.Roles = await _userManager.GetRolesAsync(user);

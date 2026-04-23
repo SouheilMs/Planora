@@ -9,12 +9,10 @@ public class Project : BaseEntity
     public Guid WorkspaceId { get; set; }
     public string ProjectManagerId { get; set; } = string.Empty;
 
-    // Navigation properties
     public Workspace Workspace { get; set; } = null!;
     public ApplicationUser ProjectManager { get; set; } = null!;
     public ICollection<ProjectUser> Users { get; set; } = new List<ProjectUser>();
-    public ICollection<ProjectInvitation> Invitations { get; set; } = new List<ProjectInvitation>();
-    public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
+    // SUPPRIMER ICollection<ProjectInvitation> — on invite au niveau workspace
     public ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();
     public ICollection<BacklogItem> BacklogItems { get; set; } = new List<BacklogItem>();
 }

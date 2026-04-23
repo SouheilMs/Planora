@@ -88,7 +88,7 @@ export class SidebarComponent implements OnInit {
   }
 
   getProjectColor(): string {
-    return this.currentProject?.color || '#4f46e5';
+    return '#dc2626';
   }
 
   goToAllTasks(): void {
@@ -96,6 +96,5 @@ export class SidebarComponent implements OnInit {
   }
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

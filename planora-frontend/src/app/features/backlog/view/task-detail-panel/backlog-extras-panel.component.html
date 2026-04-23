@@ -1,0 +1,164 @@
+<!-- ── PLUS BUTTON ── -->
+<div class="extras-header">
+  <div class="plus-wrap">
+    <button class="plus-btn" (click)="plusMenuOpen = !plusMenuOpen" matTooltip="Ajouter">
+      <mat-icon>add</mat-icon>
+    </button>
+
+    <div class="plus-menu" *ngIf="plusMenuOpen">
+      <div class="pm-search">
+        <mat-icon>search</mat-icon>
+        <span>Rechercher un élément de menu</span>
+      </div>
+      <div class="pm-item" (click)="openAction('link')">
+        <mat-icon>link</mat-icon><span>Associer un ticket</span>
+      </div>
+      <div class="pm-item" (click)="openAction('attachment')">
+        <mat-icon>attach_file</mat-icon><span>Ajouter une pièce jointe</span>
+      </div>
+      <div class="pm-divider"></div>
+      <div class="pm-item" (click)="openAction('weblink'); newWebLinkType = 0">
+        <mat-icon>language</mat-icon><span>Ajouter un lien web</span>
+      </div>
+      <div class="pm-item" (click)="openAction('weblink'); newWebLinkType = 1">
+        <mat-icon>play_circle</mat-icon><span>Vidéo</span>
+      </div>
+      <div class="pm-item" (click)="openAction('weblink'); newWebLinkType = 2">
+        <mat-icon>description</mat-icon><span>Document</span>
+      </div>
+    </div>
+
+    <div class="overlay-close" *ngIf="plusMenuOpen" (click)="plusMenuOpen = false"></div>
+  </div>
+</div>
+
+<!-- ════════ FORMS ════════ -->
+<!-- ── Associate ticket ── -->
+<div class="extra-form" *ngIf="activeAction === 'link'">
+  <div class="ef-header">
+    <mat-icon>link</mat-icon>
+    <span>Associer un ticket</span>
+    <button class="ef-close" (click)="closeAction()"><mat-icon>close</mat-icon></button>
+  </div>
+  <div class="ef-row">
+    <label>Type de lien</label>
+    <select class="ef-select" [(ngModel)]="selectedLinkType">
+      <option *ngFor="let t of ticketLinkTypes" [value]="t.value">{{ t.label }}</option>
+    </select>
+  </div>
+  <div class="ef-row">
+    <label>Rechercher un ticket</label>
+    <div class="ef-search-wrap">
+      <input class="ef-input" [(ngModel)]="ticketSearchQuery"
+             (input)="searchTickets()" placeholder="Titre du ticket...">
+      <mat-icon class="ef-search-icon" *ngIf="!searchLoading">search</mat-icon>
+      <span class="ef-loading" *ngIf="searchLoading">…</span>
+    </div>
+  </div>
+  <div class="ef-results" *ngIf="ticketSearchResults.length">
+    <div class="ef-result-row" *ngFor="let t of ticketSearchResults" (click)="selectTicket(t)">
+      <span class="ef-ticket-id">{{ t.id.slice(-6).toUpperCase() }}</span>
+      <span class="ef-ticket-title">{{ t.title }}</span>
+      <span class="ef-status-pill">
+        {{ t.status === 0 ? 'À FAIRE' : t.status === 1 ? 'EN COURS' : 'TERMINÉ' }}
+      </span>
+    </div>
+  </div>
+  <div class="ef-empty" *ngIf="ticketSearchQuery && !ticketSearchResults.length && !searchLoading">
+    Aucun résultat
+  </div>
+</div>
+
+<!-- ── Attachment ── -->
+<div class="extra-form" *ngIf="activeAction === 'attachment'">
+  <div class="ef-header">
+    <mat-icon>attach_file</mat-icon>
+    <span>Pièce jointe</span>
+    <button class="ef-close" (click)="closeAction()"><mat-icon>close</mat-icon></button>
+  </div>
+  <div class="ef-drop-zone" (click)="triggerFileInput()" [class.uploading]="uploading">
+    <mat-icon>cloud_upload</mat-icon>
+    <span *ngIf="!uploading">Cliquez pour choisir un fichier (max 20 MB)</span>
+    <span *ngIf="uploading">Envoi en cours…</span>
+    <input [id]="'file-input-' + backlogItemId" type="file"
+           style="display:none" (change)="onFileSelected($event)">
+  </div>
+</div>
+
+<!-- ── Web / Video / Document link ── -->
+<div class="extra-form" *ngIf="activeAction === 'weblink'">
+  <div class="ef-header">
+    <mat-icon>{{ getWebLinkIcon(newWebLinkType) }}</mat-icon>
+    <span>{{ webLinkTypes[newWebLinkType]?.label }}</span>
+    <button class="ef-close" (click)="closeAction()"><mat-icon>close</mat-icon></button>
+  </div>
+  <div class="ef-row">
+    <label>Type</label>
+    <div class="ef-type-chips">
+      <button *ngFor="let t of webLinkTypes" class="ef-chip"
+              [class.active]="newWebLinkType === t.value"
+              (click)="newWebLinkType = t.value">
+        <mat-icon>{{ t.icon }}</mat-icon> {{ t.label }}
+      </button>
+    </div>
+  </div>
+  <div class="ef-row">
+    <label>URL *</label>
+    <input class="ef-input" [(ngModel)]="newUrl"
+           placeholder="https://..." (keydown.enter)="saveWebLink()">
+  </div>
+  <div class="ef-row">
+    <label>Texte d'affichage</label>
+    <input class="ef-input" [(ngModel)]="newLabel"
+           placeholder="Optionnel" (keydown.enter)="saveWebLink()">
+  </div>
+  <div class="ef-actions">
+    <button class="btn-primary" (click)="saveWebLink()" [disabled]="!newUrl.trim()">Insérer</button>
+    <button class="btn-ghost" (click)="closeAction()">Annuler</button>
+  </div>
+</div>
+
+<!-- ════════ DISPLAY SECTIONS ════════ -->
+<!-- ── Ticket links ── -->
+<div class="extras-section" *ngIf="links.length">
+  <div class="es-title"><mat-icon>link</mat-icon> Tickets liés</div>
+  <div class="link-group" *ngFor="let typeGroup of ticketLinkTypes">
+    <ng-container *ngIf="getLinksByType(links, typeGroup.value).length">
+      <div class="lg-label">{{ typeGroup.label }}</div>
+      <div class="lg-item" *ngFor="let l of getLinksByType(links, typeGroup.value)">
+        <span class="ticket-chip-sm">{{ l.targetItemId.slice(-6).toUpperCase() }}</span>
+        <span class="lg-title">{{ l.targetItemTitle }}</span>
+        <span class="lg-status">{{ l.targetItemStatus }}</span>
+        <button class="del-btn" (click)="deleteLink(l)"><mat-icon>close</mat-icon></button>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- ── Attachments ── -->
+<div class="extras-section" *ngIf="attachments.length">
+  <div class="es-title"><mat-icon>attach_file</mat-icon> Pièces jointes</div>
+  <div class="att-item" *ngFor="let a of attachments">
+    <mat-icon class="att-icon">{{ getFileIcon(a.contentType) }}</mat-icon>
+    <div class="att-info">
+      <span class="att-name" (click)="downloadAttachment(a)">{{ a.fileName }}</span>
+      <span class="att-meta">
+        {{ formatFileSize(a.fileSizeBytes) }} · {{ a.uploadedByName }} · {{ a.createdAt | date:'d MMM yyyy' }}
+      </span>
+    </div>
+    <button class="del-btn" (click)="deleteAttachment(a)"><mat-icon>close</mat-icon></button>
+  </div>
+</div>
+
+<!-- ── Web links ── -->
+<div class="extras-section" *ngIf="webLinks.length">
+  <div class="es-title"><mat-icon>language</mat-icon> Liens</div>
+  <div class="wl-item" *ngFor="let w of webLinks">
+    <mat-icon class="wl-icon">{{ getWebLinkIcon(w.linkType) }}</mat-icon>
+    <div class="wl-info">
+      <span class="wl-label" (click)="openUrl(w.url)">{{ w.label || w.url }}</span>
+      <span class="wl-meta">{{ w.linkTypeLabel }} · {{ w.addedByName }}</span>
+    </div>
+    <button class="del-btn" (click)="deleteWebLink(w)"><mat-icon>close</mat-icon></button>
+  </div>
+</div>

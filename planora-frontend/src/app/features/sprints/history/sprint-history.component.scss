@@ -1,4 +1,4 @@
-// src/app/features/sprints/history/sprint-history.component.scss
+// src/app/features/sprints/history/sprint-history.component.scss - BLUE THEME
 .history-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -44,7 +44,7 @@ h1 {
   padding: 24px;
   text-align: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #e5e7eb;
+  border: 1px solid #c7d2fe;
 }
 
   .stat-card .stat-value {
@@ -70,7 +70,7 @@ h1 {
   top: 20px;
   bottom: 20px;
   width: 2px;
-  background: linear-gradient(to bottom, #4f46e5, #818cf8);
+  background: linear-gradient(to bottom, #4f46e5, #a5b4fc);
 }
 
 .sprint-card {
@@ -87,7 +87,7 @@ h1 {
   height: 12px;
   border-radius: 50%;
   border: 3px solid white;
-  box-shadow: 0 0 0 2px #e5e7eb;
+  box-shadow: 0 0 0 2px #c7d2fe;
 }
 
 .sprint-content {
@@ -96,14 +96,14 @@ h1 {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #e5e7eb;
+  border: 1px solid #c7d2fe;
   transition: all 0.3s;
-}
 
-  .sprint-content:hover {
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1);
     transform: translateY(-2px);
   }
+}
 
 .sprint-header {
   display: flex;
@@ -116,30 +116,30 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
-}
 
-  .sprint-title mat-icon {
+  mat-icon {
     color: #4f46e5;
   }
 
-  .sprint-title h3 {
+  h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
     color: #111827;
   }
+}
 
 .sprint-status {
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-}
 
-  .sprint-status.closed {
+  &.closed {
     background: #dcfce7;
     color: #166534;
   }
+}
 
 .sprint-goal, .sprint-dates {
   display: flex;
@@ -148,52 +148,60 @@ h1 {
   font-size: 14px;
   color: #6b7280;
   margin-bottom: 12px;
-}
 
-  .sprint-goal mat-icon, .sprint-dates mat-icon {
+  mat-icon {
     font-size: 16px;
     width: 16px;
     height: 16px;
   }
+}
 
 .sprint-stats {
   display: flex;
   gap: 24px;
   margin: 16px 0;
   padding: 12px 0;
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
+  border-top: 1px solid #c7d2fe;
+  border-bottom: 1px solid #c7d2fe;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
 
-  .stat-item .stat-label {
+  .stat-label {
     font-size: 12px;
     color: #6b7280;
   }
 
-  .stat-item .stat-value {
+  .stat-value {
     font-size: 20px;
     font-weight: 600;
     color: #374151;
-  }
 
-    .stat-item .stat-value.success {
+    &.success {
       color: #10b981;
     }
+  }
+}
 
 .sprint-progress {
   margin: 16px 0;
 }
 
+::ng-deep .sprint-progress .mdc-linear-progress__bar-inner {
+  border-color: #4f46e5 !important;
+}
+
+::ng-deep .sprint-progress .mdc-linear-progress__track {
+  background: #f5f3ff !important;
+}
+
 .view-sprint-btn {
   width: 100%;
   padding: 8px;
-  background: #f3f4f6;
+  background: #f5f3ff;
   border: none;
   border-radius: 8px;
   display: flex;
@@ -205,37 +213,37 @@ h1 {
   font-weight: 500;
   color: #374151;
   transition: background 0.2s;
-}
 
-  .view-sprint-btn:hover {
-    background: #e5e7eb;
+  &:hover {
+    background: #ede9fe;
   }
+}
 
 .empty-history {
   text-align: center;
   padding: 60px 20px;
   background: white;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
-}
+  border: 1px solid #c7d2fe;
 
-  .empty-history mat-icon {
+  mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
-    color: #9ca3af;
+    color: #a5b4fc;
     margin-bottom: 16px;
   }
 
-  .empty-history h3 {
+  h3 {
     margin: 0 0 8px 0;
     color: #374151;
   }
 
-  .empty-history p {
+  p {
     color: #6b7280;
     margin-bottom: 24px;
   }
+}
 
 @media (max-width: 768px) {
   .history-container {

@@ -28,7 +28,8 @@ public class CommentService : ICommentService
         var comment = new Comment
         {
             Content = dto.Content,
-            TaskId = dto.TaskId,
+            TaskId = dto.TaskId ?? Guid.Empty,        // cast Guid? → Guid
+            BacklogItemId = dto.BacklogItemId,         // Guid? → Guid? (nullable ok)
             AuthorId = authorId,
             CreatedAt = DateTime.UtcNow
         };
