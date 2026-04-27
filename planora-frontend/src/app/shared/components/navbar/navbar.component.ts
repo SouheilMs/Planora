@@ -16,7 +16,6 @@ import { WorkspaceService } from '../../../core/services/workspace.service';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     MatIconModule,
     MatButtonModule,
     MatMenuModule,
@@ -113,7 +112,7 @@ import { WorkspaceService } from '../../../core/services/workspace.service';
           }
           @for (invitation of pendingInvitations; track invitation.id) {
             <div class="invite-item" (click)="$event.stopPropagation()">
-              <div class="invite-dot">{{ invitation.workspaceName?.charAt(0)?.toUpperCase() }}</div>
+              <div class="invite-dot">{{ invitation.workspaceName.charAt(0).toUpperCase() }}</div>
               <div class="invite-info">
                 <strong>{{ invitation.workspaceName }}</strong>
                 <span>{{ invitation.email }}</span>

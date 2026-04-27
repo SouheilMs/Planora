@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,9 +23,9 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-workspaces',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule,
+    CommonModule, MatCardModule, MatButtonModule, MatIconModule,
     MatSnackBarModule, MatDialogModule, MatPaginatorModule, LoadingComponent,
-    ConfirmDialogComponent, ReactiveFormsModule, MatInputModule, MatFormFieldModule,
+    ReactiveFormsModule, MatInputModule, MatFormFieldModule,
   ],
   template: `
     <div class="page-container">

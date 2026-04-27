@@ -167,14 +167,14 @@ export class ProjectFormDialogComponent {
         error: (err) => { this.submitting = false; this.snackBar.open(err?.error?.message || 'Failed to update project', 'Close', { duration: 3000 }); }
       });
     } else {
-      this.projectService.createProject({ name, description: description || '', startDate, endDate, workspaceId: this.data?.workspaceId || '', projectManagerId: this.data?.projectManagerId || '', color: '#4f46e5' })
-.subscribe({
-        next: (response) => {
-          this.submitting = false;
-          if (response.success) { this.snackBar.open('Project created successfully', 'Close', { duration: 3000 }); this.dialogRef.close(true); }
-        },
-        error: (err) => { this.submitting = false; this.snackBar.open(err?.error?.message || 'Failed to create project', 'Close', { duration: 3000 }); }
-      });
+      this.projectService.createProject({ name, description: description || '', startDate, endDate, workspaceId: this.data?.workspaceId || '', projectManagerId: this.data?.projectManagerId || '' })
+        .subscribe({
+          next: (response) => {
+            this.submitting = false;
+            if (response.success) { this.snackBar.open('Project created successfully', 'Close', { duration: 3000 }); this.dialogRef.close(true); }
+          },
+          error: (err) => { this.submitting = false; this.snackBar.open(err?.error?.message || 'Failed to create project', 'Close', { duration: 3000 }); }
+        });
     }
   }
 }

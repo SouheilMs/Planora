@@ -17,16 +17,14 @@
       <h1>Projects</h1>
       <p class="header-subtitle">Manage and track your team's projects</p>
     </div>
-    
+
   </div>
 
   <!-- ── SEARCH BAR ── -->
   <div class="search-bar-wrapper">
     <div class="search-bar">
       <mat-icon class="search-icon">search</mat-icon>
-      <input [formControl]="searchCtrl"
-             placeholder="Search projects by name..."
-             class="search-input" />
+      <input [formControl]="searchCtrl" placeholder="Search projects by name..." class="search-input" />
       @if (searchCtrl.value) {
       <button class="search-clear" (click)="searchCtrl.setValue('')">
         <mat-icon>close</mat-icon>
@@ -95,9 +93,9 @@
       <!-- Description -->
       <p class="project-description">
         {{
- (project.description?.length ?? 0) > 110
-                  ? (project.description | slice:0:110) + '…'
-                  : project.description || 'No description provided.'
+        project.description.length > 100
+        ? (project.description | slice:0:100) + '…'
+        : project.description || 'No description provided.'
         }}
       </p>
 
@@ -124,8 +122,7 @@
           <span class="progress-pct">{{ project.progressPercentage || 0 }}%</span>
         </div>
         <div class="progress-track">
-          <div class="progress-fill"
-               [style.width.%]="project.progressPercentage || 0">
+          <div class="progress-fill" [style.width.%]="project.progressPercentage || 0">
           </div>
         </div>
       </div>
@@ -144,11 +141,8 @@
 
   <!-- ── PAGINATOR ── -->
   <div class="paginator-wrapper">
-    <mat-paginator [length]="totalCount"
-                   [pageSize]="pageSize"
-                   [pageSizeOptions]="[6, 12, 24]"
-                   (page)="onPageChange($event)"
-                   class="paginator">
+    <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[6, 12, 24]"
+      (page)="onPageChange($event)" class="paginator">
     </mat-paginator>
   </div>
   }

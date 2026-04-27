@@ -70,7 +70,7 @@ export interface RichComment {
 
   <!-- ═══════════ COMPOSER ═══════════ -->
   <div class="rce-composer" *ngIf="!editMode" [class.rce-composer--active]="composerOpen">
-    <div class="rce-av rce-av--me">{{ currentUserName?.charAt(0)?.toUpperCase() }}</div>
+    <div class="rce-av rce-av--me">{{ currentUserName.charAt(0).toUpperCase() }}</div>
 
     <div class="rce-editor-wrap" [class.focused]="composerOpen">
 

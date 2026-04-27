@@ -84,7 +84,8 @@
           @for (project of projects; track project.id) {
           <mat-card class="project-card" [routerLink]="['/projects', project.id]">
             <mat-card-header>
-              <div mat-card-avatar class="project-avatar" style="background: linear-gradient(135deg, #4f46e5, #06b6d4);">
+              <div mat-card-avatar class="project-avatar"
+                style="background: linear-gradient(135deg, #4f46e5, #06b6d4);">
                 {{ project.name.charAt(0) }}
               </div>
               <mat-card-title>{{ project.name }}</mat-card-title>
@@ -93,7 +94,8 @@
               </mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <p class="project-description">{{ (project.description?.length ?? 0) > 100 ? (project.description | slice:0:100) + '...' : project.description }}</p>
+              <p class="project-description">{{ project.description.length > 100 ? (project.description | slice:0:100) +
+                '...' : project.description }}</p>
               <div class="project-stats">
                 <div class="stat">
                   <mat-icon>people</mat-icon>

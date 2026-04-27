@@ -39,18 +39,12 @@
     <div class="col-main">
 
       <!-- Title -->
-      <textarea class="task-title"
-                [(ngModel)]="editTitle"
-                (blur)="saveTitle()"
-                (keydown.enter)="$event.preventDefault(); saveTitle()"
-                rows="2"
-                placeholder="Titre de la tâche...">
+      <textarea class="task-title" [(ngModel)]="editTitle" (blur)="saveTitle()"
+        (keydown.enter)="$event.preventDefault(); saveTitle()" rows="2" placeholder="Titre de la tâche...">
       </textarea>
 
-      <app-backlog-extras-panel [backlogItemId]="task?.id ?? null"
-                                [projectId]="projectId"
-                                [triggerAction]="devAction"
-                                (devUpdated)="onDevUpdated()">
+      <app-backlog-extras-panel [backlogItemId]="task.id" [projectId]="projectId" [triggerAction]="devAction"
+        (devUpdated)="onDevUpdated()">
       </app-backlog-extras-panel>
 
       <!-- ══ SOUS-TÂCHES ══ -->
@@ -69,29 +63,20 @@
           <!-- Liste sous-tâches -->
           <div class="subtask-row" *ngFor="let st of subTasks" [class.st-done]="st.status === 2">
 
-            <button class="st-status-btn"
-                    [class.st-status--todo]="(st.status ?? 0) === 0"
-                    [class.st-status--inprogress]="(st.status ?? 0) === 1"
-                    [class.st-status--done]="(st.status ?? 0) === 2"
-                    (click)="cycleSubTaskStatus(st)"
-                    matTooltip="Changer le statut">
-              <mat-icon *ngIf="(st.status ?? 0) === 0">radio_button_unchecked</mat-icon>
-              <mat-icon *ngIf="(st.status ?? 0) === 1">timelapse</mat-icon>
-              <mat-icon *ngIf="(st.status ?? 0) === 2">check_circle</mat-icon>
+            <button class="st-status-btn" [class.st-status--todo]="st.status === 0"
+              [class.st-status--inprogress]="st.status === 1" [class.st-status--done]="st.status === 2"
+              (click)="cycleSubTaskStatus(st)" matTooltip="Changer le statut">
+              <mat-icon *ngIf="st.status === 0">radio_button_unchecked</mat-icon>
+              <mat-icon *ngIf="st.status === 1">timelapse</mat-icon>
+              <mat-icon *ngIf="st.status === 2">check_circle</mat-icon>
             </button>
 
-            <span class="st-title"
-                  *ngIf="editingSubTaskId !== st.id"
-                  (click)="startEditSubTask(st)">
+            <span class="st-title" *ngIf="editingSubTaskId !== st.id" (click)="startEditSubTask(st)">
               {{ st.title }}
             </span>
-            <input *ngIf="editingSubTaskId === st.id"
-                   class="st-input"
-                   [(ngModel)]="editSubTaskTitle"
-                   (blur)="saveSubTaskEdit(st)"
-                   (keydown.enter)="saveSubTaskEdit(st)"
-                   (keydown.escape)="cancelSubTaskEdit()"
-                   autofocus>
+            <input *ngIf="editingSubTaskId === st.id" class="st-input" [(ngModel)]="editSubTaskTitle"
+              (blur)="saveSubTaskEdit(st)" (keydown.enter)="saveSubTaskEdit(st)" (keydown.escape)="cancelSubTaskEdit()"
+              autofocus>
 
             <span class="st-tag" [ngClass]="getSubTaskStatusClass(st)">
               {{ getSubTaskStatusLabel(st) }}
@@ -104,12 +89,8 @@
 
           <!-- Formulaire ajout -->
           <div class="st-add" *ngIf="addingSubTask">
-            <input class="st-add-input"
-                   [(ngModel)]="newSubTaskTitle"
-                   placeholder="Titre de la sous-tâche..."
-                   (keydown.enter)="createSubTask()"
-                   (keydown.escape)="addingSubTask = false"
-                   autofocus>
+            <input class="st-add-input" [(ngModel)]="newSubTaskTitle" placeholder="Titre de la sous-tâche..."
+              (keydown.enter)="createSubTask()" (keydown.escape)="addingSubTask = false" autofocus>
             <button class="btn-primary" (click)="createSubTask()" [disabled]="!newSubTaskTitle.trim()">Créer</button>
             <button class="btn-ghost" (click)="addingSubTask = false; newSubTaskTitle = ''">Annuler</button>
           </div>
@@ -126,30 +107,30 @@
         <div class="section-label">Activité</div>
         <div class="activity-tabs">
           <button class="at-tab" [class.active]="activityTab === 'all'" (click)="activityTab = 'all'">Tout</button>
-          <button class="at-tab" [class.active]="activityTab === 'comments'" (click)="activityTab = 'comments'">Commentaires</button>
-          <button class="at-tab" [class.active]="activityTab === 'history'" (click)="activityTab = 'history'">Historique</button>
+          <button class="at-tab" [class.active]="activityTab === 'comments'"
+            (click)="activityTab = 'comments'">Commentaires</button>
+          <button class="at-tab" [class.active]="activityTab === 'history'"
+            (click)="activityTab = 'history'">Historique</button>
         </div>
 
         <ng-container *ngIf="activityTab !== 'history'">
-          <app-rich-comment-editor [backlogItemId]="task?.id ?? null"
-                                   [currentUserId]="currentUserId"
-                                   [currentUserName]="currentUserName"
-                                   [comments]="richComments"
-                                   (saved)="onCommentSaved($event)"
-                                   (deleted)="onCommentDeleted($event)">
+          <app-rich-comment-editor [backlogItemId]="task.id" [currentUserId]="currentUserId"
+            [currentUserName]="currentUserName" [comments]="richComments" (saved)="onCommentSaved($event)"
+            (deleted)="onCommentDeleted($event)">
           </app-rich-comment-editor>
         </ng-container>
 
         <ng-container *ngIf="activityTab === 'history'">
           <div class="history-row" *ngFor="let a of activity">
-            <div class="av av--ghost">{{ a.authorName?.charAt(0)?.toUpperCase() }}</div>
+            <div class="av av--ghost">{{ a.authorName.charAt(0).toUpperCase() }}</div>
             <div class="history-line">
               <strong>{{ a.authorName }}</strong> {{ a.message }}
               <span class="h-date">· {{ a.createdAt | date:'d MMM yyyy, HH:mm' }}</span>
             </div>
           </div>
           <div class="empty-state" *ngIf="!activity.length">
-            <mat-icon>history</mat-icon><p>Aucun historique</p>
+            <mat-icon>history</mat-icon>
+            <p>Aucun historique</p>
           </div>
         </ng-container>
       </div>
@@ -161,8 +142,8 @@
       <!-- Status -->
       <div class="aside-status-wrap">
         <div style="position:relative">
-          <button class="status-pill" [ngClass]="'sp-' + (task.status ?? 0)" (click)="toggleStatusMenu()">
-            {{ getStatusLabel(task.status ?? 0) }}
+          <button class="status-pill" [ngClass]="'sp-' + task.status" (click)="toggleStatusMenu()">
+            {{ getStatusLabel(task.status) }}
             <mat-icon>arrow_drop_down</mat-icon>
           </button>
           <div class="dropdown" *ngIf="statusMenuOpen">
@@ -204,13 +185,13 @@
           <!-- Priorité -->
           <div class="dg-label">Priorité</div>
           <div class="dg-value dg-clickable" style="position:relative" (click)="priorityMenuOpen = !priorityMenuOpen">
-            <span class="prio-icon" [ngClass]="'pi-' + (task.priority ?? 0)">
-              <mat-icon>{{ getPrioIcon(task.priority ?? 0) }}</mat-icon>
+            <span class="prio-icon" [ngClass]="'pi-' + task.priority">
+              <mat-icon>{{ getPrioIcon(task.priority) }}</mat-icon>
             </span>
-            <span class="dg-text">{{ getPrioLabel(task.priority ?? 0) }}</span>
+            <span class="dg-text">{{ getPrioLabel(task.priority) }}</span>
             <div class="dropdown dropdown--full" *ngIf="priorityMenuOpen" (click)="$event.stopPropagation()">
               <div class="dd-item" *ngFor="let p of priorities"
-                   (click)="selectPriority(p.value); $event.stopPropagation()">
+                (click)="selectPriority(p.value); $event.stopPropagation()">
                 <span class="prio-icon" [ngClass]="'pi-' + p.value"><mat-icon>{{ p.icon }}</mat-icon></span>
                 {{ p.label }}
               </div>
@@ -299,7 +280,7 @@
               </button>
             </div>
 
-            <div class="dev-commits-list" *ngIf="b.commits?.length">
+            <div class="dev-commits-list" *ngIf="b.commits.length">
               <div class="dev-commit-item" *ngFor="let c of b.commits">
                 <span class="dev-commit-hash">{{ c.hash.slice(0,7) }}</span>
                 <span class="dev-commit-msg">{{ c.message }}</span>
@@ -309,7 +290,7 @@
               </div>
             </div>
 
-            <div class="dev-no-commits" *ngIf="!b.commits?.length">
+            <div class="dev-no-commits" *ngIf="!b.commits.length">
               <span>Aucun commit</span>
               <button class="dev-add-commit-link" (click)="openCommitModal(b)">+ Ajouter</button>
             </div>
@@ -340,16 +321,12 @@
       </div>
       <div class="modal-body">
         <label>Nom de la branche *</label>
-        <input class="modal-input" [(ngModel)]="newBranchName"
-               placeholder="ex: feature/login-page"
-               (keydown.enter)="submitBranch()"
-               (keydown.escape)="closeDevModal()"
-               autofocus>
+        <input class="modal-input" [(ngModel)]="newBranchName" placeholder="ex: feature/login-page"
+          (keydown.enter)="submitBranch()" (keydown.escape)="closeDevModal()" autofocus>
         <small class="modal-hint">Convention : feature/nom, fix/nom, hotfix/nom</small>
       </div>
       <div class="modal-footer">
-        <button class="btn-primary" (click)="submitBranch()"
-                [disabled]="!newBranchName.trim() || savingBranch">
+        <button class="btn-primary" (click)="submitBranch()" [disabled]="!newBranchName.trim() || savingBranch">
           {{ savingBranch ? 'Création...' : 'Créer' }}
         </button>
         <button class="btn-ghost" (click)="closeDevModal()">Annuler</button>
@@ -367,18 +344,15 @@
       </div>
       <div class="modal-body">
         <label>Hash du commit *</label>
-        <input class="modal-input modal-input--mono" [(ngModel)]="newCommitHash"
-               placeholder="ex: a1b2c3d">
+        <input class="modal-input modal-input--mono" [(ngModel)]="newCommitHash" placeholder="ex: a1b2c3d">
         <label style="margin-top:12px">Message *</label>
-        <input class="modal-input" [(ngModel)]="newCommitMsg"
-               placeholder="ex: feat: add login page"
-               (keydown.enter)="submitCommit()"
-               (keydown.escape)="closeDevModal()">
+        <input class="modal-input" [(ngModel)]="newCommitMsg" placeholder="ex: feat: add login page"
+          (keydown.enter)="submitCommit()" (keydown.escape)="closeDevModal()">
         <small class="modal-hint">Convention : feat:, fix:, docs:, refactor:</small>
       </div>
       <div class="modal-footer">
         <button class="btn-primary" (click)="submitCommit()"
-                [disabled]="!newCommitHash.trim() || !newCommitMsg.trim() || savingCommit">
+          [disabled]="!newCommitHash.trim() || !newCommitMsg.trim() || savingCommit">
           {{ savingCommit ? 'Enregistrement...' : 'Enregistrer' }}
         </button>
         <button class="btn-ghost" (click)="closeDevModal()">Annuler</button>
@@ -398,17 +372,14 @@
         <div class="dd-loading" *ngIf="membersLoading" style="padding: 16px 20px;">
           <mat-icon>hourglass_empty</mat-icon> Chargement...
         </div>
-        <div class="dd-item"
-             (click)="selectAssignee(null); assignModalOpen = false"
-             style="padding: 12px 20px; border-bottom: 1px solid #ebecf0;">
+        <div class="dd-item" (click)="selectAssignee(null); assignModalOpen = false"
+          style="padding: 12px 20px; border-bottom: 1px solid #ebecf0;">
           <div class="av av--xs av--ghost">–</div>
           <span>Non assignée</span>
         </div>
-        <div class="dd-item"
-             *ngFor="let m of projectMembers"
-             (click)="selectAssignee(m); assignModalOpen = false"
-             style="padding: 12px 20px; border-bottom: 1px solid #ebecf0;">
-          <div class="av av--xs">{{ m.fullName?.charAt(0)?.toUpperCase() }}</div>
+        <div class="dd-item" *ngFor="let m of projectMembers" (click)="selectAssignee(m); assignModalOpen = false"
+          style="padding: 12px 20px; border-bottom: 1px solid #ebecf0;">
+          <div class="av av--xs">{{ m.fullName.charAt(0).toUpperCase() }}</div>
           <span>{{ m.fullName }}</span>
         </div>
       </div>
@@ -428,22 +399,18 @@
       </div>
       <div class="modal-body">
         <div class="sp-grid">
-          <button class="sp-btn"
-                  *ngFor="let pt of fibPoints"
-                  [class.sp-selected]="editStoryPoints === pt"
-                  (click)="selectStoryPoints(pt); storyPointsModalOpen = false">
+          <button class="sp-btn" *ngFor="let pt of fibPoints" [class.sp-selected]="editStoryPoints === pt"
+            (click)="selectStoryPoints(pt); storyPointsModalOpen = false">
             {{ pt }}
           </button>
-          <button class="sp-btn sp-btn--q"
-                  [class.sp-selected]="editStoryPoints === -1"
-                  (click)="selectStoryPoints(-1); storyPointsModalOpen = false">
+          <button class="sp-btn sp-btn--q" [class.sp-selected]="editStoryPoints === -1"
+            (click)="selectStoryPoints(-1); storyPointsModalOpen = false">
             ?
           </button>
         </div>
       </div>
       <div class="modal-footer" style="justify-content: space-between;">
-        <button class="btn-ghost"
-                (click)="selectStoryPoints(-1); storyPointsModalOpen = false">
+        <button class="btn-ghost" (click)="selectStoryPoints(-1); storyPointsModalOpen = false">
           Effacer l'estimation
         </button>
         <button class="btn-ghost" (click)="storyPointsModalOpen = false">Annuler</button>

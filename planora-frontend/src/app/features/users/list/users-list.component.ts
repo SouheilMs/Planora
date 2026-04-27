@@ -75,7 +75,7 @@ import { LoadingComponent } from '../../../shared/components/loading/loading.com
             @for (user of users; track user.id) {
               <div class="user-card">
                 <div class="user-avatar" [class.inactive-avatar]="!user.isActive">
-                  {{ user.fullName?.charAt(0) || user.userName?.charAt(0) || 'U' }}
+                  {{ user.fullName.charAt(0) || user.userName.charAt(0) || 'U' }}
                 </div>
                 <div class="user-info">
                   <div class="user-name">

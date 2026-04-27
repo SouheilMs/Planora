@@ -32,7 +32,7 @@ import { InviteWorkspaceDialogComponent } from './modal/invite-workspace-dialog.
     MatCardModule, MatButtonModule, MatIconModule, MatTableModule,
     MatProgressBarModule, MatSnackBarModule, MatDialogModule,
     MatTooltipModule, MatTabsModule, MatFormFieldModule,
-    MatSelectModule, MatDividerModule, LoadingComponent, ErrorDialogComponent
+    MatSelectModule, MatDividerModule, LoadingComponent
   ],
   templateUrl: './workspace-detail.component.html',
   styleUrls: ['./workspace-detail.component.scss']
@@ -176,7 +176,7 @@ export class WorkspaceDetailComponent implements OnInit {
         this.snackBar.open('Project created successfully!', 'Close', { duration: 3000 });
       }
     });
-  }  editProject(project: Project): void {
+  } editProject(project: Project): void {
     const dialogRef = this.dialog.open(ProjectFormDialogComponent, {
       width: '600px',
       data: project
@@ -335,7 +335,7 @@ export class WorkspaceDetailComponent implements OnInit {
         {{ inviting ? 'Sending...' : 'Send invitation' }}
       </button>
     </mat-dialog-actions>
-  `,  styles: [`
+  `, styles: [`
     .full-width { width: 100%; }
 .invite-btn {
   background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
