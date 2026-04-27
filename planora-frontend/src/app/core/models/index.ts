@@ -101,6 +101,7 @@ export interface CreateProjectRequest {
   startDate: string;
   endDate: string;
   projectManagerId: string;
+  color?: string;
 }
 
 export interface Workspace {
@@ -379,7 +380,7 @@ export interface BacklogCommit {
   id: string;
   backlogItemId: string;
   hash: string;
-  branchId?: string; 
+  branchId?: string;
   message: string;
   createdById: string;
   createdByName: string;
