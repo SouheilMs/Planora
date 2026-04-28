@@ -78,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<ITaskService, TaskService>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<IChatInboxService, ChatInboxService>();
         services.AddScoped<ISprintService, SprintService>();
         services.AddScoped<IBacklogService, BacklogService>();
         services.AddScoped<IDashboardService, DashboardService>();

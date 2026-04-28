@@ -46,27 +46,23 @@
     </div>
 
     <div class="project-nav">
-      <a [routerLink]="['/projects', currentProject.id, 'backlog']"
-         routerLinkActive="active"
-         class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'backlog']" routerLinkActive="active" class="project-nav-item">
         <mat-icon>inbox</mat-icon>
         <span>Backlog</span>
       </a>
-      <a [routerLink]="['/projects', currentProject.id, 'board']"
-         routerLinkActive="active"
-         class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'inbox']" routerLinkActive="active" class="project-nav-item">
+        <mat-icon>forum</mat-icon>
+        <span>Inbox Chat</span>
+      </a>
+      <a [routerLink]="['/projects', currentProject.id, 'board']" routerLinkActive="active" class="project-nav-item">
         <mat-icon>view_kanban</mat-icon>
         <span>Tableau Kanban</span>
       </a>
-      <a [routerLink]="['/projects', currentProject.id, 'tasks']"
-         routerLinkActive="active"
-         class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'tasks']" routerLinkActive="active" class="project-nav-item">
         <mat-icon>task_alt</mat-icon>
         <span>Tâches</span>
       </a>
-      <a [routerLink]="['/projects', currentProject.id, 'history']"
-         routerLinkActive="active"
-         class="project-nav-item">
+      <a [routerLink]="['/projects', currentProject.id, 'history']" routerLinkActive="active" class="project-nav-item">
         <mat-icon>history</mat-icon>
         <span>Historique</span>
       </a>
