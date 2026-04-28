@@ -23,4 +23,6 @@ public class ApplicationUser : IdentityUser
     public ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Project> ManagedProjects { get; set; } = new List<Project>();
+    public ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
+    public ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
 }
