@@ -1,9 +1,11 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Planora.Application.DTOs.ChatInbox;
 using Planora.Application.DTOs.Common;
 using Planora.Application.Interfaces;
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Planora.Controllers;
 
@@ -67,5 +69,15 @@ public class ChatInboxController : ControllerBase
 
         var result = await _chatInboxService.SendMessageAsync(projectId, sessionId, dto, userId);
         return Ok(ApiResponseDto<ChatMessageDto>.SuccessResult(result, "Message sent successfully."));
+    }
+
+    [HttpDelete("sessions/{sessionId:guid}")]
+    public async Task<IActionResult> DeleteSession(Guid projectId, Guid sessionId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(ApiResponseDto<object>.ErrorResult("User not authenticated."));
+
+        await _chatInboxService.DeleteSessionAsync(projectId, sessionId, userId);
+        return Ok(ApiResponseDto<object>.SuccessResult(null, "Conversation supprimée."));
     }
 }

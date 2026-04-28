@@ -1,15 +1,16 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Planora.Application;
 using Planora.Infrastructure;
 using Planora.Infrastructure.Data;
 using Planora.Infrastructure.Identity;
 using Planora.Middleware;
+using Planora.Hubs;
 using Serilog;
 using System;
 using System.Threading.Tasks;
 
-// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("logs/planora-.txt", rollingInterval: RollingInterval.Day)
@@ -19,14 +20,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-// Use Serilog
+var testKey = builder.Configuration["OpenAI:ApiKey"];
+Console.WriteLine($">>> OpenAI Key loaded: '{testKey}'");
+
 builder.Host.UseSerilog();
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Planora API", Version = "v1" });
@@ -55,11 +56,22 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Clean Architecture layers
+// ✅ AddSignalR EN PREMIER
+builder.Services.AddSignalR().AddJsonProtocol(options =>
+{
+    options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+});
+
+// ✅ Ensuite IHubClients — après AddSignalR
+builder.Services.AddSingleton<IHubClients>(sp =>
+{
+    var hubContext = sp.GetRequiredService<IHubContext<ChatHub>>();
+    return hubContext.Clients;
+});
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// CORS – allowed origins are configurable via Cors:AllowedOrigins in appsettings
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? ["http://localhost:4200", "http://localhost:5000"];
 
@@ -93,18 +105,16 @@ static async Task SeedAdminUser(IServiceProvider services)
 
 var app = builder.Build();
 
-// Apply pending migrations and seed roles
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-   await db.Database.MigrateAsync();
+    await db.Database.MigrateAsync();
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await RoleSeeder.SeedRolesAsync(roleManager);
     await SeedAdminUser(scope.ServiceProvider);
 }
 
-// Middleware pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseSwagger();
@@ -115,5 +125,6 @@ app.UseCors("AllowAngularApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

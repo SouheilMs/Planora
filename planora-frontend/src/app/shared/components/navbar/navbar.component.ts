@@ -54,14 +54,7 @@ import { WorkspaceService } from '../../../core/services/workspace.service';
       <div class="navbar-right">
 
         <!-- Search -->
-        <div class="search-bar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <span>Rechercher…</span>
-          <kbd>⌘K</kbd>
-        </div>
+      
 
         <!-- Notifications -->
         @if (authService.user$ | async; as user) {
