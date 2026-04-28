@@ -69,6 +69,39 @@ export interface Project {
   progressPercentage: number;
 }
 
+export interface ChatSession {
+  id: string;
+  projectId: string;
+  title: string;
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt?: string | null;
+  messageCount: number;
+  lastMessageAt?: string | null;
+  lastMessageContent: string;
+  lastMessageSenderName: string;
+  lastMessageIsAssistant: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  chatSessionId: string;
+  senderUserId: string;
+  senderName: string;
+  isAssistant: boolean;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreateChatSessionRequest {
+  title: string;
+}
+
+export interface SendChatMessageRequest {
+  content: string;
+}
+
 export interface ProjectMember {
   userId: string;
   fullName: string;
@@ -101,6 +134,7 @@ export interface CreateProjectRequest {
   startDate: string;
   endDate: string;
   projectManagerId: string;
+  color?: string;
 }
 
 export interface Workspace {
@@ -379,7 +413,7 @@ export interface BacklogCommit {
   id: string;
   backlogItemId: string;
   hash: string;
-  branchId?: string; 
+  branchId?: string;
   message: string;
   createdById: string;
   createdByName: string;

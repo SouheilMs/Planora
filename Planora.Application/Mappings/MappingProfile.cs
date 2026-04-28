@@ -1,6 +1,7 @@
 // Planora.Application/Mappings/MappingProfile.cs
 using AutoMapper;
 using Planora.Application.DTOs.Auth;
+using Planora.Application.DTOs.ChatInbox;
 using Planora.Application.DTOs.Backlog;
 using Planora.Application.DTOs.Comments;
 using Planora.Application.DTOs.Projects;
@@ -64,6 +65,30 @@ public class MappingProfile : Profile
                     : string.Empty));
 
         CreateMap<CreateCommentDto, Comment>();
+
+        // Chat inbox mappings
+        CreateMap<ChatSession, ChatSessionDto>()
+            .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src =>
+                src.CreatedByUser != null
+                    ? $"{src.CreatedByUser.FirstName} {src.CreatedByUser.LastName}"
+                    : string.Empty))
+            .ForMember(dest => dest.MessageCount, opt => opt.MapFrom(src => src.Messages.Count))
+            .ForMember(dest => dest.LastMessageAt, opt => opt.MapFrom(src =>
+                src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => (DateTime?)m.CreatedAt).FirstOrDefault()))
+            .ForMember(dest => dest.LastMessageContent, opt => opt.MapFrom(src =>
+                src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.Content).FirstOrDefault() ?? string.Empty))
+            .ForMember(dest => dest.LastMessageSenderName, opt => opt.MapFrom(src =>
+                src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.IsAssistant ? "Planora AI" : m.SenderUser != null ? $"{m.SenderUser.FirstName} {m.SenderUser.LastName}" : string.Empty).FirstOrDefault() ?? string.Empty))
+            .ForMember(dest => dest.LastMessageIsAssistant, opt => opt.MapFrom(src =>
+                src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.IsAssistant).FirstOrDefault()));
+
+        CreateMap<ChatMessage, ChatMessageDto>()
+            .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src =>
+                src.IsAssistant
+                    ? "Planora AI"
+                    : src.SenderUser != null
+                    ? $"{src.SenderUser.FirstName} {src.SenderUser.LastName}"
+                    : string.Empty));
 
         // Sprint mappings
         CreateMap<Sprint, SprintDto>()

@@ -4,6 +4,8 @@ import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ApiResponse,
+  ChatMessage,
+  ChatSession,
   CreateProjectRequest,
   PagedResult,
   Project,
@@ -67,5 +69,21 @@ export class ProjectService {
 
   rejectInvitation(invitationId: string): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/invitations/${invitationId}/reject`, {});
+  }
+
+  getChatSessions(projectId: string): Observable<ApiResponse<ChatSession[]>> {
+    return this.http.get<ApiResponse<ChatSession[]>>(`${this.apiUrl}/${projectId}/chat/sessions`);
+  }
+
+  createChatSession(projectId: string, title: string): Observable<ApiResponse<ChatSession>> {
+    return this.http.post<ApiResponse<ChatSession>>(`${this.apiUrl}/${projectId}/chat/sessions`, { title });
+  }
+
+  getChatMessages(projectId: string, sessionId: string): Observable<ApiResponse<ChatMessage[]>> {
+    return this.http.get<ApiResponse<ChatMessage[]>>(`${this.apiUrl}/${projectId}/chat/sessions/${sessionId}/messages`);
+  }
+
+  sendChatMessage(projectId: string, sessionId: string, content: string): Observable<ApiResponse<ChatMessage>> {
+    return this.http.post<ApiResponse<ChatMessage>>(`${this.apiUrl}/${projectId}/chat/sessions/${sessionId}/messages`, { content });
   }
 }
