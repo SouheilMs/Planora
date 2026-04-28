@@ -294,6 +294,64 @@
   border-radius: 18px 18px 6px 18px;
 }
 
+.message.chat-command .bubble {
+  position: relative;
+  border-color: rgba(79, 70, 229, 0.18);
+  background: linear-gradient(180deg, rgba(79, 70, 229, 0.07), rgba(6, 182, 212, 0.05));
+}
+
+.message-command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.command-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.14);
+  color: var(--primary-dark);
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+
+.command-body {
+  color: #334155;
+  line-height: 1.55;
+  flex: 1 1 0;
+}
+
+.message.assistant {
+  max-width: min(78%, 680px);
+}
+
+.message.assistant .bubble {
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+.message.assistant .message-meta {
+  color: #64748b;
+}
+
+.message.assistant .sender {
+  color: #0f172a;
+}
+
+.composer-hint {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: -2px;
+}
+
 .composer {
   display: grid;
   gap: 12px;

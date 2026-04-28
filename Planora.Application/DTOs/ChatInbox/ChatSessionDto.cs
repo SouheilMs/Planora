@@ -13,4 +13,5 @@ public class ChatSessionDto
   public DateTime? LastMessageAt { get; set; }
   public string LastMessageContent { get; set; } = string.Empty;
   public string LastMessageSenderName { get; set; } = string.Empty;
+  public bool LastMessageIsAssistant { get; set; }
 }

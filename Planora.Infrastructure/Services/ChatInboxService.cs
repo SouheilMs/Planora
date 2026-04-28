@@ -9,10 +9,12 @@ namespace Planora.Infrastructure.Services;
 public class ChatInboxService : IChatInboxService
 {
   private readonly ApplicationDbContext _dbContext;
+  private readonly IChatbotService _chatbotService;
 
-  public ChatInboxService(ApplicationDbContext dbContext)
+  public ChatInboxService(ApplicationDbContext dbContext, IChatbotService chatbotService)
   {
     _dbContext = dbContext;
+    _chatbotService = chatbotService;
   }
 
   public async Task<IEnumerable<ChatSessionDto>> GetSessionsAsync(Guid projectId, string userId)
@@ -87,7 +89,7 @@ public class ChatInboxService : IChatInboxService
   {
     await EnsureProjectMemberAsync(projectId, userId);
 
-    var session = await _dbContext.ChatSessions
+    var session = await SessionQuery()
         .FirstOrDefaultAsync(s => s.Id == sessionId && s.ProjectId == projectId)
         ?? throw new KeyNotFoundException("Chat session not found.");
 
@@ -100,6 +102,7 @@ public class ChatInboxService : IChatInboxService
       Id = Guid.NewGuid(),
       ChatSessionId = session.Id,
       SenderUserId = userId,
+      IsAssistant = false,
       Content = content,
       CreatedAt = DateTime.UtcNow
     };
@@ -107,10 +110,36 @@ public class ChatInboxService : IChatInboxService
     session.UpdatedAt = DateTime.UtcNow;
 
     await _dbContext.ChatMessages.AddAsync(message);
-    _dbContext.ChatSessions.Update(session);
     await _dbContext.SaveChangesAsync();
 
     await _dbContext.Entry(message).Reference(m => m.SenderUser).LoadAsync();
+
+    if (ShouldInvokeAssistant(content))
+    {
+      var prompt = ExtractAssistantPrompt(content);
+      var transcriptSession = await SessionQuery()
+          .FirstAsync(s => s.Id == session.Id);
+      var transcript = BuildSessionTranscript(transcriptSession);
+      var assistantResponse = await _chatbotService.GetResponseAsync(prompt, transcript);
+
+      if (!string.IsNullOrWhiteSpace(assistantResponse))
+      {
+        var assistantMessage = new ChatMessage
+        {
+          Id = Guid.NewGuid(),
+          ChatSessionId = session.Id,
+          SenderUserId = null,
+          IsAssistant = true,
+          Content = assistantResponse.Trim(),
+          CreatedAt = DateTime.UtcNow
+        };
+
+        session.UpdatedAt = assistantMessage.CreatedAt;
+        await _dbContext.ChatMessages.AddAsync(assistantMessage);
+        await _dbContext.SaveChangesAsync();
+      }
+    }
+
     return MapMessageDto(message);
   }
 
@@ -150,7 +179,10 @@ public class ChatInboxService : IChatInboxService
       MessageCount = session.Messages.Count,
       LastMessageAt = lastMessage?.CreatedAt,
       LastMessageContent = lastMessage?.Content ?? string.Empty,
-      LastMessageSenderName = lastMessage?.SenderUser != null ? $"{lastMessage.SenderUser.FirstName} {lastMessage.SenderUser.LastName}".Trim() : string.Empty
+      LastMessageSenderName = lastMessage?.IsAssistant == true
+        ? "Planora AI"
+        : lastMessage?.SenderUser != null ? $"{lastMessage.SenderUser.FirstName} {lastMessage.SenderUser.LastName}".Trim() : string.Empty,
+      LastMessageIsAssistant = lastMessage?.IsAssistant ?? false
     };
   }
 
@@ -159,9 +191,42 @@ public class ChatInboxService : IChatInboxService
       {
         Id = message.Id,
         ChatSessionId = message.ChatSessionId,
-        SenderUserId = message.SenderUserId,
-        SenderName = message.SenderUser != null ? $"{message.SenderUser.FirstName} {message.SenderUser.LastName}".Trim() : string.Empty,
+        SenderUserId = message.SenderUserId ?? string.Empty,
+        SenderName = message.IsAssistant
+            ? "Planora AI"
+            : message.SenderUser != null ? $"{message.SenderUser.FirstName} {message.SenderUser.LastName}".Trim() : string.Empty,
+        IsAssistant = message.IsAssistant,
         Content = message.Content,
         CreatedAt = message.CreatedAt
       };
+
+  private static bool ShouldInvokeAssistant(string content)
+      => content.TrimStart().StartsWith("@chat", StringComparison.OrdinalIgnoreCase);
+
+  private static string ExtractAssistantPrompt(string content)
+  {
+    var trimmed = content.Trim();
+    var prompt = trimmed.Length > 5 ? trimmed[5..].Trim() : string.Empty;
+    return string.IsNullOrWhiteSpace(prompt)
+        ? "Review the session and help the team with the issue discussed here."
+        : prompt;
+  }
+
+  private static string BuildSessionTranscript(ChatSession session)
+  {
+    var lines = session.Messages
+        .OrderBy(message => message.CreatedAt)
+        .Select(message =>
+        {
+          var senderName = message.IsAssistant
+              ? "Planora AI"
+              : message.SenderUser != null
+                  ? $"{message.SenderUser.FirstName} {message.SenderUser.LastName}".Trim()
+                  : "Unknown";
+
+          return $"[{message.CreatedAt:yyyy-MM-dd HH:mm}] {senderName}: {message.Content}";
+        });
+
+    return string.Join(Environment.NewLine, lines);
+  }
 }

@@ -81,6 +81,7 @@ export interface ChatSession {
   lastMessageAt?: string | null;
   lastMessageContent: string;
   lastMessageSenderName: string;
+  lastMessageIsAssistant: boolean;
 }
 
 export interface ChatMessage {
@@ -88,6 +89,7 @@ export interface ChatMessage {
   chatSessionId: string;
   senderUserId: string;
   senderName: string;
+  isAssistant: boolean;
   content: string;
   createdAt: string;
 }

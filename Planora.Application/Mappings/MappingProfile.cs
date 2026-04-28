@@ -78,11 +78,15 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.LastMessageContent, opt => opt.MapFrom(src =>
                 src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.Content).FirstOrDefault() ?? string.Empty))
             .ForMember(dest => dest.LastMessageSenderName, opt => opt.MapFrom(src =>
-                src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.SenderUser != null ? $"{m.SenderUser.FirstName} {m.SenderUser.LastName}" : string.Empty).FirstOrDefault() ?? string.Empty));
+                src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.IsAssistant ? "Planora AI" : m.SenderUser != null ? $"{m.SenderUser.FirstName} {m.SenderUser.LastName}" : string.Empty).FirstOrDefault() ?? string.Empty))
+            .ForMember(dest => dest.LastMessageIsAssistant, opt => opt.MapFrom(src =>
+                src.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.IsAssistant).FirstOrDefault()));
 
         CreateMap<ChatMessage, ChatMessageDto>()
             .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src =>
-                src.SenderUser != null
+                src.IsAssistant
+                    ? "Planora AI"
+                    : src.SenderUser != null
                     ? $"{src.SenderUser.FirstName} {src.SenderUser.LastName}"
                     : string.Empty));
 

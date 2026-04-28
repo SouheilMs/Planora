@@ -118,7 +118,11 @@ export class ProjectInboxComponent implements OnInit, OnDestroy {
       next: response => {
         this.loading = false;
         this.sessions = response.success && response.data ? response.data : [];
-        this.selectedSession = this.sessions[0] || null;
+        if (this.selectedSession) {
+          this.selectedSession = this.sessions.find(session => session.id === this.selectedSession?.id) || this.sessions[0] || null;
+        } else {
+          this.selectedSession = this.sessions[0] || null;
+        }
 
         if (this.selectedSession) {
           this.loadMessages(projectId, this.selectedSession.id);
@@ -180,28 +184,18 @@ export class ProjectInboxComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const projectId = this.project.id;
+    const sessionId = this.selectedSession.id;
+
     this.sendingMessage = true;
     const content = this.messageForm.value.content?.trim() ?? '';
 
-    this.chatService.sendMessage(this.project.id, this.selectedSession.id, { content }).pipe(takeUntil(this.destroy$)).subscribe({
+    this.chatService.sendMessage(projectId, sessionId, { content }).pipe(takeUntil(this.destroy$)).subscribe({
       next: response => {
         this.sendingMessage = false;
         if (response.success && response.data) {
-          this.messages = [...this.messages, response.data];
           this.messageForm.reset();
-          const sessionIndex = this.sessions.findIndex(session => session.id === this.selectedSession?.id);
-          if (sessionIndex >= 0) {
-            const updatedSession: ChatSession = {
-              ...this.sessions[sessionIndex],
-              messageCount: this.sessions[sessionIndex].messageCount + 1,
-              lastMessageAt: response.data.createdAt,
-              lastMessageContent: response.data.content,
-              lastMessageSenderName: response.data.senderName,
-              updatedAt: response.data.createdAt
-            };
-            this.sessions = [updatedSession, ...this.sessions.filter(session => session.id !== updatedSession.id)];
-            this.selectedSession = updatedSession;
-          }
+          this.loadSessions(projectId);
         }
       },
       error: err => {
@@ -217,5 +211,15 @@ export class ProjectInboxComponent implements OnInit, OnDestroy {
 
   trackByMessageId(_: number, message: ChatMessage): string {
     return message.id;
+  }
+
+  isChatCommand(message: ChatMessage): boolean {
+    return message.content.trimStart().toLowerCase().startsWith('@chat');
+  }
+
+  chatCommandBody(message: ChatMessage): string {
+    const trimmed = message.content.trimStart();
+    const body = trimmed.length > 5 ? trimmed.slice(5).trimStart() : '';
+    return body.length > 0 ? body : 'Requesting AI review';
   }
 }

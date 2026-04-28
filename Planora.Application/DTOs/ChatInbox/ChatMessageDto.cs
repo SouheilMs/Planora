@@ -6,6 +6,7 @@ public class ChatMessageDto
   public Guid ChatSessionId { get; set; }
   public string SenderUserId { get; set; } = string.Empty;
   public string SenderName { get; set; } = string.Empty;
+  public bool IsAssistant { get; set; }
   public string Content { get; set; } = string.Empty;
   public DateTime CreatedAt { get; set; }
 }

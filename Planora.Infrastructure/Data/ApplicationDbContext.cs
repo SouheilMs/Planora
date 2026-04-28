@@ -135,6 +135,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.Property(x => x.Content)
                 .IsRequired()
                 .HasColumnType("nvarchar(max)");
+            b.Property(x => x.IsAssistant)
+                .HasDefaultValue(false);
             b.HasOne(x => x.ChatSession)
                 .WithMany(x => x.Messages)
                 .HasForeignKey(x => x.ChatSessionId)
@@ -142,7 +144,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.HasOne(x => x.SenderUser)
                 .WithMany(x => x.ChatMessages)
                 .HasForeignKey(x => x.SenderUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         });
     }
 
