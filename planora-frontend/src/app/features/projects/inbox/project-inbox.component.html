@@ -1,0 +1,126 @@
+<div class="inbox-page">
+  @if (loading) {
+  <app-loading></app-loading>
+  }
+
+  @if (!loading && project) {
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Project inbox</div>
+      <h1>{{ project.name }}</h1>
+      <p>Private sessions are visible only to project members.</p>
+    </div>
+    <a [routerLink]="['/projects', project.id]" class="back-link">
+      <mat-icon>arrow_back</mat-icon>
+      Back to project
+    </a>
+  </div>
+
+  <div class="inbox-shell">
+    <aside class="sessions-panel">
+      <div class="panel-header">
+        <div>
+          <span class="panel-kicker">Sessions</span>
+          <h2>Conversation threads</h2>
+        </div>
+        <span class="count">{{ sessions.length }}</span>
+      </div>
+
+      <form [formGroup]="sessionForm" (ngSubmit)="createSession()" class="session-create">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Session title</mat-label>
+          <input matInput formControlName="title" placeholder="Planning sync" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit" [disabled]="creatingSession || sessionForm.invalid">
+          <mat-icon>{{ creatingSession ? 'hourglass_empty' : 'add' }}</mat-icon>
+          {{ creatingSession ? 'Creating…' : 'Start session' }}
+        </button>
+      </form>
+
+      <div class="session-list">
+        @for (session of sessions; track trackBySessionId($index, session)) {
+        <button type="button" class="session-item" [class.active]="selectedSession?.id === session.id"
+          (click)="selectSession(session)">
+          <div class="session-top">
+            <div class="session-title">{{ session.title }}</div>
+            <span class="message-count">{{ session.messageCount }}</span>
+          </div>
+          <div class="session-meta">
+            <span>Created by {{ session.createdByName || 'Unknown' }}</span>
+            @if (session.lastMessageAt) {
+            <span>{{ session.lastMessageAt | date:'MMM d, HH:mm' }}</span>
+            }
+          </div>
+          <div class="session-preview" [class.empty]="!session.lastMessageContent">
+            {{ session.lastMessageContent || 'No messages yet' }}
+          </div>
+        </button>
+        } @empty {
+        <div class="empty-state">
+          <mat-icon>forum</mat-icon>
+          <p>No conversations yet</p>
+          <span>Start a session to begin a private project thread.</span>
+        </div>
+        }
+      </div>
+    </aside>
+
+    <section class="messages-panel">
+      @if (selectedSession) {
+      <div class="panel-header messages-header">
+        <div>
+          <span class="panel-kicker">Active session</span>
+          <h2>{{ selectedSession.title }}</h2>
+        </div>
+        <div class="session-stats">
+          <span>{{ selectedSession.messageCount }} messages</span>
+          <span>Created by {{ selectedSession.createdByName || 'Unknown' }}</span>
+        </div>
+      </div>
+
+      <div class="messages-list">
+        @for (message of messages; track trackByMessageId($index, message)) {
+        <article class="message" [class.mine]="message.senderUserId === currentUserId">
+          <div class="message-meta">
+            <span class="sender">{{ message.senderName || 'Unknown' }}</span>
+            <span class="time">{{ message.createdAt | date:'MMM d, HH:mm' }}</span>
+          </div>
+          <div class="bubble">{{ message.content }}</div>
+        </article>
+        } @empty {
+        <div class="empty-thread">
+          <mat-icon>chat_bubble_outline</mat-icon>
+          <p>No messages in this session yet</p>
+        </div>
+        }
+      </div>
+
+      <form class="composer" [formGroup]="messageForm" (ngSubmit)="sendMessage()">
+        <mat-form-field appearance="outline" class="composer-field">
+          <mat-label>Write a message</mat-label>
+          <textarea matInput rows="3" formControlName="content" placeholder="Share an update with the team"></textarea>
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit" [disabled]="sendingMessage || messageForm.invalid">
+          <mat-icon>{{ sendingMessage ? 'hourglass_empty' : 'send' }}</mat-icon>
+          {{ sendingMessage ? 'Sending…' : 'Send message' }}
+        </button>
+      </form>
+      } @else {
+      <div class="no-session">
+        <mat-icon>forum</mat-icon>
+        <h3>Select a session</h3>
+        <p>Pick an existing thread or create a new one on the left.</p>
+      </div>
+      }
+    </section>
+  </div>
+  }
+
+  @if (!loading && !project) {
+  <div class="not-found">
+    <mat-icon>folder_off</mat-icon>
+    <h3>Project not found</h3>
+    <a [routerLink]="['/projects']">Back to Projects</a>
+  </div>
+  }
+</div>

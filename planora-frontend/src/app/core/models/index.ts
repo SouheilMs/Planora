@@ -69,6 +69,37 @@ export interface Project {
   progressPercentage: number;
 }
 
+export interface ChatSession {
+  id: string;
+  projectId: string;
+  title: string;
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt?: string | null;
+  messageCount: number;
+  lastMessageAt?: string | null;
+  lastMessageContent: string;
+  lastMessageSenderName: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  chatSessionId: string;
+  senderUserId: string;
+  senderName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreateChatSessionRequest {
+  title: string;
+}
+
+export interface SendChatMessageRequest {
+  content: string;
+}
+
 export interface ProjectMember {
   userId: string;
   fullName: string;
