@@ -13,13 +13,15 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly IEmailService _emailService;
 
-    public AuthService(UserManager<ApplicationUser> userManager, IJwtService jwtService, IConfiguration configuration, ILogger<AuthService> logger)
+    public AuthService(UserManager<ApplicationUser> userManager, IJwtService jwtService, IConfiguration configuration, ILogger<AuthService> logger, IEmailService emailService)
     {
         _userManager = userManager;
         _jwtService = jwtService;
         _configuration = configuration;
         _logger = logger;
+        _emailService = emailService;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -42,6 +44,8 @@ public class AuthService : IAuthService
             throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
 
         await _userManager.AddToRoleAsync(user, "Member");
+
+        await _emailService.SendWelcomeEmailAsync(user.Email ?? dto.Email, $"{dto.FirstName} {dto.LastName}");
 
         return await IssueTokensAsync(user);
     }
