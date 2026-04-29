@@ -42,6 +42,7 @@ public class ChatInboxService : IChatInboxService
         return sessions.Select(MapSessionDto).ToList();
     }
 
+    // ✅ Version unique avec broadcast SignalR
     public async Task<ChatSessionDto> CreateSessionAsync(Guid projectId, CreateChatSessionDto dto, string userId)
     {
         await EnsureProjectMemberAsync(projectId, userId);
@@ -62,8 +63,14 @@ public class ChatInboxService : IChatInboxService
         await _dbContext.ChatSessions.AddAsync(session);
         await _dbContext.SaveChangesAsync();
 
-        // ✅ Pas de broadcast ici — pas de message à envoyer
-        return await GetSessionByIdAsync(projectId, session.Id, userId);
+        var sessionDto = await GetSessionByIdAsync(projectId, session.Id, userId);
+
+        // ✅ Notifier tous les membres du projet en temps réel
+        await _hubClients
+            .Group($"project_{projectId}")
+            .SendAsync("SessionCreated", sessionDto);
+
+        return sessionDto;
     }
 
     public async Task<ChatSessionDto> GetSessionByIdAsync(Guid projectId, Guid sessionId, string userId)
@@ -129,6 +136,7 @@ public class ChatInboxService : IChatInboxService
         var messageDto = MapMessageDto(message);
         await _hubClients.Group(sessionId.ToString())
                          .SendAsync("ReceiveMessage", messageDto);
+
         if (ShouldInvokeAssistant(content))
         {
             var prompt = ExtractAssistantPrompt(content);
@@ -163,6 +171,37 @@ public class ChatInboxService : IChatInboxService
         return messageDto;
     }
 
+    public async Task DeleteSessionAsync(Guid projectId, Guid sessionId, string userId)
+    {
+        await EnsureProjectMemberAsync(projectId, userId);
+
+        var session = await _dbContext.ChatSessions
+            .Include(s => s.Messages)
+            .FirstOrDefaultAsync(s => s.Id == sessionId && s.ProjectId == projectId)
+            ?? throw new KeyNotFoundException("Chat session not found.");
+
+        var project = await _dbContext.Projects
+            .FirstOrDefaultAsync(p => p.Id == projectId)
+            ?? throw new KeyNotFoundException("Project not found.");
+
+        var isProjectManager = project.ProjectManagerId == userId;
+        var isCreator = session.CreatedByUserId == userId;
+
+        if (!isCreator && !isProjectManager)
+            throw new UnauthorizedAccessException("Only the session creator or project manager can delete it.");
+
+        _dbContext.ChatMessages.RemoveRange(session.Messages);
+        _dbContext.ChatSessions.Remove(session);
+        await _dbContext.SaveChangesAsync();
+
+        // ✅ Notifier tous les membres du projet en temps réel
+        await _hubClients
+            .Group($"project_{projectId}")
+            .SendAsync("SessionDeleted", sessionId.ToString());
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
     private IQueryable<ChatSession> SessionQuery()
         => _dbContext.ChatSessions
             .Include(s => s.CreatedByUser)
@@ -194,18 +233,18 @@ public class ChatInboxService : IChatInboxService
             Title = session.Title,
             CreatedByUserId = session.CreatedByUserId,
             CreatedByName = session.CreatedByUser != null
-            ? $"{session.CreatedByUser.FirstName} {session.CreatedByUser.LastName}".Trim()
-            : string.Empty,
+                ? $"{session.CreatedByUser.FirstName} {session.CreatedByUser.LastName}".Trim()
+                : string.Empty,
             CreatedAt = session.CreatedAt,
             UpdatedAt = session.UpdatedAt,
             MessageCount = session.Messages.Count,
             LastMessageAt = lastMessage?.CreatedAt,
             LastMessageContent = lastMessage?.Content ?? string.Empty,
             LastMessageSenderName = lastMessage?.IsAssistant == true
-            ? "Planora AI"
-            : lastMessage?.SenderUser != null
-              ? $"{lastMessage.SenderUser.FirstName} {lastMessage.SenderUser.LastName}".Trim()
-              : string.Empty,
+                ? "Planora AI"
+                : lastMessage?.SenderUser != null
+                    ? $"{lastMessage.SenderUser.FirstName} {lastMessage.SenderUser.LastName}".Trim()
+                    : string.Empty,
             LastMessageIsAssistant = lastMessage?.IsAssistant ?? false
         };
     }
@@ -217,10 +256,10 @@ public class ChatInboxService : IChatInboxService
             ChatSessionId = message.ChatSessionId,
             SenderUserId = message.SenderUserId ?? string.Empty,
             SenderName = message.IsAssistant
-              ? "Planora AI"
-              : message.SenderUser != null
-                ? $"{message.SenderUser.FirstName} {message.SenderUser.LastName}".Trim()
-                : string.Empty,
+                ? "Planora AI"
+                : message.SenderUser != null
+                    ? $"{message.SenderUser.FirstName} {message.SenderUser.LastName}".Trim()
+                    : string.Empty,
             IsAssistant = message.IsAssistant,
             Content = message.Content,
             CreatedAt = message.CreatedAt
@@ -241,35 +280,18 @@ public class ChatInboxService : IChatInboxService
     private static string BuildSessionTranscript(ChatSession session)
     {
         var lines = session.Messages
-            .OrderBy(message => message.CreatedAt)
-            .Select(message =>
+            .OrderBy(m => m.CreatedAt)
+            .Select(m =>
             {
-                var senderName = message.IsAssistant
-                ? "Planora AI"
-                : message.SenderUser != null
-                    ? $"{message.SenderUser.FirstName} {message.SenderUser.LastName}".Trim()
-                    : "Unknown";
+                var senderName = m.IsAssistant
+                    ? "Planora AI"
+                    : m.SenderUser != null
+                        ? $"{m.SenderUser.FirstName} {m.SenderUser.LastName}".Trim()
+                        : "Unknown";
 
-                return $"[{message.CreatedAt:yyyy-MM-dd HH:mm}] {senderName}: {message.Content}";
+                return $"[{m.CreatedAt:yyyy-MM-dd HH:mm}] {senderName}: {m.Content}";
             });
 
         return string.Join(Environment.NewLine, lines);
-    }
-    public async Task DeleteSessionAsync(Guid projectId, Guid sessionId, string userId)
-    {
-        await EnsureProjectMemberAsync(projectId, userId);
-
-        var session = await _dbContext.ChatSessions
-            .Include(s => s.Messages)
-            .FirstOrDefaultAsync(s => s.Id == sessionId && s.ProjectId == projectId)
-            ?? throw new KeyNotFoundException("Chat session not found.");
-
-        // Seul le créateur de la session peut la supprimer
-        if (session.CreatedByUserId != userId)
-            throw new UnauthorizedAccessException("Only the session creator can delete it.");
-
-        _dbContext.ChatMessages.RemoveRange(session.Messages);
-        _dbContext.ChatSessions.Remove(session);
-        await _dbContext.SaveChangesAsync();
     }
 }
