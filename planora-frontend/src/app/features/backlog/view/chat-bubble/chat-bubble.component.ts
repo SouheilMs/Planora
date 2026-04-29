@@ -71,9 +71,29 @@ export class ChatBubbleComponent implements OnInit, OnDestroy, AfterViewChecked 
       .withAutomaticReconnect()
       .build();
 
-    this.hubConnection.on('ReceiveMessage', (message: ChatMessage) => {
-      console.log('📨 SignalR reçu:', message);
+    // ── SignalR event : session supprimée ──
+    this.hubConnection.on('SessionDeleted', (deletedSessionId: string) => {
+      this.toasts = this.toasts.filter(t => t.sessionId !== deletedSessionId);
+      this.sessions = this.sessions.filter(s => s.id !== deletedSessionId);
 
+      if (this.selectedSession?.id === deletedSessionId) {
+        this.messages = [];
+        this.isAiTyping = false;
+        this.selectedSession = this.sessions[0] ?? null;
+        if (this.selectedSession) this.selectSession(this.selectedSession);
+      }
+    });
+
+    // ── SignalR event : session créée ──
+    this.hubConnection.on('SessionCreated', (newSession: ChatSession) => {
+      const alreadyExists = this.sessions.some(s => s.id === newSession.id);
+      if (!alreadyExists) {
+        this.sessions = [newSession, ...this.sessions];
+      }
+    });
+
+    // ── SignalR event : nouveau message ──
+    this.hubConnection.on('ReceiveMessage', (message: ChatMessage) => {
       const isDuplicate = this.messages.find(m => m.id === message.id);
       if (isDuplicate) return;
 
@@ -89,7 +109,6 @@ export class ChatBubbleComponent implements OnInit, OnDestroy, AfterViewChecked 
         }
       }
 
-      // N'ajouter dans messages[] que si c'est la session active
       if (isCurrentSession) {
         this.messages.push(message);
         this.shouldScrollToBottom = true;
@@ -97,7 +116,11 @@ export class ChatBubbleComponent implements OnInit, OnDestroy, AfterViewChecked 
     });
 
     this.hubConnection.start()
-      .then(() => console.log('✅ SignalR connecté'))
+      .then(() => {
+        console.log('✅ SignalR connecté');
+        this.hubConnection.invoke('JoinProject', this.projectId)
+          .catch(err => console.error('JoinProject error:', err));
+      })
       .catch(err => console.error('❌ SignalR erreur:', err));
   }
 
@@ -241,6 +264,7 @@ export class ChatBubbleComponent implements OnInit, OnDestroy, AfterViewChecked 
       });
   }
 
+  // ✅ SignalR ajoute la session dans la liste pour tout le monde (y compris soi-même)
   createSession(): void {
     if (this.sessionForm.invalid || this.creatingSession) return;
     this.creatingSession = true;
@@ -251,7 +275,6 @@ export class ChatBubbleComponent implements OnInit, OnDestroy, AfterViewChecked 
         next: res => {
           this.creatingSession = false;
           if (res.success && res.data) {
-            this.sessions = [res.data, ...this.sessions];
             this.sessionForm.reset();
             this.showNewSessionForm = false;
             this.selectSession(res.data);
@@ -261,20 +284,14 @@ export class ChatBubbleComponent implements OnInit, OnDestroy, AfterViewChecked 
       });
   }
 
+  // ✅ Pas de next() — SignalR s'occupe de la mise à jour UI pour tout le monde
   deleteSession(session: ChatSession, event: MouseEvent): void {
     event.stopPropagation();
     if (!confirm(`Supprimer la conversation "${session.title}" ?`)) return;
 
     this.chatService.deleteSession(this.projectId, session.id)
-      .pipe(takeUntil(this.destroy$)).subscribe({
-        next: () => {
-          this.sessions = this.sessions.filter(s => s.id !== session.id);
-          if (this.selectedSession?.id === session.id) {
-            this.messages = [];
-            this.selectedSession = this.sessions[0] ?? null;
-            if (this.selectedSession) this.selectSession(this.selectedSession);
-          }
-        },
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
         error: () => console.error('Erreur suppression session')
       });
   }
