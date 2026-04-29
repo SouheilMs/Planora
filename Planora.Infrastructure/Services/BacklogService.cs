@@ -1,5 +1,7 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Planora.Application.DTOs.Backlog;
 using Planora.Application.Interfaces;
 using Planora.Domain.Entities;
@@ -16,12 +18,18 @@ public class BacklogService : IBacklogService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ApplicationDbContext _dbContext;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<BacklogService> _logger;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public BacklogService(IUnitOfWork unitOfWork, IMapper mapper, ApplicationDbContext dbContext)
+    public BacklogService(IUnitOfWork unitOfWork, IMapper mapper, ApplicationDbContext dbContext, IEmailService emailService, ILogger<BacklogService> logger, UserManager<ApplicationUser> userManager)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _dbContext = dbContext;
+        _emailService = emailService;
+        _logger = logger;
+        _userManager = userManager;
     }
 
     public async Task<IEnumerable<BacklogItemDto>> GetBacklogAsync(Guid projectId)
@@ -110,12 +118,16 @@ public class BacklogService : IBacklogService
 
         await EnsureProjectMemberAccessAsync(backlogItem.ProjectId, currentUserId);
 
+        var previousAssignedToId = backlogItem.AssignedToId;
         backlogItem.AssignedToId = string.IsNullOrWhiteSpace(assignedToId) ? null : assignedToId;
         backlogItem.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
         // FIX: reload AssignedTo navigation after saving so mapper gets the name
         await _dbContext.Entry(backlogItem).Reference(b => b.AssignedTo).LoadAsync();
+
+        if (!string.IsNullOrWhiteSpace(backlogItem.AssignedToId) && backlogItem.AssignedToId != previousAssignedToId)
+            await TrySendBacklogItemAssignmentEmailAsync(backlogItem);
 
         return _mapper.Map<BacklogItemDto>(backlogItem);
     }
@@ -229,6 +241,47 @@ public class BacklogService : IBacklogService
         await _dbContext.SaveChangesAsync();
 
         return _mapper.Map<BacklogItemDto>(backlogItem);
+    }
+
+    private async Task TrySendBacklogItemAssignmentEmailAsync(BacklogItem backlogItem)
+    {
+        if (string.IsNullOrWhiteSpace(backlogItem.AssignedToId))
+            return;
+
+        var assignedUser = await _userManager.FindByIdAsync(backlogItem.AssignedToId);
+        if (assignedUser == null || string.IsNullOrWhiteSpace(assignedUser.Email))
+            return;
+
+        var project = await _dbContext.Projects
+            .Include(p => p.ProjectManager)
+            .Include(p => p.Workspace)
+            .FirstOrDefaultAsync(p => p.Id == backlogItem.ProjectId);
+
+        if (project == null)
+            return;
+
+        var pmName = project.ProjectManager != null
+            ? $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}".Trim()
+            : string.Empty;
+
+        _logger.LogInformation("Sending backlog item assignment email for item {ItemId}.", backlogItem.Id);
+        try
+        {
+            await _emailService.SendTaskAssignmentAsync(
+                assignedUser.Email,
+                assignedUser.FullName,
+                backlogItem.Title,
+                backlogItem.Description,
+                backlogItem.DueDate,
+                backlogItem.Priority.ToString(),
+                project.Name,
+                pmName);
+            _logger.LogInformation("Backlog item assignment email sent successfully for item {ItemId}.", backlogItem.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send backlog item assignment email for item {ItemId}.", backlogItem.Id);
+        }
     }
 
     private async Task EnsureProjectMemberAccessAsync(Guid projectId, string userId)
