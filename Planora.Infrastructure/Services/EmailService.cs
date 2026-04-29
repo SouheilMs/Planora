@@ -124,4 +124,76 @@ public class EmailService : IEmailService
 
         await SendEmailAsync(toEmail, subject, body);
     }
+
+    public async Task SendTaskAssignmentAsync(string toEmail, string memberName, string taskTitle, string taskDescription, DateTime? dueDate, string priority, string projectName, string projectManagerName)
+    {
+        var encodedMember = WebUtility.HtmlEncode(memberName);
+        var encodedTitle = WebUtility.HtmlEncode(taskTitle);
+        var encodedDescription = WebUtility.HtmlEncode(taskDescription);
+        var encodedDueDate = dueDate.HasValue ? WebUtility.HtmlEncode(dueDate.Value.ToString("MMMM dd, yyyy")) : "Not set";
+        var encodedPriority = WebUtility.HtmlEncode(priority);
+        var encodedProject = WebUtility.HtmlEncode(projectName);
+        var encodedManager = WebUtility.HtmlEncode(projectManagerName);
+
+        var subject = "New task assigned to you in Planora";
+        var body = $"""
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333;">
+              <h2>New Task Assigned</h2>
+              <p>Hello <strong>{encodedMember}</strong>,</p>
+              <p>A new task has been assigned to you in the project <strong>{encodedProject}</strong> (managed by <strong>{encodedManager}</strong>).</p>
+              <table style="border-collapse: collapse; width: 100%; margin-top: 12px;">
+                <tr>
+                  <td style="padding: 8px; font-weight: bold; width: 140px;">Task</td>
+                  <td style="padding: 8px;">{encodedTitle}</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                  <td style="padding: 8px; font-weight: bold;">Description</td>
+                  <td style="padding: 8px;">{encodedDescription}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; font-weight: bold;">Due Date</td>
+                  <td style="padding: 8px;">{encodedDueDate}</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                  <td style="padding: 8px; font-weight: bold;">Priority</td>
+                  <td style="padding: 8px;">{encodedPriority}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; font-weight: bold;">Project</td>
+                  <td style="padding: 8px;">{encodedProject}</td>
+                </tr>
+              </table>
+              <p style="margin-top: 16px;">Log in to your Planora account to view the full task details.</p>
+              <p style="color: #888; font-size: 12px;">You are receiving this email because you were assigned a task on Planora.</p>
+            </body>
+            </html>
+            """;
+
+        await SendEmailAsync(toEmail, subject, body);
+    }
+
+    public async Task SendProjectMemberAddedAsync(string toEmail, string memberName, string projectName, string workspaceName, string addedByName)
+    {
+        var encodedMember = WebUtility.HtmlEncode(memberName);
+        var encodedProject = WebUtility.HtmlEncode(projectName);
+        var encodedWorkspace = WebUtility.HtmlEncode(workspaceName);
+        var encodedAddedBy = WebUtility.HtmlEncode(addedByName);
+
+        var subject = "You have been added to a project in Planora";
+        var body = $"""
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333;">
+              <h2>You've Been Added to a Project</h2>
+              <p>Hello <strong>{encodedMember}</strong>,</p>
+              <p><strong>{encodedAddedBy}</strong> has added you to the project <strong>{encodedProject}</strong> in the workspace <strong>{encodedWorkspace}</strong> on Planora.</p>
+              <p>You now have access to the project and can collaborate with your team.</p>
+              <p>Log in to your Planora account to get started.</p>
+              <p style="color: #888; font-size: 12px;">You are receiving this email because you were added to a project on Planora.</p>
+            </body>
+            </html>
+            """;
+
+        await SendEmailAsync(toEmail, subject, body);
+    }
 }

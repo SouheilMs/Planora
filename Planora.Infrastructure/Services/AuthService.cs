@@ -45,7 +45,14 @@ public class AuthService : IAuthService
 
         await _userManager.AddToRoleAsync(user, "Member");
 
-        await _emailService.SendWelcomeEmailAsync(user.Email ?? dto.Email, $"{dto.FirstName} {dto.LastName}");
+        try
+        {
+            await _emailService.SendWelcomeEmailAsync(user.Email ?? dto.Email, $"{dto.FirstName} {dto.LastName}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send welcome email for user {UserId}. Registration will proceed.", user.Id);
+        }
 
         return await IssueTokensAsync(user);
     }
