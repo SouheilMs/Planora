@@ -1,0 +1,143 @@
+<!-- chat-bubble.component.html -->
+<div class="chat-bubble-wrapper">
+
+  <!-- ══ TOAST NOTIFICATIONS ══ -->
+  <div class="toast-stack">
+    @for (toast of toasts; track toast.id) {
+    <div class="toast-notif" [class.visible]="toast.visible" (click)="openFromToast(toast)">
+      <div class="toast-avatar">{{ toast.senderName.charAt(0).toUpperCase() }}</div>
+      <div class="toast-body">
+        <div class="toast-top">
+          <span class="toast-sender">{{ toast.senderName }}</span>
+          <span class="toast-session">· {{ toast.sessionTitle }}</span>
+        </div>
+        <p class="toast-content">{{ toast.content }}</p>
+      </div>
+      <button class="toast-close" (click)="$event.stopPropagation(); dismissToast(toast.id)">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    }
+  </div>
+
+  <!-- ══ CHAT WINDOW ══ -->
+  @if (isOpen) {
+  <div class="chat-window">
+
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="header-avatar">
+          <mat-icon>forum</mat-icon>
+        </div>
+        <div class="header-text">
+          <span class="header-title">Inbox du projet</span>
+          <span class="header-sub">{{ sessions.length }} conversation{{ sessions.length !== 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="header-btn" (click)="showNewSessionForm = !showNewSessionForm"
+                matTooltip="Nouvelle conversation">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button class="header-btn" (click)="toggleChat()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- New session form -->
+    @if (showNewSessionForm) {
+    <div class="new-session-form">
+      <form [formGroup]="sessionForm" (ngSubmit)="createSession()">
+        <input class="session-input" formControlName="title"
+               placeholder="Titre de la conversation..." />
+        <button type="submit" class="create-btn" [disabled]="sessionForm.invalid || creatingSession">
+          {{ creatingSession ? '...' : 'Créer' }}
+        </button>
+      </form>
+    </div>
+    }
+
+    <!-- Sessions tabs avec bouton suppression -->
+    @if (sessions.length > 0) {
+    <div class="sessions-tabs">
+      @for (session of sessions; track session.id) {
+      <div class="session-tab-wrap" [class.active]="selectedSession?.id === session.id">
+        <button class="session-tab" (click)="selectSession(session)" [matTooltip]="session.title">
+          {{ session.title.length > 12 ? session.title.slice(0, 12) + '…' : session.title }}
+        </button>
+        <button class="session-delete-btn"
+                (click)="deleteSession(session, $event)"
+                matTooltip="Supprimer cette conversation">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Messages -->
+    <div class="messages-area" #messagesContainer>
+      @if (sessions.length === 0) {
+      <div class="empty-chat">
+        <mat-icon>chat_bubble_outline</mat-icon>
+        <span>Aucune conversation — créez-en une !</span>
+      </div>
+      }
+      @if (selectedSession && messages.length === 0) {
+      <div class="empty-chat">
+        <mat-icon>chat_bubble_outline</mat-icon>
+        <span>Aucun message pour l'instant</span>
+      </div>
+      }
+      @for (msg of messages; track msg.id) {
+      <div class="msg-row"
+           [class.mine]="isMine(msg)"
+           [class.assistant]="msg.isAssistant"
+           [class.command]="isChatCommand(msg) && !msg.isAssistant">
+        @if (!isMine(msg)) {
+        <div class="msg-sender">{{ msg.isAssistant ? '🤖 Planora AI' : msg.senderName }}</div>
+        }
+        <div class="msg-bubble">{{ msg.content }}</div>
+      </div>
+      }
+
+      <!-- AI typing indicator -->
+      @if (isAiTyping) {
+      <div class="msg-row assistant">
+        <div class="msg-sender">🤖 Planora AI</div>
+        <div class="msg-bubble typing-bubble">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Hint -->
+    <div class="chat-hint">Tapez <code>@chat</code> pour invoquer l'IA</div>
+
+    <!-- Composer -->
+    <div class="chat-input-area">
+      <textarea class="chat-input" [formControl]="messageForm.controls.content"
+                placeholder="Écrire un message..."
+                rows="1"
+                (keydown)="onKeydown($event)"
+                [disabled]="!selectedSession"></textarea>
+      <button class="send-btn" (click)="sendMessage()"
+              [disabled]="messageForm.invalid || !selectedSession || sendingMessage">
+        <mat-icon>{{ sendingMessage ? 'hourglass_empty' : 'send' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- ══ FAB ══ -->
+  <button class="chat-fab" (click)="toggleChat()" matTooltip="Inbox projet">
+    <mat-icon>{{ isOpen ? 'close' : 'forum' }}</mat-icon>
+    @if (!isOpen && unreadCount > 0) {
+    <span class="fab-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+    }
+  </button>
+
+</div>

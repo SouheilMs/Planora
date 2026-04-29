@@ -24,4 +24,8 @@ export class ChatInboxService {
   sendMessage(projectId: string, sessionId: string, request: SendChatMessageRequest): Observable<ApiResponse<ChatMessage>> {
     return this.http.post<ApiResponse<ChatMessage>>(`${this.baseUrl}/${projectId}/chat/sessions/${sessionId}/messages`, request);
   }
+
+  deleteSession(projectId: string, sessionId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${projectId}/chat/sessions/${sessionId}`);
+  }
 }
