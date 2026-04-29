@@ -10,6 +10,7 @@ using Planora.Domain.Interfaces;
 using Planora.Infrastructure.Data;
 using Planora.Infrastructure.Repositories;
 using Planora.Infrastructure.Services;
+using Planora.Infrastructure.Settings;
 using System.Text;
 
 namespace Planora.Infrastructure;
@@ -85,6 +86,10 @@ public static class DependencyInjection
 
         // Chatbot
         services.AddHttpClient<IChatbotService, ChatbotService>();
+
+        // Email
+        services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
+        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }

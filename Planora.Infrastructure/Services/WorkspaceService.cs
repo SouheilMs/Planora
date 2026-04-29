@@ -17,12 +17,14 @@ public class WorkspaceService : IWorkspaceService
     private readonly ApplicationDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IMapper _mapper;
+    private readonly IEmailService _emailService;
 
-    public WorkspaceService(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IMapper mapper)
+    public WorkspaceService(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IMapper mapper, IEmailService emailService)
     {
         _dbContext = dbContext;
         _userManager = userManager;
         _mapper = mapper;
+        _emailService = emailService;
     }
 
     public async Task<IEnumerable<WorkspaceDto>> GetAccessibleWorkspacesAsync(string userId)
@@ -236,6 +238,9 @@ public class WorkspaceService : IWorkspaceService
 
         await _dbContext.WorkspaceInvitations.AddAsync(invitation);
         await _dbContext.SaveChangesAsync();
+
+        var inviterFullName = $"{inviter.FirstName} {inviter.LastName}";
+        await _emailService.SendWorkspaceInvitationAsync(email, inviterFullName, workspace.Name, dto.Role);
 
         invitation.Workspace = workspace;
         return _mapper.Map<WorkspaceInvitationDto>(invitation);
