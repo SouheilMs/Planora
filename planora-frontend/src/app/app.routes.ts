@@ -57,6 +57,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/backlog/view/backlog-view.component').then(m => m.BacklogViewComponent)
       },
 
+      {
+        path: 'projects/:projectId/inbox',
+        loadComponent: () => import('./features/projects/inbox/project-inbox.component').then(m => m.ProjectInboxComponent)
+      },
+
       // Tasks
       {
         path: 'projects/:projectId/tasks',

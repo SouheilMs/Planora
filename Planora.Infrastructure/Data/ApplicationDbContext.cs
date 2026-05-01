@@ -18,6 +18,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ProjectInvitation> ProjectInvitations => Set<ProjectInvitation>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<BacklogItem> BacklogItems => Set<BacklogItem>();
     public DbSet<SubTask> SubTasks => Set<SubTask>();
@@ -108,6 +110,43 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.Property(c => c.Content)
              .HasColumnType("nvarchar(max)");
         });
+
+        builder.Entity<ChatSession>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasQueryFilter(x => !x.IsDeleted);
+            b.Property(x => x.Title)
+                .IsRequired()
+                .HasMaxLength(150);
+            b.HasOne(x => x.Project)
+                .WithMany(x => x.ChatSessions)
+                .HasForeignKey(x => x.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.CreatedByUser)
+                .WithMany(x => x.ChatSessions)
+                .HasForeignKey(x => x.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ChatMessage>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasQueryFilter(x => !x.IsDeleted);
+            b.Property(x => x.Content)
+                .IsRequired()
+                .HasColumnType("nvarchar(max)");
+            b.Property(x => x.IsAssistant)
+                .HasDefaultValue(false);
+            b.HasOne(x => x.ChatSession)
+                .WithMany(x => x.Messages)
+                .HasForeignKey(x => x.ChatSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.SenderUser)
+                .WithMany(x => x.ChatMessages)
+                .HasForeignKey(x => x.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+        });
     }
-         
+
 }

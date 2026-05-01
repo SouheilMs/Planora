@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Planora.Application.DTOs.Workspaces;
 using Planora.Application.Interfaces;
 using Planora.Domain.Entities;
@@ -17,12 +18,16 @@ public class WorkspaceService : IWorkspaceService
     private readonly ApplicationDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IMapper _mapper;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<WorkspaceService> _logger;
 
-    public WorkspaceService(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IMapper mapper)
+    public WorkspaceService(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IMapper mapper, IEmailService emailService, ILogger<WorkspaceService> logger)
     {
         _dbContext = dbContext;
         _userManager = userManager;
         _mapper = mapper;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<WorkspaceDto>> GetAccessibleWorkspacesAsync(string userId)
@@ -236,6 +241,16 @@ public class WorkspaceService : IWorkspaceService
 
         await _dbContext.WorkspaceInvitations.AddAsync(invitation);
         await _dbContext.SaveChangesAsync();
+
+        var inviterFullName = $"{inviter.FirstName} {inviter.LastName}";
+        try
+        {
+            await _emailService.SendWorkspaceInvitationAsync(email, inviterFullName, workspace.Name, dto.Role);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send workspace invitation email for invitation {InvitationId}. Invitation was saved successfully.", invitation.Id);
+        }
 
         invitation.Workspace = workspace;
         return _mapper.Map<WorkspaceInvitationDto>(invitation);

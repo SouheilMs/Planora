@@ -23,15 +23,18 @@ public class ChatbotService : IChatbotService
         if (string.IsNullOrEmpty(apiKey))
             return "Chatbot is not configured. Please set the OpenAI API key.";
 
+        var baseUrl = _configuration["OpenAI:BaseUrl"] ?? "https://api.openai.com/v1";
+        var model = _configuration["OpenAI:Chat:Options:Model"] ?? "gpt-4o-mini";
+
         var systemMessage = "You are a helpful project management assistant for Planora. " +
-                           "Help users with project management tasks, sprints, and task organization.";
+                           "Help users with project management tasks, sprints, task organization, and team coordination.";
 
         if (!string.IsNullOrEmpty(context))
-            systemMessage += $" Context: {context}";
+            systemMessage += $" Session context: {context}";
 
         var requestBody = new
         {
-            model = "gpt-4o-mini",
+            model,
             messages = new[]
             {
                 new { role = "system", content = systemMessage },
@@ -40,7 +43,12 @@ public class ChatbotService : IChatbotService
             max_tokens = 500
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+        var normalizedBaseUrl = baseUrl.TrimEnd('/');
+        var completionsPath = normalizedBaseUrl.EndsWith("/v1", StringComparison.OrdinalIgnoreCase)
+            ? "/chat/completions"
+            : "/v1/chat/completions";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{normalizedBaseUrl}{completionsPath}");
         request.Headers.Add("Authorization", $"Bearer {apiKey}");
 
         var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");

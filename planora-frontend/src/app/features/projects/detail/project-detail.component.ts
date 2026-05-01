@@ -58,6 +58,13 @@ export class ProjectDetailComponent implements OnInit {
     return this.workspaceMembers.filter(member => !projectMemberIds.has(member.userId));
   }
 
+  get canOpenInbox(): boolean {
+    const currentUserId = this.authService.currentUser?.userId;
+    if (!this.project || !currentUserId) return false;
+    return (this.project.members || []).some(member => member.userId === currentUserId) ||
+      currentUserId === this.project.projectManagerId;
+  }
+
   ngOnInit(): void {
     const projectId = this.route.snapshot.paramMap.get('projectId');
     if (!projectId || projectId === 'null' || projectId === 'undefined') {

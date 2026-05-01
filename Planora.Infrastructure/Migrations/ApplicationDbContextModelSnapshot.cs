@@ -497,6 +497,81 @@ namespace Planora.Infrastructure.Migrations
                     b.ToTable("BacklogWebLinks");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChatSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAssistant")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SenderUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatSessionId");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.ChatSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ChatSessions");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1107,6 +1182,43 @@ namespace Planora.Infrastructure.Migrations
                     b.Navigation("BacklogItem");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.ChatMessage", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.ChatSession", "ChatSession")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "SenderUser")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ChatSession");
+
+                    b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("Planora.Domain.Entities.ChatSession", b =>
+                {
+                    b.HasOne("Planora.Domain.Entities.ApplicationUser", "CreatedByUser")
+                        .WithMany("ChatSessions")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Planora.Domain.Entities.Project", "Project")
+                        .WithMany("ChatSessions")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.Comment", b =>
                 {
                     b.HasOne("Planora.Domain.Entities.ApplicationUser", "Author")
@@ -1304,6 +1416,10 @@ namespace Planora.Infrastructure.Migrations
 
                     b.Navigation("BacklogItems");
 
+                    b.Navigation("ChatMessages");
+
+                    b.Navigation("ChatSessions");
+
                     b.Navigation("Comments");
 
                     b.Navigation("ManagedProjects");
@@ -1333,9 +1449,16 @@ namespace Planora.Infrastructure.Migrations
                     b.Navigation("SubTasks");
                 });
 
+            modelBuilder.Entity("Planora.Domain.Entities.ChatSession", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("Planora.Domain.Entities.Project", b =>
                 {
                     b.Navigation("BacklogItems");
+
+                    b.Navigation("ChatSessions");
 
                     b.Navigation("Sprints");
 

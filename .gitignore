@@ -72,6 +72,9 @@ artifacts/
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
+# Local app settings overrides
+Planora/appsettings.Local.json
+
 # StyleCop
 StyleCopReport.xml
 

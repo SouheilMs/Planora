@@ -23,6 +23,7 @@ import { BacklogCreateDialogComponent } from '../create/backlog-create-dialog.co
 import { CreateSprintDialogComponent } from './create-sprint-dialog.component';
 import { ComplexityDialogComponent } from './complexity-dialog.component';
 import { TaskDetailPanelComponent } from './task-detail-panel/task-detail-panel.component';
+import { ChatBubbleComponent } from './chat-bubble/chat-bubble.component';
 
 @Component({
   selector: 'app-backlog-view',
@@ -37,7 +38,9 @@ import { TaskDetailPanelComponent } from './task-detail-panel/task-detail-panel.
     MatDividerModule,
     DragDropModule,
     LoadingComponent,
-    TaskDetailPanelComponent
+    TaskDetailPanelComponent,
+    ChatBubbleComponent
+
   ],
   templateUrl: './backlog-view.component.html',
   styleUrls: ['./backlog-view.component.scss']

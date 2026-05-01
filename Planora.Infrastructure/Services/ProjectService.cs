@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Planora.Application.DTOs.Common;
 using Planora.Application.DTOs.Projects;
 using Planora.Application.Interfaces;
@@ -16,13 +17,17 @@ public class ProjectService : IProjectService
     private readonly IMapper _mapper;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<ProjectService> _logger;
 
-    public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
+    public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, IEmailService emailService, ILogger<ProjectService> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _userManager = userManager;
         _dbContext = dbContext;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<PaginatedResultDto<ProjectDto>> GetProjectsAsync(string userId, int page, int pageSize, string? search = null)
@@ -237,6 +242,31 @@ public class ProjectService : IProjectService
 
         await _unitOfWork.ProjectUsers.AddAsync(member);
         await _unitOfWork.SaveChangesAsync();
+
+        var actingUser = await _userManager.FindByIdAsync(currentUserId);
+        var addedByName = actingUser != null
+            ? $"{actingUser.FirstName} {actingUser.LastName}".Trim()
+            : string.Empty;
+
+        var targetEmail = targetUser.Email ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(targetEmail))
+        {
+            _logger.LogInformation("Sending project membership email for project {ProjectId} to user {UserId}.", projectId, targetUser.Id);
+            try
+            {
+                await _emailService.SendProjectMemberAddedAsync(
+                    targetEmail,
+                    targetUser.FullName,
+                    project.Name,
+                    project.Workspace.Name,
+                    addedByName);
+                _logger.LogInformation("Project membership email sent successfully for project {ProjectId}.", projectId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send project membership email for project {ProjectId}.", projectId);
+            }
+        }
     }
 
     public async Task RemoveMemberAsync(Guid projectId, string userIdToRemove, string currentUserId)
@@ -346,7 +376,22 @@ public class ProjectService : IProjectService
         await _dbContext.ProjectInvitations.AddAsync(invitation);
         await _dbContext.SaveChangesAsync();
 
-        var invitedByUser = await _userManager.FindByIdAsync(userId);
+        var invitedByUser = await _userManager.FindByIdAsync(userId)
+            ?? throw new KeyNotFoundException("Inviting user not found.");
+        var inviterFullName = $"{invitedByUser.FirstName} {invitedByUser.LastName}";
+        var targetEmail = targetUser.Email ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(targetEmail))
+        {
+            try
+            {
+                await _emailService.SendProjectInvitationAsync(targetEmail, inviterFullName, project.Name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send project invitation email for invitation {InvitationId}. Invitation was saved successfully.", invitation.Id);
+            }
+        }
+
         return new ProjectInvitationDto
         {
             Id = invitation.Id,
@@ -354,9 +399,9 @@ public class ProjectService : IProjectService
             ProjectName = project.Name,
             UserId = targetUser.Id,
             UserFullName = $"{targetUser.FirstName} {targetUser.LastName}",
-            UserEmail = targetUser.Email ?? string.Empty,
+            UserEmail = targetEmail,
             InvitedByUserId = userId,
-            InvitedByFullName = $"{invitedByUser?.FirstName} {invitedByUser?.LastName}",
+            InvitedByFullName = inviterFullName,
             ExpiresAt = invitation.ExpiresAt,
             Accepted = false,
             CreatedAt = invitation.CreatedAt
