@@ -59,10 +59,10 @@ export class SidebarComponent implements OnInit {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
-      this.checkUrl(this.router.url);
+      this.checkUrl(this.router.url); // ← cette ligne manquait !
     });
   }
-
+  // ← AJOUTE cette méthode
   private checkUrl(url: string): void {
     this.showProjectNav = url.includes('/projects/') &&
       !url.includes('/projects/list') &&
@@ -77,7 +77,6 @@ export class SidebarComponent implements OnInit {
       this.currentProject = null;
     }
   }
-
   private extractProjectId(url: string): string | null {
     const match = url.match(/\/projects\/([^\/]+)/);
     const projectId = match ? match[1] : null;

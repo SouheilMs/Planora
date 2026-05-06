@@ -215,6 +215,7 @@ import { AuthService } from '../../core/services/auth.service';
     .ring-track { fill: none; stroke: #ede9fe; stroke-width: 10; }
     .ring-fill {
       fill: none;
+      stroke: url(#ring-gradient);
       stroke: #4f46e5;
       stroke-width: 10;
       stroke-linecap: round;
