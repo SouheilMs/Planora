@@ -3,3 +3,6 @@ flask-cors
 scikit-learn
 numpy
 joblib
+pandas
+pyodbc
+scipy
